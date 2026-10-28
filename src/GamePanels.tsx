@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
-import { ranking, total, type State } from "../shared/game";
-import { courses, colors } from "../shared/courses";
+import { ranking, total, position, canStart, type State } from "../shared/game";
+import { getCourse, getCircuit, colors } from "../shared/courses";
+import { CircuitPicker } from "./CircuitPicker";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
   s: State;
@@ -17,7 +18,7 @@ type Props = {
   setPower: Setter<number>;
   setError: Setter<string>;
   shoot: () => void;
-  action: (type: string) => void;
+  action: (type: string, value?: string) => void;
   leave: () => void;
 };
 export function GamePanels({
@@ -38,14 +39,20 @@ export function GamePanels({
   action,
   leave,
 }: Props) {
-  const current = s.players[s.turn];
+  const current = s.players[s.turn],
+    circuit = getCircuit(s.circuit),
+    courses = circuit.courses;
   const isHost = mode === "local" || s.host === id;
   const sorted = ranking(s.players),
     winners = sorted.filter(
-      (p) => total(p) === total(sorted[0]) && p.aces === sorted[0].aces,
+      (p) =>
+        !p.withdrawn &&
+        total(p) === total(sorted[0]) &&
+        p.aces === sorted[0].aces,
     );
-  const winnerLabel =
-    winners.length > 1
+  const winnerLabel = !winners.length
+    ? "Partida abandonada."
+    : winners.length > 1
       ? "Victoria compartida."
       : `${sorted[0]?.name} gana el club.`;
   return (
@@ -61,6 +68,10 @@ export function GamePanels({
           <button
             className="invite"
             onClick={() => {
+              if (!navigator.clipboard) {
+                setError("Copia el código de sala: " + s.code);
+                return;
+              }
               navigator.clipboard
                 ?.writeText(
                   `${location.origin}${location.pathname}?room=${s.code}`,
@@ -72,6 +83,15 @@ export function GamePanels({
             <span data-testid="room-code">{s.code}</span>
             <small>COPIAR INVITACIÓN →</small>
           </button>
+          <CircuitPicker
+            value={s.circuit}
+            onChange={(id) => action("circuit", id)}
+            disabled={!isHost || status !== "Conectado"}
+          />
+          <p className="muted">
+            Cambiar el recorrido cancela el estado preparado. Al comenzar solo
+            entran los invitados conectados.
+          </p>
           <div className="players">
             {s.players.map((p, i) => (
               <div key={p.id}>
@@ -85,6 +105,15 @@ export function GamePanels({
                       ? "LISTO"
                       : "ESPERANDO"}
                 </span>
+                {isHost && !p.connected && (
+                  <button
+                    className="text-button"
+                    aria-label={`Quitar a ${p.name}`}
+                    onClick={() => action("remove", p.id)}
+                  >
+                    Quitar
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -96,10 +125,7 @@ export function GamePanels({
           {isHost && (
             <button
               className="primary"
-              disabled={
-                s.players.length < 2 ||
-                s.players.some((p) => !p.ready || !p.connected)
-              }
+              disabled={!canStart(s) || status !== "Conectado"}
               onClick={() => action("start")}
             >
               Comenzar partida →
@@ -113,7 +139,7 @@ export function GamePanels({
       {s.phase === "playing" && (
         <>
           <div className="hole-hud">
-            <div className="eyebrow">CLUB DEL ATARDECER</div>
+            <div className="eyebrow">{circuit.name.toUpperCase()}</div>
             <h2>
               <span>0{s.hole + 1}</span> {courses[s.hole].name}
             </h2>
@@ -128,11 +154,15 @@ export function GamePanels({
             </div>
             {ranking(s.players).map((p, i) => (
               <div className={p.id === current.id ? "active" : ""} key={p.id}>
-                <span>{i + 1}</span>
+                <span>{position(p, s.players)}</span>
                 <i style={{ background: colors[s.players.indexOf(p)] }} />
                 <strong>
                   {p.name}
-                  {!p.connected && mode === "online" ? " · sin red" : ""}
+                  {p.withdrawn
+                    ? " · retirado"
+                    : !p.connected && mode === "online"
+                      ? " · sin red"
+                      : ""}
                 </strong>
                 <b>{total(p)}</b>
               </div>
@@ -237,9 +267,10 @@ export function GamePanels({
                   <tr key={p.id}>
                     <td>
                       <span style={{ color: colors[s.players.indexOf(p)] }}>
-                        {i + 1} ·{" "}
+                        {position(p, s.players)} ·{" "}
                       </span>
                       {p.name}
+                      {p.withdrawn ? " · retirado" : ""}
                     </td>
                     {courses.map((_, j) => (
                       <td key={j}>{p.scores[j] ?? "—"}</td>
@@ -256,12 +287,24 @@ export function GamePanels({
           {isHost ? (
             <button
               className="primary"
+              disabled={
+                mode === "online" &&
+                (status !== "Conectado" ||
+                  (s.phase === "finished" &&
+                    s.players.filter((p) => p.connected && !p.withdrawn)
+                      .length < 2))
+              }
               onClick={() => action(s.phase === "scores" ? "next" : "replay")}
             >
               {s.phase === "scores" ? "Siguiente hoyo →" : "La revancha →"}
             </button>
           ) : (
             <p>Esperando al anfitrión…</p>
+          )}
+          {s.phase === "finished" && isHost && (
+            <button className="secondary" onClick={() => action("lobby")}>
+              Elegir otro recorrido
+            </button>
           )}
           <button className="text-button" onClick={leave}>
             Volver al inicio

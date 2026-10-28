@@ -6,7 +6,8 @@ import { Server, type Socket } from "socket.io";
 import { gzip as gzipCallback } from "node:zlib";
 import { promisify } from "node:util";
 const gzip = promisify(gzipCallback);
-import { Game, initPhysics } from "../shared/game";
+import { Game, initPhysics, canStart } from "../shared/game";
+import { isCircuitId } from "../shared/courses";
 await initPhysics();
 const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173").split(
   ",",
@@ -71,7 +72,10 @@ type Room = {
   touched: number;
 };
 const rooms = new Map<string, Room>();
-const capacity = Math.max(2, Math.min(8, Number(process.env.MAX_PLAYERS) || 8));
+const capacity = Math.max(
+  2,
+  Math.min(8, Math.floor(Number(process.env.MAX_PLAYERS)) || 8),
+);
 const snapshot = (r: Room) => r.game.state;
 const fail = (socket: Socket, message: string) =>
   socket.emit("notice", message);
@@ -80,7 +84,7 @@ io.on("connection", (socket) => {
   let pid = "";
   let bucket = 20;
   const refill = setInterval(() => (bucket = Math.min(20, bucket + 10)), 1000);
-  socket.on("action", (data: unknown) => {
+  socket.on("action", (data: unknown, ack?: () => void) => {
     if (--bucket < 0) return;
     if (!data || typeof data !== "object") return;
     const d = data as Record<string, unknown>;
@@ -93,7 +97,10 @@ io.on("connection", (socket) => {
           do {
             code = randomBytes(3).toString("hex").toUpperCase();
           } while (rooms.has(code));
+          if (d.circuit !== undefined && !isCircuitId(d.circuit))
+            throw Error("Recorrido inválido");
           const game = new Game();
+          if (isCircuitId(d.circuit)) game.selectCircuit(d.circuit);
           game.state.code = code;
           room = {
             game,
@@ -114,10 +121,20 @@ io.on("connection", (socket) => {
             if (typeof d.token !== "string" || !candidate.tokens.has(d.token))
               throw Error("Sesión no válida");
             pid = candidate.tokens.get(d.token)!;
+            const returning = candidate.game.state.players.find(
+              (p) => p.id === pid,
+            );
+            if (!returning || returning.withdrawn)
+              throw Error("Sesión no válida");
             const old = candidate.sockets.get(pid);
             if (old) io.sockets.sockets.get(old)?.disconnect(true);
-            candidate.game.state.players.find((p) => p.id === pid)!.connected =
-              true;
+            returning.connected = true;
+            if (
+              !candidate.game.state.players.some(
+                (p) => p.id === candidate.game.state.host && p.connected,
+              )
+            )
+              candidate.game.state.host = pid;
           } else {
             if (candidate.game.state.players.length >= capacity)
               throw Error("Sala llena");
@@ -146,18 +163,62 @@ io.on("connection", (socket) => {
       const s = room.game.state,
         p = s.players.find((p) => p.id === pid)!;
       room.touched = Date.now();
+      const revoke = (playerId: string) => {
+        for (const [token, owner] of room!.tokens) {
+          if (owner === playerId) room!.tokens.delete(token);
+        }
+      };
       switch (d.type) {
+        case "leave": {
+          const previous = room,
+            code = s.code;
+          room.game.withdraw(pid);
+          revoke(pid);
+          room.sockets.delete(pid);
+          if (s.host === pid)
+            s.host = s.players.find((p) => p.connected)?.id || "";
+          socket.leave(code);
+          room = undefined;
+          pid = "";
+          io.to(code).emit("state", snapshot(previous));
+          if (typeof ack === "function") ack();
+          return;
+        }
+        case "remove":
+          if (
+            s.host !== pid ||
+            s.phase !== "lobby" ||
+            typeof d.id !== "string" ||
+            !s.players.some((p) => p.id === d.id && !p.connected)
+          )
+            throw Error(
+              "Solo puedes quitar invitados desconectados de la sala",
+            );
+          room.game.removeFromLobby(d.id);
+          revoke(d.id);
+          break;
+        case "circuit":
+          if (s.host !== pid || !isCircuitId(d.circuit))
+            throw Error("Solo el anfitrión elige un recorrido válido");
+          room.game.selectCircuit(d.circuit);
+          break;
+        case "lobby":
+          if (s.host !== pid) throw Error("Solo el anfitrión vuelve a la sala");
+          room.game.returnToLobby();
+          break;
         case "ready":
           if (s.phase === "lobby") p.ready = !p.ready;
           break;
         case "start":
-          if (
-            s.host !== pid ||
-            s.players.length < 2 ||
-            s.players.some((p) => !p.ready || !p.connected) ||
-            s.phase !== "lobby"
-          )
-            throw Error("El anfitrión inicia cuando todos están listos");
+          if (s.host !== pid || !canStart(s))
+            throw Error(
+              "El anfitrión inicia con al menos dos jugadores conectados y listos",
+            );
+          for (const player of [...s.players])
+            if (!player.connected) {
+              room.game.removeFromLobby(player.id);
+              revoke(player.id);
+            }
           room.game.start();
           break;
         case "shoot":
@@ -173,13 +234,20 @@ io.on("connection", (socket) => {
           room.game.next();
           break;
         case "replay":
-          if (s.host !== pid || s.phase !== "finished")
+          if (
+            s.host !== pid ||
+            s.phase !== "finished" ||
+            s.players.filter((p) => p.connected && !p.withdrawn).length < 2
+          )
             throw Error("Acción no disponible");
+          s.players = s.players.filter((p) => p.connected && !p.withdrawn);
           room.game.start();
           break;
         default:
           throw Error("Acción desconocida");
       }
+      for (const [token, owner] of room.tokens)
+        if (!s.players.some((p) => p.id === owner)) room.tokens.delete(token);
       io.to(s.code).emit("state", snapshot(room));
     } catch (e) {
       fail(socket, e instanceof Error ? e.message : "Error de sala");
@@ -191,7 +259,10 @@ io.on("connection", (socket) => {
     room.sockets.delete(pid);
     const s = room.game.state,
       p = s.players.find((p) => p.id === pid);
-    if (p) p.connected = false;
+    if (p) {
+      p.connected = false;
+      if (s.phase === "lobby") p.ready = false;
+    }
     room.touched = Date.now();
     if (s.host === pid) s.host = s.players.find((p) => p.connected)?.id || pid;
     io.to(s.code).emit("state", snapshot(room));

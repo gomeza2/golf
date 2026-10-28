@@ -1,5 +1,13 @@
 import RAPIER from "@dimforge/rapier3d-compat";
-import { courses, type V3 } from "./courses";
+import {
+  getCircuit,
+  getCourse,
+  geometry,
+  blockPose,
+  type Block,
+  type CircuitId,
+  type V3,
+} from "./courses";
 let initialization: Promise<void> | undefined;
 export const initPhysics = () => (initialization ??= RAPIER.init());
 export const MAX_STROKES = 12;
@@ -11,6 +19,7 @@ export type Player = {
   scores: number[];
   strokes: number;
   done: boolean;
+  withdrawn: boolean;
   pos: V3;
   aces: number;
 };
@@ -18,6 +27,7 @@ export type State = {
   phase: "lobby" | "playing" | "scores" | "finished";
   players: Player[];
   hole: number;
+  circuit: CircuitId;
   turn: number;
   moving: boolean;
   time: number;
@@ -27,7 +37,12 @@ export type State = {
   code: string;
 };
 export function ranking(players: Player[]) {
-  return [...players].sort((a, b) => total(a) - total(b) || b.aces - a.aces);
+  return [...players].sort(
+    (a, b) =>
+      Number(a.withdrawn) - Number(b.withdrawn) ||
+      total(a) - total(b) ||
+      b.aces - a.aces,
+  );
 }
 export const total = (p: Player) =>
   p.scores.reduce((a, b) => a + b, 0) + p.strokes;
@@ -36,6 +51,7 @@ export class Game {
     phase: "lobby",
     players: [],
     hole: 0,
+    circuit: "sunset",
     turn: 0,
     moving: false,
     time: 0,
@@ -47,6 +63,7 @@ export class Game {
   world!: RAPIER.World;
   ball!: RAPIER.RigidBody;
   bars: RAPIER.RigidBody[] = [];
+  dynamicBlocks: { body: RAPIER.RigidBody; block: Block }[] = [];
   elapsed = 0;
   quiet = 0;
   last: V3 = { x: 0, y: 0, z: 0 };
@@ -61,7 +78,8 @@ export class Game {
       scores: [],
       strokes: 0,
       done: false,
-      pos: { ...courses[0].start },
+      withdrawn: false,
+      pos: { ...getCourse({ ...this.state, hole: 0 }).start },
       aces: 0,
     };
     this.state.players.push(p);
@@ -69,6 +87,7 @@ export class Game {
     return p;
   }
   start() {
+    this.state.players = this.state.players.filter((p) => !p.withdrawn);
     if (!this.state.players.length) throw Error("Faltan jugadores");
     this.state.hole = 0;
     for (const p of this.state.players) {
@@ -82,40 +101,40 @@ export class Game {
     this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this.world.timestep = 1 / 60;
     this.bars = [];
-    const c = courses[this.state.hole];
-    const box = (
-      pos: number[],
-      size: number[],
-      rotation = 0,
-      moving = false,
-    ) => {
-      let d = moving
+    const c = getCourse(this.state);
+    this.dynamicBlocks = [];
+    const box = (block: Block) => {
+      const pose = blockPose(block, this.state.time),
+        rotation = block.rotation || 0;
+      const sx = Math.sin(rotation / 2),
+        cx = Math.cos(rotation / 2),
+        sy = Math.sin(pose.yaw / 2),
+        cy = Math.cos(pose.yaw / 2);
+      const descriptor = block.moving
         ? RAPIER.RigidBodyDesc.kinematicPositionBased()
         : RAPIER.RigidBodyDesc.fixed();
-      d = d.setTranslation(pos[0], pos[1], pos[2]);
-      const b = this.world.createRigidBody(d);
-      b.setRotation(
-        { x: Math.sin(rotation / 2), y: 0, z: 0, w: Math.cos(rotation / 2) },
-        true,
+      const body = this.world.createRigidBody(
+        descriptor
+          .setTranslation(...pose.pos)
+          .setRotation({ x: sx * cy, y: cx * sy, z: sx * sy, w: cx * cy }),
       );
       this.world.createCollider(
-        RAPIER.ColliderDesc.cuboid(size[0] / 2, size[1] / 2, size[2] / 2)
+        RAPIER.ColliderDesc.cuboid(
+          block.size[0] / 2,
+          block.size[1] / 2,
+          block.size[2] / 2,
+        )
           .setRestitution(0.65)
           .setFriction(0.08),
-        b,
+        body,
       );
-      if (moving) this.bars.push(b);
+      if (block.moving) {
+        this.bars.push(body);
+        this.dynamicBlocks.push({ body, block });
+      }
     };
-    if (c.ramp) {
-      box([0, -0.2, 7], [12, 0.4, 10]);
-      box([0, 1, -1], [12, 0.4, 6.46], Math.atan(0.4));
-      box([0, 2.2, -8], [12, 0.4, 8]);
-    } else box([0, -0.2, 0], [12, 0.4, 24]);
-    box([-6.2, 2, 0], [0.4, 6, 24]);
-    box([6.2, 2, 0], [0.4, 6, 24]);
-    box([0, 2, -12.2], [12, 6, 0.4]);
-    box([0, 2, 12.2], [12, 6, 0.4]);
-    for (const b of c.blocks) box(b.pos, b.size, 0, b.moving);
+    const shape = geometry(c);
+    [...shape.surfaces, ...shape.walls, ...c.blocks].forEach(box);
     this.ball = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(c.start.x, c.start.y, c.start.z)
@@ -132,13 +151,16 @@ export class Game {
       this.ball,
     );
     for (const p of this.state.players) {
-      p.strokes = 0;
-      p.done = false;
+      p.strokes = p.withdrawn ? MAX_STROKES : 0;
+      p.done = p.withdrawn;
       p.pos = { ...c.start };
     }
     Object.assign(this.state, {
       phase: "playing",
-      turn: 0,
+      turn: Math.max(
+        0,
+        this.state.players.findIndex((p) => !p.withdrawn),
+      ),
       moving: false,
       deadline: this.state.time + 45,
       message: "Nuevo hoyo. ¡Busca tu línea!",
@@ -184,13 +206,18 @@ export class Game {
     const s = this.state;
     s.time += 1 / 60;
     if (s.phase !== "playing") return;
-    for (const b of this.bars) {
-      const a = Math.sin(s.time * 0.8) * 1.25;
-      b.setNextKinematicRotation({
+    for (const { body, block } of this.dynamicBlocks) {
+      const pose = blockPose(block, s.time);
+      body.setNextKinematicTranslation({
+        x: pose.pos[0],
+        y: pose.pos[1],
+        z: pose.pos[2],
+      });
+      body.setNextKinematicRotation({
         x: 0,
-        y: Math.sin(a / 2),
+        y: Math.sin(pose.yaw / 2),
         z: 0,
-        w: Math.cos(a / 2),
+        w: Math.cos(pose.yaw / 2),
       });
     }
     this.world.step();
@@ -208,7 +235,7 @@ export class Game {
       v = this.ball.linvel(),
       pos = this.ball.translation();
     p.pos = { ...pos };
-    const c = courses[s.hole];
+    const c = getCourse(s);
     const speed = Math.hypot(v.x, v.z);
     if (
       Math.hypot(pos.x - c.cup.x, pos.z - c.cup.z) < 0.48 &&
@@ -254,7 +281,10 @@ export class Game {
         p.scores.push(p.strokes);
         p.strokes = 0;
       }
-      s.phase = s.hole === courses.length - 1 ? "finished" : "scores";
+      s.phase =
+        s.hole === getCircuit(s.circuit).courses.length - 1
+          ? "finished"
+          : "scores";
       return;
     }
     do {
@@ -268,7 +298,86 @@ export class Game {
       this.load();
     }
   }
+  selectCircuit(circuit: CircuitId) {
+    if (this.state.phase !== "lobby")
+      throw Error("El recorrido se elige en la sala");
+    this.state.circuit = circuit;
+    for (const p of this.state.players) {
+      p.ready = false;
+      p.pos = { ...getCourse({ ...this.state, hole: 0 }).start };
+    }
+  }
+  removeFromLobby(id: string) {
+    if (this.state.phase !== "lobby") throw Error("La partida ya comenzó");
+    this.state.players = this.state.players.filter((p) => p.id !== id);
+    if (this.state.host === id)
+      this.state.host =
+        this.state.players.find((p) => p.connected)?.id ||
+        this.state.players[0]?.id ||
+        "";
+  }
+  withdraw(id: string) {
+    const s = this.state,
+      p = s.players.find((p) => p.id === id);
+    if (!p) return;
+    if (s.phase === "lobby") {
+      this.removeFromLobby(id);
+      return;
+    }
+    p.connected = false;
+    if (s.phase === "finished") return;
+    p.withdrawn = true;
+    if (s.phase === "playing" && !p.done) {
+      p.strokes = MAX_STROKES;
+      p.done = true;
+      if (s.players[s.turn].id === id) this.endTurn();
+    }
+    if (s.players.every((p) => p.withdrawn)) {
+      for (const p of s.players) {
+        while (p.scores.length < getCircuit(s.circuit).courses.length)
+          p.scores.push(MAX_STROKES);
+        p.strokes = 0;
+      }
+      s.moving = false;
+      s.phase = "finished";
+      s.message = "Partida abandonada";
+    }
+  }
+  returnToLobby() {
+    if (this.state.phase !== "finished")
+      throw Error("Termina el recorrido primero");
+    this.state.players = this.state.players.filter(
+      (p) => p.connected && !p.withdrawn,
+    );
+    this.state.hole = 0;
+    this.state.phase = "lobby";
+    this.state.moving = false;
+    for (const p of this.state.players) {
+      p.ready = false;
+      p.done = false;
+      p.strokes = 0;
+      p.scores = [];
+      p.aces = 0;
+      p.pos = { ...getCourse(this.state).start };
+    }
+  }
   dispose() {
     this.world?.free();
   }
+}
+
+export const canStart = (s: State) =>
+  s.phase === "lobby" &&
+  s.players.filter((p) => p.connected).length >= 2 &&
+  s.players.filter((p) => p.connected).every((p) => p.ready);
+export function position(player: Player, players: Player[]) {
+  const sorted = ranking(players);
+  return (
+    sorted.findIndex(
+      (p) =>
+        p.withdrawn === player.withdrawn &&
+        total(p) === total(player) &&
+        p.aces === player.aces,
+    ) + 1
+  );
 }

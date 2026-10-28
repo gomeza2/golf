@@ -715,3 +715,71 @@ td b {
 button > span {
   font-family: Arial, sans-serif;
 }
+.circuit-picker {
+  border: 0;
+  padding: 0;
+  margin: 24px 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.circuit-picker legend {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #c2ceba;
+  margin-bottom: 12px;
+}
+.circuit-picker button {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 14px;
+  border: 1px solid #ffffff26;
+  background: #ffffff04;
+  padding: 16px;
+  border-radius: 7px;
+  min-height: 100px;
+}
+.circuit-picker button[aria-pressed="true"] {
+  border-color: #f5cc77;
+  background: #f5cc770c;
+}
+.circuit-picker button:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+.circuit-number {
+  font:
+    700 28px "Barlow Condensed",
+    sans-serif;
+  color: #9cb5ad;
+}
+.circuit-picker strong,
+.circuit-picker small,
+.circuit-picker b {
+  display: block;
+}
+.circuit-picker strong {
+  font-size: 15px;
+}
+.circuit-picker small {
+  font-size: 11px;
+  color: #b3c5b8;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+.circuit-picker b {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #edca7b;
+}
+.circuit-picker i {
+  margin-left: auto;
+}
+.players .text-button {
+  font-size: 10px;
+  padding: 6px;
+}
+.players strong {
+  overflow-wrap: anywhere;
+}

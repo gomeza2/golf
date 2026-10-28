@@ -1,14 +1,21 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useRef, useState } from "react";
 import * as THREE from "three";
-import { courses, colors, type Block } from "../shared/courses";
+import {
+  getCourse,
+  getCircuit,
+  geometry,
+  blockPose,
+  colors,
+  type Block,
+} from "../shared/courses";
 import type { State } from "../shared/game";
 function Box({ b, time }: { b: Block; time: number }) {
-  const a = b.moving ? Math.sin(time * 0.8) * 1.25 : 0;
+  const pose = blockPose(b, time);
   return (
     <mesh
-      position={b.pos}
-      rotation={[b.rotation || 0, a, 0]}
+      position={pose.pos}
+      rotation={[b.rotation || 0, pose.yaw, 0]}
       castShadow
       receiveShadow
     >
@@ -62,7 +69,7 @@ function Camera({ s, overview }: { s: State; overview: boolean }) {
   const { camera, size } = useThree();
   const target = useRef(new THREE.Vector3());
   useFrame((_, dt) => {
-    const p = s.players[s.turn]?.pos || courses[s.hole].start;
+    const p = s.players[s.turn]?.pos || getCourse(s).start;
     const focus = overview
       ? new THREE.Vector3(0, 0, 0)
       : new THREE.Vector3(p.x * 0.25, p.y * 0.4, p.z * 0.35);
@@ -96,25 +103,28 @@ function World({
   overview: boolean;
   onAim: (a: number) => void;
 }) {
-  const c = courses[s.hole];
+  const c = getCourse(s),
+    theme = getCircuit(s.circuit),
+    shape = geometry(c);
   const p = s.players[s.turn]?.pos || c.start;
-  const blocks: Block[] = [
-    { pos: [-6.2, 1, 0], size: [0.4, 2, 24] },
-    { pos: [6.2, 1, 0], size: [0.4, 2, 24] },
-    { pos: [0, 1, 12.2], size: [12, 2, 0.4] },
-    { pos: [0, 1, -12.2], size: [12, 2, 0.4] },
-    ...c.blocks,
-  ];
+  const blocks = shape.walls
+    .map((b) => ({ ...b, color: theme.edge }))
+    .concat(
+      c.blocks.map((b) => ({
+        ...b,
+        color: b.color || (b.moving ? theme.accent : theme.edge),
+      })),
+    );
   return (
     <>
-      <color attach="background" args={["#163d3a"]} />
-      <fog attach="fog" args={["#163d3a", 100, 230]} />
+      <color attach="background" args={[theme.background]} />
+      <fog attach="fog" args={[theme.background, 100, 230]} />
       <ambientLight intensity={1.15} />
       <hemisphereLight args={["#e9fff5", "#6b7050", 1.3]} />
       <directionalLight
         position={[-12, 25, 8]}
-        intensity={3}
-        color="#ffe2b2"
+        intensity={s.circuit === "moonlight" ? 2 : 3}
+        color={s.circuit === "moonlight" ? "#a6d8ff" : "#ffe2b2"}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-20}
@@ -125,30 +135,12 @@ function World({
       <Camera s={s} overview={overview} />
       <mesh position={[0, -1, 0]} receiveShadow>
         <boxGeometry args={[14, 1.5, 26]} />
-        <meshStandardMaterial color="#234b43" />
-      </mesh>
-      {(c.ramp
-        ? [
-            { pos: [0, -0.2, 7], size: [12, 0.4, 10] },
-            {
-              pos: [0, 1, -1],
-              size: [12, 0.4, 6.46],
-              rotation: Math.atan(0.4),
-            },
-            { pos: [0, 2.2, -8], size: [12, 0.4, 8] },
-          ]
-        : [{ pos: [0, -0.2, 0], size: [12, 0.4, 24] }]
-      ).map((b, i) => (
-        <Box
-          key={i}
-          b={{
-            ...b,
-            pos: b.pos as [number, number, number],
-            size: b.size as [number, number, number],
-            color: i % 2 ? "#419979" : "#36876c",
-          }}
-          time={s.time}
+        <meshStandardMaterial
+          color={s.circuit === "moonlight" ? "#284658" : "#234b43"}
         />
+      </mesh>
+      {shape.surfaces.map((b, i) => (
+        <Box key={i} b={{ ...b, color: theme.ground }} time={s.time} />
       ))}
       {Array.from({ length: 12 }, (_, i) => (
         <mesh
@@ -178,7 +170,7 @@ function World({
         </mesh>
         <mesh position={[0.95, 2.1, 0]}>
           <boxGeometry args={[0.9, 0.55, 0.04]} />
-          <meshStandardMaterial color="#ffcc68" />
+          <meshStandardMaterial color={theme.accent} />
         </mesh>
       </group>
       {s.players.length ? (
@@ -238,14 +230,24 @@ function World({
             </mesh>
             <mesh position={[0, 2.5, 0]} castShadow>
               <icosahedronGeometry args={[1.4, 0]} />
-              <meshStandardMaterial color={i % 2 ? "#638f68" : "#8aa472"} />
+              <meshStandardMaterial
+                color={
+                  s.circuit === "moonlight"
+                    ? i % 2
+                      ? "#557c94"
+                      : "#689d9b"
+                    : i % 2
+                      ? "#638f68"
+                      : "#8aa472"
+                }
+              />
             </mesh>
           </group>
         );
       })}
       <mesh position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#173f3b" roughness={0.9} />
+        <meshStandardMaterial color={theme.background} roughness={0.9} />
       </mesh>
     </>
   );

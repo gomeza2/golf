@@ -110,13 +110,171 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
     await b.getByRole("button", { name: /Unirme/ }).click();
     await a.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await b.getByRole("button", { name: "Estoy listo", exact: true }).click();
+    await expect(
+      a.getByRole("button", { name: /Comenzar partida/ }),
+    ).toBeEnabled();
+    await a.getByRole("button", { name: /Jardín lunar/ }).click();
+    await expect(
+      a.getByRole("button", { name: /Comenzar partida/ }),
+    ).toBeDisabled();
+    await expect(
+      b.getByRole("button", { name: /Jardín lunar/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      b.getByRole("button", { name: /Club del atardecer/ }),
+    ).toBeDisabled();
+    await a.getByRole("button", { name: "Estoy listo", exact: true }).click();
+    await b.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await a.getByRole("button", { name: /Comenzar partida/ }).click();
     await expect(a.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
     await expect(b.getByRole("button", { name: /GOLPEAR/ })).toBeDisabled();
     await a.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(b.getByText("Pelota en movimiento")).toBeVisible();
+    await expect(
+      b.getByRole("heading", { name: /Las diagonales/ }),
+    ).toBeVisible();
+    await a.getByRole("button", { name: "Salir", exact: true }).click();
+    await expect(b.locator(".turn-toast strong")).toHaveText("Luis");
+    await expect(b.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+    await expect(b.locator(".leaderboard")).toContainText("Ana · retirado");
+    expect(
+      await a.evaluate(() => sessionStorage.getItem("golf-session")),
+    ).toBeNull();
   } finally {
     await ca.close();
     await cb.close();
+  }
+});
+
+const openClient = async () => {
+  const socket = io("http://localhost:3001", { transports: ["websocket"] });
+  await waitEvent(socket, "connect");
+  return socket;
+};
+const enter = async (socket: Socket, data: Record<string, unknown>) => {
+  const pending = waitEvent(socket, "session");
+  socket.emit("action", data);
+  return await pending;
+};
+test("lobby departures revoke tokens, guest permissions hold, and host can remove a disconnected guest", async () => {
+  const sockets: Socket[] = [];
+  try {
+    const a = await openClient(),
+      b = await openClient(),
+      c = await openClient();
+    sockets.push(a, b, c);
+    const sa = await enter(a, {
+        type: "create",
+        name: "Ana",
+        circuit: "moonlight",
+      }),
+      sb = await enter(b, { type: "join", name: "Beto", code: sa.code });
+    const sc = await enter(c, { type: "join", name: "Cris", code: sa.code });
+    let pending = waitEvent(b, "notice");
+    b.emit("action", { type: "circuit", circuit: "sunset" });
+    expect(await pending).toContain("anfitrión");
+    pending = waitState(a, (s) => s.players.length === 2);
+    await new Promise<void>((resolve) =>
+      c.emit("action", { type: "leave" }, resolve),
+    );
+    await pending;
+    pending = waitEvent(c, "notice");
+    c.emit("action", { type: "resume", code: sa.code, token: sc.token });
+    expect(await pending).toBe("Sesión no válida");
+    const c2 = await enter(c, {
+      type: "join",
+      name: "Cris de nuevo",
+      code: sa.code,
+    });
+    pending = waitState(a, (s) =>
+      s.players.some((p: any) => p.id === c2.id && !p.connected),
+    );
+    c.disconnect();
+    await pending;
+    pending = waitState(b, (s) => s.players.length === 2);
+    a.emit("action", { type: "remove", id: c2.id });
+    await pending;
+    pending = waitState(a, (s) => s.players.every((p: any) => p.ready));
+    a.emit("action", { type: "ready" });
+    b.emit("action", { type: "ready" });
+    await pending;
+    pending = waitState(b, (s) => s.phase === "playing");
+    a.emit("action", { type: "start" });
+    const state = await pending;
+    expect(state.circuit).toBe("moonlight");
+    expect(state.players.map((p: any) => p.id)).toEqual([sa.id, sb.id]);
+    a.disconnect();
+    b.disconnect();
+    const returning = await openClient();
+    sockets.push(returning);
+    await enter(returning, { type: "resume", code: sa.code, token: sa.token });
+    const recovered = await waitState(returning, (s) =>
+      s.players.some((p: any) => p.id === sa.id && p.connected),
+    );
+    expect(recovered.host).toBe(sa.id);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+  }
+});
+test("eight real clients fit a private room and a ninth is rejected", async () => {
+  const sockets: Socket[] = [];
+  try {
+    const host = await openClient();
+    sockets.push(host);
+    const session = await enter(host, { type: "create", name: "Host" });
+    for (let i = 1; i < 8; i++) {
+      const s = await openClient();
+      sockets.push(s);
+      await enter(s, { type: "join", code: session.code, name: "Player " + i });
+    }
+    const ninth = await openClient();
+    sockets.push(ninth);
+    let pending = waitEvent(ninth, "notice");
+    ninth.emit("action", { type: "join", code: session.code, name: "Ninth" });
+    expect(await pending).toBe("Sala llena");
+    pending = waitState(
+      host,
+      (s) => s.players.length === 8 && s.players.every((p: any) => p.ready),
+    );
+    for (const s of sockets.slice(0, 8)) s.emit("action", { type: "ready" });
+    await pending;
+    pending = waitState(host, (s) => s.phase === "playing");
+    host.emit("action", { type: "start" });
+    expect((await pending).players).toHaveLength(8);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+  }
+});
+test("touch aiming never shoots accidentally and the lunar circuit works with corrupt recovery storage", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+    deviceScaleFactor: 1,
+  });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() =>
+      sessionStorage.setItem("golf-session", "{broken"),
+    );
+    await page.goto("/");
+    await page.getByRole("button", { name: /Jugar en este/ }).tap();
+    await page.getByRole("button", { name: /Jardín lunar/ }).tap();
+    await page.getByRole("button", { name: /Comenzar recorrido/ }).tap();
+    await expect(
+      page.getByRole("heading", { name: /Las diagonales/ }),
+    ).toBeVisible();
+    await page.touchscreen.tap(220, 400);
+    await expect(
+      page.getByRole("slider", { name: "Ángulo", exact: true }),
+    ).not.toHaveValue("0");
+    await expect(page.locator(".turn-toast b")).toHaveText("0/12");
+    await page.getByRole("button", { name: /GOLPEAR/ }).tap();
+    await expect(page.getByText("Pelota en movimiento")).toBeVisible();
+    await page.screenshot({ path: "work/lunar-mobile.png" });
+  } finally {
+    await context.close();
   }
 });

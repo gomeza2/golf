@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { io, type Socket } from "socket.io-client";
 import { Game, initPhysics, type State } from "../shared/game";
-import { colors } from "../shared/courses";
+import { colors, getCircuit, type CircuitId } from "../shared/courses";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
+import { CircuitPicker } from "./CircuitPicker";
+import { readLocal, saveLocal, readSession, saveSession } from "./storage";
 import "@fontsource/barlow-condensed/700.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/700.css";
@@ -14,6 +16,7 @@ const initial: State = {
   phase: "lobby",
   players: [],
   hole: 0,
+  circuit: "sunset",
   turn: 0,
   moving: false,
   time: 0,
@@ -28,8 +31,9 @@ function App() {
       "home",
     ),
     [mode, setMode] = useState<"local" | "online">("local"),
+    [circuit, setCircuit] = useState<CircuitId>("sunset"),
     [names, setNames] = useState(["Golfista 1", "Golfista 2"]),
-    [name, setName] = useState(localStorage.getItem("golf-name") || ""),
+    [name, setName] = useState(readLocal("golf-name")),
     [code, setCode] = useState(
       new URLSearchParams(location.search).get("room") || "",
     ),
@@ -40,9 +44,7 @@ function App() {
     [power, setPower] = useState(0.55),
     [overview, setOverview] = useState(true),
     [settings, setSettings] = useState(false),
-    [volume, setVolume] = useState(
-      Number(localStorage.getItem("golf-volume") ?? ".6"),
-    ),
+    [volume, setVolume] = useState(Number(readLocal("golf-volume", ".6"))),
     [ready, setReady] = useState(false);
   const game = useRef<Game | null>(null),
     socket = useRef<Socket | null>(null),
@@ -68,7 +70,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
   useEffect(() => {
-    localStorage.setItem("golf-volume", String(volume));
+    saveLocal("golf-volume", String(volume));
   }, [volume]);
   useEffect(() => {
     const key = `${s.hole}:${s.turn}:${s.phase}`;
@@ -122,6 +124,7 @@ function App() {
     socket.current?.disconnect();
     game.current?.dispose();
     const g = new Game();
+    g.selectCircuit(circuit);
     names.forEach((n, i) => g.add(String(i), n));
     g.start();
     game.current = g;
@@ -144,48 +147,78 @@ function App() {
     });
     socket.current = sock;
     sock.on("connect", () => {
-      setStatus("Conectado");
-      const saved = JSON.parse(
-        sessionStorage.getItem("golf-session") || "null",
-      );
+      if (socket.current !== sock) return;
+      setStatus("Recuperando sesión…");
+      const saved = readSession();
       sock.emit(
         "action",
         saved && type === "resume"
           ? { type: "resume", ...saved }
-          : { type, name, code: code.trim().toUpperCase() },
+          : { type, name, code: code.trim().toUpperCase(), circuit },
       );
     });
     sock.on("session", (session) => {
+      if (socket.current !== sock) return;
+      setStatus("Conectado");
       setId(session.id);
       setCode(session.code);
-      sessionStorage.setItem("golf-session", JSON.stringify(session));
-      localStorage.setItem("golf-name", name);
+      saveSession(session);
+      saveLocal("golf-name", name);
       setScreen("game");
     });
-    sock.on("state", (state: State) => setS(state));
-    sock.on("notice", (msg: string) => {
-      setError(msg);
-      if (msg === "Sesión no válida" || msg === "Sala inexistente o caducada")
-        sessionStorage.removeItem("golf-session");
+    sock.on("state", (state: State) => {
+      if (socket.current === sock) setS(state);
     });
-    sock.on("connect_error", () =>
-      setStatus("Servidor no disponible. Reintentando…"),
+    sock.on("notice", (msg: string) => {
+      if (socket.current !== sock) return;
+      setError(msg);
+      if (msg === "Sesión no válida" || msg === "Sala inexistente o caducada") {
+        saveSession(null);
+        setStatus("Sesión no recuperada");
+      }
+    });
+    sock.on(
+      "connect_error",
+      () =>
+        socket.current === sock &&
+        setStatus("Servidor no disponible. Reintentando…"),
     );
     sock.on("disconnect", () => {
+      if (socket.current !== sock) return;
       setStatus("Desconectado. Reconectando…");
       type = "resume";
     });
   }
-  function action(type: string) {
-    if (mode === "online") socket.current?.emit("action", { type });
-    else if (game.current) {
+  function action(type: string, value?: string) {
+    if (mode === "online") {
+      if (!socket.current?.connected || status !== "Conectado") {
+        setError("Recupera la conexión antes de continuar");
+        return;
+      }
+      socket.current.emit("action", {
+        type,
+        ...(type === "remove" ? { id: value } : { circuit: value }),
+      });
+    } else if (game.current) {
+      if (type === "lobby") {
+        game.current.dispose();
+        game.current = null;
+        setScreen("local");
+        return;
+      }
       type === "next" ? game.current.next() : game.current.start();
       setS(structuredClone(game.current.state));
     }
   }
   function leave() {
-    socket.current?.disconnect();
+    const previous = socket.current;
     socket.current = null;
+    if (previous?.connected)
+      previous
+        .timeout(1500)
+        .emit("action", { type: "leave" }, () => previous.disconnect());
+    else previous?.disconnect();
+    if (mode === "online") saveSession(null);
     game.current?.dispose();
     game.current = null;
     setS(initial);
@@ -197,7 +230,7 @@ function App() {
     <main>
       <div className={"scene " + (screen === "game" ? "" : "hero-scene")}>
         <Scene
-          s={s}
+          s={screen === "game" ? s : { ...initial, circuit }}
           angle={angle}
           power={power}
           overview={screen !== "game" || overview}
@@ -216,7 +249,12 @@ function App() {
           MGB<span>MINI GOLF BATTLE</span>
         </button>
         <div className="header-right">
-          <span className="edition">CLUB DEL ATARDECER / VOL. 01</span>
+          <span className="edition">
+            {getCircuit(
+              screen === "game" ? s.circuit : circuit,
+            ).name.toUpperCase()}{" "}
+            / VOL. 02
+          </span>
           <button
             className="icon"
             aria-label="Ajustes"
@@ -245,7 +283,7 @@ function App() {
             Mucha <em>rivalidad.</em>
           </h1>
           <p>
-            Tres hoyos. Tus amigos. Una sola victoria.
+            Dos recorridos. Tus amigos. Una sola victoria.
             <br />
             Encuentra tu línea en el club del atardecer.
           </p>
@@ -264,7 +302,7 @@ function App() {
           </div>
           <div className="hero-meta">
             <span>01—08 JUGADORES</span>
-            <span>3 HOYOS CON PERSONALIDAD</span>
+            <span>6 HOYOS CON PERSONALIDAD</span>
             <span>SIN REGISTRO</span>
           </div>
           <div className="course-tag">
@@ -325,13 +363,7 @@ function App() {
               + Añadir jugador
             </button>
           )}
-          <div className="route-preview">
-            01 Jardín de rebotes <span>PAR 3</span>
-            <br />
-            02 La torre dorada <span>PAR 4</span>
-            <br />
-            03 El péndulo <span>PAR 4</span>
-          </div>
+          <CircuitPicker value={circuit} onChange={setCircuit} />
           <button
             className="primary"
             disabled={!ready || names.some((n) => !n.trim())}
@@ -360,6 +392,7 @@ function App() {
               placeholder="¿Cómo te llamas?"
             />
           </label>
+          <CircuitPicker value={circuit} onChange={setCircuit} />
           <button
             className="primary"
             disabled={!name.trim() || !ready}
@@ -384,7 +417,7 @@ function App() {
           >
             Unirme a la sala
           </button>
-          {sessionStorage.getItem("golf-session") && (
+          {readSession() && (
             <button className="text-button" onClick={() => connect("resume")}>
               Recuperar mi sesión
             </button>

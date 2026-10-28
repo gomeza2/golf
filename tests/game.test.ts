@@ -1,6 +1,14 @@
 import { beforeAll, describe, it, expect, afterEach } from "vitest";
-import { Game, initPhysics, ranking, MAX_STROKES, total } from "../shared/game";
-import { courses } from "../shared/courses";
+import {
+  Game,
+  initPhysics,
+  ranking,
+  MAX_STROKES,
+  total,
+  canStart,
+  position,
+} from "../shared/game";
+import { courses, getCourse, geometry } from "../shared/courses";
 beforeAll(async () => {
   await initPhysics();
 });
@@ -148,4 +156,126 @@ describe("authoritative rules and physics", () => {
     for (let i = 0; i < 60; i++) g.tick();
     expect(Math.abs(g.bars[0].rotation().y)).toBeGreaterThan(0.1);
   });
+});
+
+describe("circuits and session lifecycle", () => {
+  it("requires two connected prepared players, and circuit changes clear readiness", () => {
+    const g = new Game();
+    games.push(g);
+    const a = g.add("a", "Ana"),
+      b = g.add("b", "Beto"),
+      c = g.add("c", "Cris");
+    a.ready = b.ready = true;
+    c.connected = false;
+    expect(canStart(g.state)).toBe(true);
+    g.selectCircuit("moonlight");
+    expect(g.state.players.every((p) => !p.ready)).toBe(true);
+    expect(canStart(g.state)).toBe(false);
+    g.removeFromLobby("c");
+    expect(g.state.players).toHaveLength(2);
+    a.ready = b.ready = true;
+    expect(canStart(g.state)).toBe(true);
+    g.start();
+    expect(getCourse(g.state).name).toBe("Las diagonales");
+    expect(() => g.selectCircuit("sunset")).toThrow();
+  });
+  it("removes guests who leave the lobby and transfers host ownership", () => {
+    const g = new Game();
+    games.push(g);
+    g.add("a", "Ana");
+    g.add("b", "Beto");
+    g.withdraw("a");
+    expect(g.state.players.map((p) => p.id)).toEqual(["b"]);
+    expect(g.state.host).toBe("b");
+  });
+  it("forfeits a moving player immediately and skips their future turns", () => {
+    const g = make();
+    g.shoot("0", 0, 0.5);
+    g.withdraw("0");
+    expect(g.state.moving).toBe(false);
+    expect(g.state.turn).toBe(1);
+    expect(g.state.players[0].withdrawn).toBe(true);
+    expect(g.state.players[0].strokes).toBe(12);
+    let guard = 0;
+    while (g.state.phase !== "finished" && guard++ < 50) {
+      if (g.state.phase === "scores") g.next();
+      else {
+        g.state.time = g.state.deadline + 1;
+        g.tick();
+      }
+    }
+    expect(g.state.phase).toBe("finished");
+    expect(g.state.players[0].scores).toEqual([12, 12, 12]);
+    expect(ranking(g.state.players)[0].id).toBe("1");
+  });
+  it("ends an entirely abandoned match and allows a fresh lobby after a completed game", () => {
+    const g = make();
+    g.withdraw("0");
+    g.withdraw("1");
+    expect(g.state.phase).toBe("finished");
+    expect(g.state.players.every((p) => p.scores.length === 3)).toBe(true);
+    const h = make();
+    h.state.phase = "finished";
+    h.returnToLobby();
+    h.selectCircuit("moonlight");
+    expect(
+      h.state.players.every((p) => !p.ready && p.scores.length === 0),
+    ).toBe(true);
+    expect(h.state.phase).toBe("lobby");
+  });
+  it("preserves ties in displayed positions and places withdrawals after finishers", () => {
+    const g = make(3);
+    for (const p of g.state.players) p.scores = [4];
+    g.state.players[2].withdrawn = true;
+    expect(position(g.state.players[0], g.state.players)).toBe(1);
+    expect(position(g.state.players[1], g.state.players)).toBe(1);
+    expect(position(g.state.players[2], g.state.players)).toBe(3);
+  });
+  it("uses shared geometry and physically translates the lunar gates", () => {
+    const g = new Game();
+    games.push(g);
+    g.selectCircuit("moonlight");
+    g.add("a", "Ana");
+    g.start();
+    g.state.hole = 1;
+    g.load();
+    const x = g.bars[0].translation().x;
+    for (let i = 0; i < 90; i++) g.tick();
+    expect(Math.abs(g.bars[0].translation().x - x)).toBeGreaterThan(1);
+    expect(g.bars[0].rotation().y).toBe(0);
+    const shape = geometry(getCourse(g.state));
+    expect(shape.walls.every((w) => w.size[1] === 0.9)).toBe(true);
+  });
+});
+
+it("plays the complete lunar circuit from the tees, including live sliding gates", () => {
+  const g = new Game();
+  games.push(g);
+  g.selectCircuit("moonlight");
+  g.add("a", "Ana");
+  g.start();
+  const routes = [
+    [
+      [1.1863183977578735, 0.45],
+      [-0.010982696204455439, 0.25],
+      [-1.4522786397823277, 0.5],
+      [-0.035975307594120126, 0.65],
+      [1.3485712430036696, 0.35],
+    ],
+    [[0.6460553845713439, 0.8]],
+    [
+      [-1.3924966677897854, 0.45],
+      [0.0862968889607296, 0.8],
+    ],
+  ];
+  for (let hole = 0; hole < 3; hole++) {
+    for (const [angle, power] of routes[hole]) {
+      expect(g.shoot("a", angle, power)).toBe(true);
+      settle(g);
+    }
+    expect(g.state.players[0].done).toBe(true);
+    if (hole < 2) g.next();
+  }
+  expect(g.state.phase).toBe("finished");
+  expect(g.state.players[0].scores).toEqual([5, 1, 2]);
 });
