@@ -82,7 +82,8 @@ export const colors = [
   "#f6f0da",
 ];
 
-export type CircuitId = "sunset" | "moonlight" | "park" | "riviera";
+export type CircuitId =
+  "sunset" | "moonlight" | "park" | "riviera" | "masters" | "tour";
 export const nightCourses: Course[] = [
   {
     name: "Las diagonales",
@@ -291,6 +292,103 @@ export const rivieraCourses: Course[] = [
     ],
   },
 ];
+export const mastersCourses: Course[] = [
+  {
+    name: "La costura",
+    par: 5,
+    subtitle:
+      "Cose las diagonales con golpes cortos. El control gana a la fuerza.",
+    dimensions: { width: 14, length: 48 },
+    start: { x: -4, y: 0.24, z: 21 },
+    cup: { x: 4, y: 0, z: -21 },
+    blocks: [
+      { ...wall(-2, 10, 8, 0.5), yaw: -0.3 },
+      { ...wall(2, -2, 8, 0.5), yaw: 0.3 },
+      { ...wall(-2, -12, 6, 0.5), yaw: -0.3 },
+    ],
+    sand: [{ x: 4, z: -15, width: 4, length: 3, y: 0 }],
+  },
+  {
+    name: "El ocho",
+    par: 6,
+    subtitle:
+      "Dos cambios de lado y un péndulo. No pierdas la siguiente salida de vista.",
+    dimensions: { width: 18, length: 54 },
+    start: { x: -5, y: 0.24, z: 24 },
+    cup: { x: 5, y: 0, z: -24 },
+    blocks: [
+      wall(-3, 14, 10, 0.5),
+      wall(3, 2, 10, 0.5),
+      wall(-3, -10, 10, 0.5),
+      { pos: [2, 0.5, -19], size: [5, 1, 0.4], moving: true },
+    ],
+  },
+  {
+    name: "La terraza",
+    par: 6,
+    subtitle:
+      "Una larga subida y un green elevado. Cuida el aterrizaje: aquí el suelo absorbe la caída.",
+    dimensions: { width: 20, length: 60 },
+    start: { x: 0, y: 0.24, z: 27 },
+    cup: { x: 6, y: 3, z: -27 },
+    greenBounds: { minX: -10, maxX: 10, minZ: -30, maxZ: -5 },
+    terrain: [
+      deck(0, 24, 20, 12),
+      rampDeck(0, 12, 18, 6, 0, 3),
+      deck(0, 0.5, 12, 11, 3),
+    ],
+    blocks: [
+      { pos: [-2, 3.4, -14], size: [11, 0.8, 0.5], yaw: -0.25 },
+      { pos: [10.2, 3.45, -17.5], size: [0.4, 0.9, 25] },
+      { pos: [-10.2, 3.45, -17.5], size: [0.4, 0.9, 25] },
+      { pos: [0, 3.45, -30.2], size: [20, 0.9, 0.4] },
+    ],
+  },
+  {
+    name: "Dos canales",
+    par: 7,
+    subtitle:
+      "Sesenta y seis metros: cruza por la izquierda, cambia de orilla y encuentra el segundo puente.",
+    dimensions: { width: 20, length: 66 },
+    start: { x: -5, y: 0.24, z: 30 },
+    cup: { x: 5, y: 0, z: -30 },
+    greenBounds: { minX: -10, maxX: 10, minZ: -33, maxZ: -14 },
+    terrain: [
+      deck(0, 23.5, 20, 19),
+      deck(-5, 10, 3.5, 8),
+      deck(0, 0, 20, 12),
+      deck(5, -10, 3.5, 8),
+    ],
+    water: [
+      { x: 0, z: 10, width: 20, length: 8, y: -0.3 },
+      { x: 0, z: -10, width: 20, length: 8, y: -0.3 },
+    ],
+    sand: [{ x: 0, z: 0, width: 5, length: 5, y: 0 }],
+    blocks: [{ ...wall(-2, -22, 8, 0.5), yaw: -0.3 }],
+  },
+  {
+    name: "El último aliento",
+    par: 7,
+    subtitle:
+      "Setenta y dos metros de temple. Coloca cada golpe para preparar el siguiente.",
+    dimensions: { width: 22, length: 72 },
+    start: { x: -6, y: 0.24, z: 33 },
+    cup: { x: 6, y: 0, z: -33 },
+    blocks: [
+      { ...wall(-3, 20, 12, 0.6), yaw: -0.2 },
+      { ...wall(3, 0, 12, 0.6), yaw: 0.2 },
+      { pos: [0, 0.5, -23], size: [8, 1, 0.4], moving: true },
+    ],
+    sand: [{ x: -6, z: -11, width: 5, length: 5, y: 0 }],
+  },
+];
+export const uniqueCourses = [
+  ...courses,
+  ...nightCourses,
+  ...parkCourses,
+  ...rivieraCourses,
+  ...mastersCourses,
+];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
   Math.abs(p.z - zone.z) < zone.length / 2 + margin;
@@ -339,6 +437,27 @@ export const circuits = [
     edge: "#d7c6a1",
     background: "#153d47",
     accent: "#f4b36b",
+  },
+  {
+    id: "masters" as const,
+    name: "Desafío Maestro",
+    description: "5 hoyos de 48–72 m. Precisión, desniveles y dos canales.",
+    courses: mastersCourses,
+    ground: "#3c7d64",
+    edge: "#d8c39a",
+    background: "#233c3f",
+    accent: "#e8a785",
+  },
+  {
+    id: "tour" as const,
+    name: "Vuelta completa",
+    description:
+      "Los 18 hoyos en una sola partida, desde el jardín hasta el último desafío.",
+    courses: uniqueCourses,
+    ground: "#3e8469",
+    edge: "#e5cda6",
+    background: "#173c3c",
+    accent: "#f4cf7d",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>

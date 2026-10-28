@@ -16,7 +16,9 @@ import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
 import { useTurnPresentation } from "./useTurnPresentation";
 import { AppErrorBoundary } from "./AppErrorBoundary";
-import { CircuitPicker } from "./CircuitPicker";
+import { ClubCatalog, SelectedRound } from "./ClubCatalog";
+import { isControlMode } from "./shotControls";
+import { useShotControls, type Shot } from "./useShotControls";
 import { readLocal, saveLocal, readSession, saveSession } from "./storage";
 import "@fontsource/barlow-condensed/700.css";
 import "@fontsource/dm-sans/400.css";
@@ -57,6 +59,10 @@ function App() {
     [id, setId] = useState(""),
     [angle, setAngle] = useState(0),
     [power, setPower] = useState(0.55),
+    [controlMode, setControlMode] = useState(() => {
+      const saved = readLocal("golf-control-mode");
+      return isControlMode(saved) ? saved : "classic";
+    }),
     [style, setStyle] = useState<ShotStyle>("putt"),
     [overview, setOverview] = useState(false),
     [settings, setSettings] = useState(false),
@@ -166,15 +172,38 @@ function App() {
     !settings &&
     !transitioning &&
     (mode === "local" || (current?.id === id && status === "Conectado"));
-  const shoot = () => {
+  const shoot = (shot?: Shot) => {
     if (!canShoot) return;
     tone("shot", volume);
     if (mode === "local") {
-      game.current?.shoot(current.id, angle, power, style);
+      game.current?.shoot(
+        current.id,
+        shot?.angle ?? angle,
+        shot?.power ?? power,
+        style,
+      );
       setS(structuredClone(game.current!.state));
     } else
-      socket.current?.emit("action", { type: "shoot", angle, power, style });
+      socket.current?.emit("action", {
+        type: "shoot",
+        angle: shot?.angle ?? angle,
+        power: shot?.power ?? power,
+        style,
+      });
   };
+  const controls = useShotControls({
+    mode: controlMode,
+    canShoot,
+    turnKey,
+    angle,
+    power,
+    setAngle,
+    setPower,
+    fire: shoot,
+  });
+  const controlsRef = useRef({ controls, controlMode });
+  controlsRef.current = { controls, controlMode };
+  useEffect(() => saveLocal("golf-control-mode", controlMode), [controlMode]);
   const shotRef = useRef(shoot);
   shotRef.current = shoot;
   useEffect(() => {
@@ -184,8 +213,11 @@ function App() {
         ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "].includes(e.key)
       ) {
         e.preventDefault();
-        if (e.key === " ") shotRef.current();
-        else if (e.key === "ArrowLeft")
+        if (e.key === " ") {
+          if (controlsRef.current.controlMode === "pulse") {
+            if (!e.repeat) controlsRef.current.controls.start();
+          } else if (!controlsRef.current.controls.active) shotRef.current();
+        } else if (e.key === "ArrowLeft")
           setAngle((a) => wrapAngle(a - (e.shiftKey ? 0.005 : 0.04)));
         else if (e.key === "ArrowRight")
           setAngle((a) => wrapAngle(a + (e.shiftKey ? 0.005 : 0.04)));
@@ -201,8 +233,16 @@ function App() {
           );
       }
     };
+    const release = (e: KeyboardEvent) => {
+      if (e.key === " " && controlsRef.current.controlMode === "pulse")
+        controlsRef.current.controls.release();
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keyup", release);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", release);
+    };
   }, []);
   function localStart() {
     socket.current?.disconnect();
@@ -258,9 +298,9 @@ function App() {
     });
     sock.on("session", (session) => {
       if (socket.current !== sock) return;
-      if (session.protocol !== 2) {
+      if (session.protocol !== 3) {
         setError(
-          "El servidor necesita actualizarse para admitir agua y golpes elevados",
+          "El servidor necesita actualizarse para admitir la nueva física y los 18 hoyos",
         );
         setStatus("Servidor de otra versión");
         sock.disconnect();
@@ -343,6 +383,10 @@ function App() {
         <Scene
           s={screen === "game" ? s : { ...initial, circuit }}
           angle={angle}
+          cameraAngle={controls.cameraAngle}
+          canShoot={canShoot}
+          controlMode={controlMode}
+          shotInput={controls}
           power={power}
           style={style}
           onPower={(p) => {
@@ -389,67 +433,33 @@ function App() {
         </div>
       )}
       {screen === "home" && (
-        <section className="hero">
-          <div className="eyebrow">
-            <span className="dot" /> EL PRÓXIMO GOLPE LO CAMBIA TODO
-          </div>
-          <h1>
-            Poco campo.
-            <br />
-            Mucha <em>rivalidad.</em>
-          </h1>
-          <p>
-            {circuits.length} recorridos. Tus amigos. Una sola victoria.
-            <br />
-            Cada golpe cuenta en el Club del Último Golpe.
-          </p>
-          <div className="hero-actions">
-            <button
-              className="primary"
-              disabled={!ready}
-              onClick={() => setScreen("local")}
-            >
-              {ready ? "Jugar en este dispositivo" : "Cargando físicas…"}{" "}
-              <span>→</span>
-            </button>
-            <button
-              className="secondary"
-              disabled={!onlineAvailable}
-              onClick={() => setScreen("online")}
-            >
-              Jugar online <span>→</span>
-            </button>
-          </div>
-          {!onlineAvailable && (
-            <p className="availability">
-              Juega con hasta 8 personas en este dispositivo. Online no está
-              disponible en este sitio.{" "}
-              <button
-                className="text-button"
-                onClick={() => setScreen("online")}
-              >
-                Conectar un servidor
-              </button>
-            </p>
-          )}
-          <div className="hero-meta">
-            <span>01—08 JUGADORES</span>
-            <span>
-              {circuits.reduce(
-                (count, circuit) => count + circuit.courses.length,
-                0,
-              )}{" "}
-              HOYOS CON PERSONALIDAD
-            </span>
-            <span>SIN REGISTRO</span>
-          </div>
-          <div className="course-tag">
-            <small>EL RECORRIDO INAUGURAL</small>
-            <strong>Club del atardecer</strong>
-            <span>Jardín · Torre · Péndulo</span>
-          </div>
-          <footer>LA PRECISIÓN SE ENTRENA. LAS REVANCHAS SE PIDEN.</footer>
-        </section>
+        <ClubCatalog
+          circuit={circuit}
+          setCircuit={setCircuit}
+          controlMode={controlMode}
+          setControlMode={setControlMode}
+          ready={ready}
+          onlineAvailable={onlineAvailable}
+          onLocal={() => setScreen("local")}
+          onOnline={() => setScreen("online")}
+        />
+      )}
+      {controls.active && controls.pointer && (
+        <svg className="gesture-layer" aria-hidden="true">
+          <circle cx={controls.pointer.ox} cy={controls.pointer.oy} r="22" />
+          <line
+            x1={controls.pointer.ox}
+            y1={controls.pointer.oy}
+            x2={controls.pointer.x}
+            y2={controls.pointer.y}
+          />
+          <text
+            x={Math.min(innerWidth - 60, Math.max(20, controls.pointer.x + 16))}
+            y={Math.max(30, controls.pointer.y - 20)}
+          >
+            {Math.round(power * 100)}%
+          </text>
+        </svg>
       )}
       {screen === "local" && (
         <section className="panel setup">
@@ -501,7 +511,8 @@ function App() {
               + Añadir jugador
             </button>
           )}
-          <CircuitPicker value={circuit} onChange={setCircuit} />
+          <SelectedRound circuit={circuit} onChange={() => setScreen("home")} />
+
           <button
             className="primary"
             disabled={!ready || names.some((n) => !n.trim())}
@@ -544,7 +555,8 @@ function App() {
               placeholder="¿Cómo te llamas?"
             />
           </label>
-          <CircuitPicker value={circuit} onChange={setCircuit} />
+          <SelectedRound circuit={circuit} onChange={() => setScreen("home")} />
+
           <button
             className="primary"
             disabled={!name.trim() || !ready || !onlineAvailable}
@@ -589,6 +601,13 @@ function App() {
           serverUrl={serverUrl}
           latency={latency}
           id={id}
+          controlMode={controlMode}
+          setControlMode={setControlMode}
+          referencePower={controls.targetPower}
+          chargeActive={controls.active}
+          startCharge={() => controls.start()}
+          releaseCharge={controls.release}
+          cancelCharge={controls.cancel}
           style={style}
           setStyle={setStyle}
           canShoot={canShoot}

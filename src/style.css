@@ -1072,3 +1072,479 @@ button > span {
 .scene canvas {
   touch-action: none;
 }
+/* The club catalogue brings the route and match controls together. */
+.club-catalog {
+  width: min(1400px, 92%);
+  margin: 0 auto;
+  padding: 24px 0 50px;
+}
+.catalog-intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  align-items: end;
+  margin-bottom: 30px;
+}
+.catalog-intro h1 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 62px;
+  line-height: 0.95;
+  margin: 12px 0 0;
+  letter-spacing: -1px;
+}
+.catalog-intro em {
+  color: #f6ce7d;
+  font-style: normal;
+}
+.catalog-intro p {
+  max-width: 360px;
+  color: #c5d4c7;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.catalog-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 325px;
+  gap: 24px;
+  align-items: start;
+}
+.course-catalog {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.course-choice {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid #ffffff24;
+  border-radius: 12px;
+  background: #163d36f2;
+  min-height: 184px;
+  transition:
+    border-color 0.16s,
+    transform 0.16s;
+}
+.course-choice:hover {
+  border-color: #d4c390;
+  transform: translateY(-2px);
+}
+.course-choice[aria-pressed="true"] {
+  border-color: #f2cc7e;
+  box-shadow: 0 0 0 1px #f2cc7e;
+}
+.course-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 184px;
+}
+.course-art svg {
+  width: 75px;
+  height: 135px;
+  transform: rotate(-12deg);
+  filter: drop-shadow(5px 8px 0 #001f2855);
+}
+.course-art > span {
+  position: absolute;
+  bottom: 12px;
+  left: 8px;
+  right: 8px;
+  color: #f4d18a;
+  font-size: 7px;
+  letter-spacing: 0.7px;
+  text-align: center;
+}
+.course-copy {
+  padding: 19px 15px;
+}
+.course-copy > small {
+  font-size: 8px;
+  color: #cdbb8b;
+  letter-spacing: 1px;
+}
+.course-copy > strong {
+  display: block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 25px;
+  margin-top: 6px;
+}
+.course-copy p {
+  font-size: 10px;
+  line-height: 1.65;
+  margin: 9px 0;
+  color: #bfcec2;
+}
+.course-copy > span {
+  font-size: 8px;
+  color: #e3c995;
+}
+.match-builder {
+  position: sticky;
+  top: 20px;
+  border: 1px solid #ffffff26;
+  border-radius: 12px;
+  padding: 22px;
+  background: #102f2bf2;
+}
+.match-builder > .primary,
+.match-builder > .secondary {
+  width: 100%;
+  margin-top: 12px;
+}
+.match-builder > small {
+  display: block;
+  color: #aac2b4;
+  font-size: 9px;
+  margin: 10px 0;
+}
+.selected-round {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid #ffffff20;
+  padding: 17px 0;
+  margin-bottom: 16px;
+}
+.selected-round small,
+.selected-round strong,
+.selected-round span {
+  display: block;
+}
+.selected-round small {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #b8c7b8;
+}
+.selected-round strong {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 26px;
+  margin: 7px 0;
+}
+.selected-round span {
+  font-size: 10px;
+  color: #dfc994;
+}
+.selected-round .text-button {
+  font-size: 9px;
+  max-width: 80px;
+  padding: 0;
+}
+.shot-mode-picker {
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.shot-mode-picker legend {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #c3d2c4;
+  margin-bottom: 12px;
+}
+.shot-mode-picker button {
+  background: #1d463c;
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  text-align: left;
+  padding: 10px 12px;
+}
+.shot-mode-picker button[aria-pressed="true"] {
+  border-color: #f2cc7e;
+  background: #35513b;
+}
+.shot-mode-picker strong {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 22px;
+  display: block;
+}
+.shot-mode-picker small {
+  font-size: 7px;
+  color: #f2cc7e;
+  float: right;
+  letter-spacing: 0.7px;
+}
+.shot-mode-picker span {
+  display: block;
+  font-size: 9px;
+  line-height: 1.6;
+  color: #c2d1c5;
+  margin-top: 3px;
+}
+.control-mode-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+.control-mode-row label {
+  font-size: 8px;
+  color: #c6d2bf;
+  letter-spacing: 1px;
+}
+.control-mode-row select {
+  color: #f2d18b;
+  background: #21463b;
+  border: 1px solid #577362;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin-left: 9px;
+  font: inherit;
+  font-size: 11px;
+}
+.pull-instruction {
+  min-width: 165px;
+  max-width: 210px;
+  color: #f4cd79;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.pull-instruction small {
+  display: block;
+  font-size: 9px;
+}
+.charge-track {
+  height: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #496459;
+  position: relative;
+  margin: 10px 0 4px;
+}
+.charge-track > span {
+  display: block;
+  height: 100%;
+  background: #f5cd78;
+}
+.charge-track.pulse > i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 73%;
+  width: 4%;
+  border-left: 1px solid white;
+  border-right: 1px solid white;
+  background: #ffffff22;
+}
+.pulse-trigger {
+  touch-action: none;
+  user-select: none;
+  font-size: 11px;
+}
+.gesture-layer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 12;
+}
+.gesture-layer circle {
+  fill: #f2c87918;
+  stroke: #f2cf83;
+  stroke-width: 2;
+}
+.gesture-layer line {
+  stroke: #f2cf83;
+  stroke-width: 3;
+  stroke-dasharray: 7 5;
+}
+.gesture-layer text {
+  fill: #ffe1a0;
+  font:
+    bold 20px "Barlow Condensed",
+    sans-serif;
+  paint-order: stroke;
+  stroke: #16372d;
+  stroke-width: 4;
+}
+@media (min-width: 801px) {
+  .turn-toast {
+    bottom: 330px;
+  }
+  .view-controls {
+    bottom: 330px;
+  }
+  .hole-map {
+    bottom: 375px;
+  }
+}
+@media (max-width: 1000px) and (min-width: 801px) {
+  .catalog-layout {
+    grid-template-columns: 1fr 285px;
+  }
+  .course-catalog {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 800px) {
+  .club-catalog {
+    width: 94%;
+    padding-top: 8px;
+  }
+  .catalog-intro {
+    display: block;
+    margin-bottom: 20px;
+  }
+  .catalog-intro h1 {
+    font-size: 42px;
+  }
+  .catalog-intro p {
+    font-size: 11px;
+    margin: 12px 0;
+  }
+  .catalog-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .course-catalog {
+    order: 2;
+    width: 100%;
+    gap: 10px;
+  }
+  .course-choice {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .course-art {
+    min-height: 85px;
+  }
+  .course-art svg {
+    height: 70px;
+    width: 40px;
+  }
+  .course-art > span {
+    left: auto;
+    right: 7px;
+    bottom: 8px;
+    max-width: 75px;
+    font-size: 6px;
+  }
+  .course-copy {
+    padding: 12px;
+  }
+  .course-copy > strong {
+    font-size: 23px;
+  }
+  .course-copy p {
+    font-size: 9px;
+  }
+  .match-builder {
+    order: 1;
+    position: static;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 10px;
+    padding: 16px;
+  }
+  .match-builder > .eyebrow,
+  .match-builder > .selected-round,
+  .match-builder > .shot-mode-picker,
+  .match-builder > .availability,
+  .match-builder > small {
+    grid-column: 1/-1;
+  }
+  .match-builder > .selected-round {
+    margin-bottom: 0;
+    padding: 10px 0;
+  }
+  .match-builder > .selected-round strong {
+    font-size: 23px;
+    margin: 4px 0;
+  }
+  .match-builder .shot-mode-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 12px 0 4px;
+  }
+  .match-builder .shot-mode-picker button {
+    padding: 9px 7px;
+  }
+  .match-builder .shot-mode-picker small {
+    display: none;
+  }
+  .match-builder .shot-mode-picker strong {
+    font-size: 21px;
+  }
+  .match-builder .shot-mode-picker span {
+    font-size: 8px;
+    line-height: 1.4;
+  }
+  .match-builder > .primary,
+  .match-builder > .secondary {
+    min-width: 0;
+    padding: 12px 7px;
+    font-size: 10px;
+  }
+  .match-builder > .primary {
+    grid-column: 1;
+    grid-row: 4;
+  }
+  .match-builder > .secondary {
+    grid-column: 2;
+    grid-row: 4;
+  }
+  .match-builder > small {
+    margin-bottom: 0;
+  }
+  .control-mode-row {
+    margin: 7px 0 9px;
+  }
+  .shot-options {
+    margin-bottom: 4px;
+  }
+  .shot-controls {
+    margin-top: 9px;
+    gap: 15px;
+  }
+  .pull-instruction {
+    min-width: 0;
+    grid-column: 1/-1;
+    max-width: none;
+    text-align: center;
+  }
+  .turn-toast {
+    bottom: 365px;
+  }
+  .power-presets {
+    margin-top: 6px;
+  }
+  .power-presets button {
+    min-height: 25px;
+  }
+}
+.shot-panel[data-control-mode="pull"] .shot-controls label,
+.shot-panel[data-control-mode="pulse"] .shot-controls label,
+.shot-panel[data-control-mode="pull"] .power-presets {
+  display: none;
+}
+.shot-panel[data-control-mode="pull"] .shot-controls {
+  justify-content: center;
+  margin: 9px 0;
+}
+.shot-panel[data-control-mode="pulse"] .shot-controls {
+  justify-content: flex-end;
+  margin: 9px 0;
+}
+.shot-panel[data-control-mode="pull"] .pull-instruction {
+  max-width: none;
+  text-align: center;
+}
+/* The active ball stays unobstructed below the turn marker. */
+.turn-toast {
+  top: 174px;
+  bottom: auto;
+}
+@media (max-width: 800px) {
+  .turn-toast {
+    top: 170px;
+    bottom: auto;
+  }
+}

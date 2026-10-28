@@ -19,7 +19,7 @@ const http = createServer(async (req, res) => {
     res.end(
       JSON.stringify({
         ok: true,
-        protocol: 2,
+        protocol: 3,
         rooms: rooms.size,
         maxPlayers: capacity,
       }),
@@ -165,7 +165,7 @@ io.on("connection", (socket) => {
             id: pid,
             token: d.token,
             code: candidate.game.state.code,
-            protocol: 2,
+            protocol: 3,
           });
           io.to(candidate.game.state.code).emit("state", snapshot(candidate));
         } catch (error) {

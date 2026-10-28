@@ -120,7 +120,7 @@ export class Game {
     this.bars = [];
     const c = getCourse(this.state);
     this.dynamicBlocks = [];
-    const box = (block: Block) => {
+    const box = (block: Block, restitution = 0.62) => {
       const pose = blockPose(block, this.state.time),
         rotation = block.rotation || 0;
       const sx = Math.sin(rotation / 2),
@@ -141,7 +141,8 @@ export class Game {
           block.size[1] / 2,
           block.size[2] / 2,
         )
-          .setRestitution(0.65)
+          .setRestitution(restitution)
+          .setRestitutionCombineRule(RAPIER.CoefficientCombineRule.Max)
           .setFriction(0.08),
         body,
       );
@@ -151,9 +152,9 @@ export class Game {
       }
     };
     const shape = geometry(c);
-    [...shape.surfaces, ...shape.walls, ...c.blocks, ...cupWalls(c)].forEach(
-      box,
-    );
+    shape.surfaces.forEach((block) => box(block, 0));
+    [...shape.walls, ...c.blocks].forEach((block) => box(block, 0.62));
+    cupWalls(c).forEach((block) => box(block, 0.08));
     const green = cupGreen(c);
     this.world.createCollider(
       RAPIER.ColliderDesc.trimesh(
@@ -161,7 +162,7 @@ export class Game {
         new Uint32Array(green.indices),
       )
         .setFriction(0.08)
-        .setRestitution(0.65),
+        .setRestitution(0),
     );
     this.capturedAt = null;
     this.state.event = undefined;
@@ -176,7 +177,8 @@ export class Game {
     this.world.createCollider(
       RAPIER.ColliderDesc.ball(0.22)
         .setMass(1)
-        .setRestitution(0.65)
+        .setRestitution(0)
+        .setRestitutionCombineRule(RAPIER.CoefficientCombineRule.Max)
         .setFriction(0.02),
       this.ball,
     );
