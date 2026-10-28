@@ -8,7 +8,7 @@ URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiz
 
 Pages sirve el juego local completo para 1–8 personas y ambos recorridos. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación. Para habilitarlo, despliega el servidor y configura la variable de repositorio `VITE_SERVER_URL` con su URL HTTPS; permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor y vuelve a ejecutar la publicación. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
-El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Configura el sitio Pages existente para usar **GitHub Actions**, con `pages: write` e `id-token: write`. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
+El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
 ## Instalar y jugar
 
