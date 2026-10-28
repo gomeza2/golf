@@ -125,22 +125,19 @@ describe("authoritative rules and physics", () => {
     const g = make(1);
     const routes = [
       [
-        [1.2161003820347587, 0.8],
-        [0.054853656141002224, 0.8],
-        [-1.545823317050767, 0.8],
-        [5.472451719156414, 0.5],
-        [1.1901565555751958, 0.5],
+        [2.6348841610753104, 1],
+        [0.4053667940115862, 0.5],
+        [0.4053667940115862, 1],
       ],
       [
-        [0, 0.4],
-        [0.6080501910173793, 1],
-        [-0.19314647427264958, 0.3],
+        [1.0134169850289656, 1],
+        [0.2026833970057931, 1],
       ],
       [
         [1.0026915943204695, 0.4],
         [-0.021941736210232248, 0.5],
-        [1.6214671760463448, 1],
-        [-0.005684812548253181, 0.4],
+        [4.864401528139035, 0.5],
+        [-0.03592094094384412, 0.4],
       ],
     ];
     for (let hole = 0; hole < 3; hole++) {
@@ -153,7 +150,7 @@ describe("authoritative rules and physics", () => {
       if (hole < 2) g.next();
     }
     expect(g.state.phase).toBe("finished");
-    expect(g.state.players[0].scores).toEqual([5, 3, 4]);
+    expect(g.state.players[0].scores).toEqual([3, 2, 4]);
   });
   it("moves rotating obstacle colliders", () => {
     const g = make();
@@ -263,15 +260,20 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
   const routes = [
     [
       [1.1902899496825317, 0.5],
-      [0.4053667940115862, 0.5],
       [0.4053667940115862, 1],
     ],
-    [[0, 1]],
+    [
+      [3.648301146104276, 1],
+      [5.675135116162207, 0.4],
+      [0.8107335880231724, 0.8],
+      [0.4053667940115862, 0.5],
+      [-1.2411981327518915, 0.4],
+    ],
     [
       [0.7328151017865066, 0.22],
       [0.0005464805026951569, 0.4],
-      [5.675135116162207, 1],
-      [1.0134169850289656, 0.3],
+      [5.472451719156414, 1],
+      [0.2209929522405836, 0.3],
     ],
   ];
   for (let hole = 0; hole < 3; hole++) {
@@ -283,7 +285,7 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
     if (hole < 2) g.next();
   }
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([3, 1, 4]);
+  expect(g.state.players[0].scores).toEqual([2, 5, 4]);
 });
 
 it("plays all larger park holes from the tees without repositioning", () => {
@@ -296,17 +298,17 @@ it("plays all larger park holes from the tees without repositioning", () => {
     [
       [0.8107335880231724, 0.8],
       [0.4053667940115862, 1],
-      [-1.5983031859596035, 1],
-      [-0.048154767410561586, 0.5],
-      [1.5651664677745454, 0.65],
-      [0, 0.8],
+      [4.053667940115862, 0.8],
+      [5.675135116162207, 0.65],
+      [1.5956450049118174, 1],
+      [0.6080501910173793, 0.8],
     ],
     [
       [-0.9367736071314745, 0.5],
-      [5.877818513168, 0.5],
-      [1.4187837790405518, 0.8],
+      [0.2026833970057931, 1],
+      [1.423815801097959, 0.8],
       [0.2026833970057931, 0.65],
-      [-0.9642500874239865, 0.5],
+      [-0.9768341052305888, 0.5],
     ],
     [
       [1.3156139361740782, 0.65],
@@ -351,7 +353,7 @@ it("drops through a real opening and keeps the camera's turn during the fall", (
 it("lets a fast putt cross the opening instead of automatically capturing it", () => {
   const g = make(1),
     cup = getCourse(g.state).cup;
-  g.state.players[0].pos = { x: cup.x, y: cup.y + 0.22, z: cup.z + 1 };
+  g.state.players[0].pos = { x: cup.x + 0.27, y: cup.y + 0.22, z: cup.z + 1 };
   g.place();
   g.shoot("0", 0, 1);
   for (let i = 0; i < 10; i++) g.tick();

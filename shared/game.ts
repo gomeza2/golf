@@ -143,10 +143,16 @@ export class Game {
           .setRotation({ x: sx * cy, y: cx * sy, z: sx * sy, w: cx * cy }),
       );
       this.world.createCollider(
-        RAPIER.ColliderDesc.cuboid(
-          block.size[0] / 2,
-          block.size[1] / 2,
-          block.size[2] / 2,
+        (block.bevel
+          ? RAPIER.ColliderDesc.roundCuboid(
+              block.size[0] / 2 - block.bevel,
+              block.size[1] / 2 - block.bevel,
+              block.size[2] / 2 - block.bevel,
+              block.bevel,
+            )
+          : RAPIER.ColliderDesc.cuboid(
+              ...(block.size.map((v) => v / 2) as [number, number, number]),
+            )
         )
           .setRestitution(restitution)
           .setRestitutionCombineRule(RAPIER.CoefficientCombineRule.Max)
@@ -171,6 +177,12 @@ export class Game {
       )
         .setFriction(0.08)
         .setRestitution(0),
+    );
+    this.world.createCollider(
+      RAPIER.ColliderDesc.cylinder(1.625, 0.025)
+        .setTranslation(c.cup.x, c.cup.y + 0.775, c.cup.z)
+        .setRestitution(0.08)
+        .setFriction(0.02),
     );
     this.capturedAt = null;
     this.state.event = undefined;

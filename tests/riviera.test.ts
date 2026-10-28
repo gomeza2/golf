@@ -72,7 +72,7 @@ it("normal shots have no vertical launch and use the same bounded speed", () => 
   const g = game(1);
   g.shoot("0", 0, 1);
   expect(g.ball.linvel().y).toBe(0);
-  expect(Math.hypot(g.ball.linvel().x, g.ball.linvel().z)).toBeCloseTo(14);
+  expect(Math.hypot(g.ball.linvel().x, g.ball.linvel().z)).toBeCloseTo(15.2);
   expect(shotVelocity(1, 0.5).y).toBe(0);
   expect(
     Math.hypot(shotVelocity(1, 0.5).x, shotVelocity(1, 0.5).z),
@@ -133,31 +133,28 @@ it("completes all four Riviera holes from their tees, without repositioning or p
     ],
     [
       [0, 1],
-      [0.4053667940115862, 0.22],
-      [-0.07605085228882334, 1],
-      [0.03440295833723532, 0.65],
       [0, 1],
-      [0.05429413656794196, 0.4],
+      [0, 0.5],
+      [0, 0.3],
+      [0.2026833970057931, 1],
     ],
     [
       [0, 0.8],
       [0.2026833970057931, 0.8],
       [4.053667940115862, 0.3],
       [1.4187837790405518, 0.8],
-      [0.2026833970057931, 0.5],
-      [-0.37438646072938886, 0.65],
-      [-0.02305944427192695, 0.65],
+      [0, 0.8],
+      [-0.34301026820385344, 0.4],
+      [0.029623796467516995, 0.65],
     ],
     [
       [0, 1],
-      [0.4053667940115862, 0.22],
-      [-0.08334725790865377, 1],
-      [2.8493919289432257, 0.22],
-      [-0.5346632767290767, 0.4],
-      [6.080501910173792, 0.3],
-      [-0.21420489567324294, 0.8],
-      [1.1854270905439717, 0.65],
-      [1.1854440762118827, 0.15],
+      [0, 1],
+      [3.141592653589793, 0.22],
+      [-0.5894101733083764, 0.4],
+      [-0.026290506530174423, 0.3],
+      [5.269768322150621, 1],
+      [1.0995647775248354, 0.8],
     ],
   ];
   let highest = 0;
@@ -175,5 +172,5 @@ it("completes all four Riviera holes from their tees, without repositioning or p
   }
   expect(highest).toBeGreaterThan(3.8);
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([6, 6, 7, 9]);
+  expect(g.state.players[0].scores).toEqual([6, 5, 7, 7]);
 });

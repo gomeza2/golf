@@ -1,7 +1,7 @@
 import { getCircuit, isCircuitId, type CircuitId } from "../shared/courses";
 import type { State } from "../shared/game";
 import { isControlMode, type ControlMode } from "./shotControls";
-export const RECORDS_KEY = "club-personal-normal-v4";
+export const RECORDS_KEY = "club-personal-normal-v5";
 export const goalLabels: Record<string, string> = {
   finish: "Recorrido completado",
   par: "Al par o mejor",
@@ -33,7 +33,7 @@ export function readPersonalRecords(): PersonalHistory {
     const raw = JSON.parse(localStorage.getItem(RECORDS_KEY) || "null");
     if (
       !raw ||
-      raw.version !== 4 ||
+      raw.version !== 5 ||
       !raw.records ||
       typeof raw.records !== "object"
     )
@@ -121,7 +121,7 @@ export function recordCompletedRound(
 }
 export function persistPersonalRecords(records: PersonalHistory) {
   try {
-    localStorage.setItem(RECORDS_KEY, JSON.stringify({ version: 4, records }));
+    localStorage.setItem(RECORDS_KEY, JSON.stringify({ version: 5, records }));
     return true;
   } catch {
     return false;

@@ -132,7 +132,7 @@ it("record storage survives reload and ignores corrupt or obsolete data", () => 
   value = JSON.stringify({ version: 3, records: {} });
   expect(readPersonalRecords()).toEqual({});
   value = JSON.stringify({
-    version: 4,
+    version: 5,
     records: {
       "sunset:classic": { best: NaN, rounds: 1, date: "bad", goals: [] },
     },
