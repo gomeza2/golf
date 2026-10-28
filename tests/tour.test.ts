@@ -33,3 +33,26 @@ it("completes one continuous 18-hole match with real shots, no repositioning and
     g.dispose();
   }
 });
+
+it("completes the shorter nine-hole round with real normal shots", () => {
+  const g = new Game();
+  try {
+    g.selectCircuit("nine");
+    g.add("a", "A");
+    g.start();
+    for (let hole = 0; hole < 9; hole++) {
+      for (const [angle, power] of tourShots[hole]) {
+        expect(g.shoot("a", angle, power)).toBe(true);
+        for (let frame = 0; frame < 1200 && g.state.moving; frame++) g.tick();
+      }
+      expect(g.state.players[0].done).toBe(true);
+      if (hole < 8) g.next();
+    }
+    expect(g.state.phase).toBe("finished");
+    expect(g.state.players[0].scores).toHaveLength(9);
+    expect(g.state.players[0].penalties).toBe(0);
+    expect(g.state.players[0].capped).toEqual([]);
+  } finally {
+    g.dispose();
+  }
+});

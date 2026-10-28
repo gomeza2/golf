@@ -7,12 +7,14 @@ import {
   cupWalls,
   courseSize,
   inZone,
+  surfaceAt,
+  rollingResistance,
   blockPose,
   type Block,
   type CircuitId,
   type V3,
 } from "./courses";
-import { shotVelocity, type ShotStyle } from "./shot";
+import { shotVelocity } from "./shot";
 let initialization: Promise<void> | undefined;
 export const initPhysics = () => (initialization ??= RAPIER.init());
 export const MAX_STROKES = 12;
@@ -28,6 +30,7 @@ export type Player = {
   pos: V3;
   aces: number;
   penalties: number;
+  capped: number[];
 };
 export type State = {
   phase: "lobby" | "playing" | "scores" | "finished";
@@ -76,6 +79,7 @@ export class Game {
   ball!: RAPIER.RigidBody;
   bars: RAPIER.RigidBody[] = [];
   dynamicBlocks: { body: RAPIER.RigidBody; block: Block }[] = [];
+  turnOrder: number[] = [];
   elapsed = 0;
   quiet = 0;
   capturedAt: number | null = null;
@@ -97,6 +101,7 @@ export class Game {
       pos: { ...getCourse({ ...this.state, hole: 0 }).start },
       aces: 0,
       penalties: 0,
+      capped: [],
     };
     this.state.players.push(p);
     if (!this.state.host) this.state.host = id;
@@ -106,10 +111,12 @@ export class Game {
     this.state.players = this.state.players.filter((p) => !p.withdrawn);
     if (!this.state.players.length) throw Error("Faltan jugadores");
     this.state.hole = 0;
+    this.turnOrder = this.state.players.map((_, i) => i);
     for (const p of this.state.players) {
       p.scores = [];
       p.aces = 0;
       p.penalties = 0;
+      p.capped = [];
     }
     this.load();
   }
@@ -120,7 +127,7 @@ export class Game {
     this.bars = [];
     const c = getCourse(this.state);
     this.dynamicBlocks = [];
-    const box = (block: Block, restitution = 0.62) => {
+    const box = (block: Block, restitution = 0.52) => {
       const pose = blockPose(block, this.state.time),
         rotation = block.rotation || 0;
       const sx = Math.sin(rotation / 2),
@@ -153,13 +160,14 @@ export class Game {
     };
     const shape = geometry(c);
     shape.surfaces.forEach((block) => box(block, 0));
-    [...shape.walls, ...c.blocks].forEach((block) => box(block, 0.62));
+    [...shape.walls, ...c.blocks].forEach((block) => box(block, 0.52));
     cupWalls(c).forEach((block) => box(block, 0.08));
     const green = cupGreen(c);
     this.world.createCollider(
       RAPIER.ColliderDesc.trimesh(
         new Float32Array(green.vertices),
         new Uint32Array(green.indices),
+        RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES,
       )
         .setFriction(0.08)
         .setRestitution(0),
@@ -189,10 +197,7 @@ export class Game {
     }
     Object.assign(this.state, {
       phase: "playing",
-      turn: Math.max(
-        0,
-        this.state.players.findIndex((p) => !p.withdrawn),
-      ),
+      turn: this.turnOrder.find((i) => !this.state.players[i].withdrawn) ?? 0,
       moving: false,
       deadline: this.state.time + 45,
       message: "Nuevo hoyo. ¡Busca tu línea!",
@@ -205,7 +210,7 @@ export class Game {
     this.ball.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.state.deadline = this.state.time + 45;
   }
-  shoot(id: string, angle: number, power: number, style: ShotStyle = "putt") {
+  shoot(id: string, angle: number, power: number) {
     const s = this.state,
       p = s.players[s.turn];
     if (
@@ -215,15 +220,14 @@ export class Game {
       !Number.isFinite(angle) ||
       !Number.isFinite(power) ||
       power < 0.03 ||
-      power > 1 ||
-      (style !== "putt" && style !== "chip")
+      power > 1
     )
       return false;
     p.strokes++;
     this.last = { ...p.pos };
     // A ball waiting on a slope stays at its saved lie until its next shot.
     this.ball.setTranslation(p.pos, true);
-    this.ball.setLinvel(shotVelocity(angle, power, style), true);
+    this.ball.setLinvel(shotVelocity(angle, power), true);
     s.moving = true;
     this.elapsed = 0;
     this.quiet = 0;
@@ -316,7 +320,7 @@ export class Game {
       return;
     }
     // Rolling resistance is applied only on the surface, preserving airborne arcs.
-    const grounded = this.world.castRay(
+    const grounded = this.world.castRayAndGetNormal(
       new RAPIER.Ray(pos, { x: 0, y: -1, z: 0 }),
       0.26,
       true,
@@ -325,14 +329,44 @@ export class Game {
       undefined,
       this.ball,
     );
-    if (grounded && Math.abs(v.y) < 0.3) {
-      const sand = c.sand?.some(
-        (zone) => inZone(zone, pos) && Math.abs(pos.y - zone.y - 0.22) < 0.2,
-      );
-      const resistance = sand ? 0.085 : 0.016;
-      const f = Math.max(0, 1 - resistance / Math.max(0.05, speed));
-      this.ball.setLinvel({ x: v.x * f, y: v.y, z: v.z * f }, true);
+    if (grounded) {
+      const n = grounded.normal;
+      const normalSpeed = v.x * n.x + v.y * n.y + v.z * n.z;
+      if (
+        n.y > 0.45 &&
+        Math.abs(normalSpeed) < 0.3 &&
+        grounded.timeOfImpact < 0.25
+      ) {
+        const resistance = rollingResistance[surfaceAt(c, pos)];
+        const tangent = {
+          x: v.x - normalSpeed * n.x,
+          y: v.y - normalSpeed * n.y,
+          z: v.z - normalSpeed * n.z,
+        };
+        const tangentSpeed = Math.hypot(tangent.x, tangent.y, tangent.z);
+        const fraction = Math.min(1, resistance / Math.max(0.05, tangentSpeed));
+        this.ball.setLinvel(
+          {
+            x: v.x - tangent.x * fraction,
+            y: v.y - tangent.y * fraction,
+            z: v.z - tangent.z * fraction,
+          },
+          true,
+        );
+      }
     }
+    // Moving obstacles may transfer energy, but cannot launch a ball without bound.
+    const actual = this.ball.linvel(),
+      magnitude = Math.hypot(actual.x, actual.y, actual.z);
+    if (magnitude > 18)
+      this.ball.setLinvel(
+        {
+          x: (actual.x * 18) / magnitude,
+          y: (actual.y * 18) / magnitude,
+          z: (actual.z * 18) / magnitude,
+        },
+        true,
+      );
     const bounds = courseSize(c);
     if (
       pos.y < -4 ||
@@ -365,7 +399,8 @@ export class Game {
     s.moving = false;
     if (s.message === "La pelota está en juego")
       s.message = "Pelota detenida. Pasa el turno.";
-    if (p.strokes >= MAX_STROKES) {
+    if (p.strokes >= MAX_STROKES && !p.done) {
+      p.capped.push(s.hole);
       p.done = true;
       s.message = `${p.name}: límite de ${MAX_STROKES} golpes`;
     }
@@ -381,12 +416,24 @@ export class Game {
       return;
     }
     do {
-      s.turn = (s.turn + 1) % s.players.length;
+      s.turn =
+        this.turnOrder[
+          (this.turnOrder.indexOf(s.turn) + 1) % this.turnOrder.length
+        ];
     } while (s.players[s.turn].done);
     this.place();
   }
   next() {
     if (this.state.phase === "scores") {
+      // Stable sorting retains the previous tee honours when scores are tied.
+      const hole = this.state.hole;
+      this.turnOrder.sort(
+        (a, b) =>
+          Number(this.state.players[a].withdrawn) -
+            Number(this.state.players[b].withdrawn) ||
+          this.state.players[a].scores[hole] -
+            this.state.players[b].scores[hole],
+      );
       this.state.hole++;
       this.load();
     }
@@ -452,6 +499,7 @@ export class Game {
       p.scores = [];
       p.aces = 0;
       p.penalties = 0;
+      p.capped = [];
       p.pos = { ...getCourse(this.state).start };
     }
   }

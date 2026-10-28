@@ -68,30 +68,26 @@ it("waits on a slope without drifting and starts the next shot at the saved lie"
   expect(g.ball.translation()).toEqual(expect.objectContaining({ x: 0, z: 7 }));
   expect(g.ball.translation().y).toBeCloseTo(lie.y, 5);
 });
-it("validates elevated shots and launches them with physical vertical velocity", () => {
+it("normal shots have no vertical launch and use the same bounded speed", () => {
   const g = game(1);
-  expect(g.shoot("0", 0, 0.6, "invalid" as any)).toBe(false);
-  expect(g.shoot("0", 0, 0.6, "chip")).toBe(true);
-  const before = g.state.players[0].pos.y;
-  expect(g.ball.linvel().y).toBeCloseTo(4.2);
-  for (let i = 0; i < 10; i++) g.tick();
-  expect(g.state.players[0].pos.y).toBeGreaterThan(before + 0.35);
-  expect(shotVelocity(0, 0.6, "chip").z).toBeGreaterThan(
-    shotVelocity(0, 0.6, "putt").z,
-  );
+  g.shoot("0", 0, 1);
+  expect(g.ball.linvel().y).toBe(0);
+  expect(Math.hypot(g.ball.linvel().x, g.ball.linvel().z)).toBeCloseTo(14);
+  expect(shotVelocity(1, 0.5).y).toBe(0);
+  expect(
+    Math.hypot(shotVelocity(1, 0.5).x, shotVelocity(1, 0.5).z),
+  ).toBeCloseTo(7);
 });
-it("draws a first bank against actual geometry and an arc for elevated shots", () => {
-  const g = new Game();
-  games.push(g);
-  g.add("0", "A");
-  g.start();
-  const from = getCourse(g.state).start;
-  const bank = aimGuide(getCourse(g.state), from, 0, 1, 0, "putt");
-  expect(bank.hit?.z).toBeCloseTo(2.47, 2);
-  expect(bank.points.at(-1)!.z).toBeGreaterThan(bank.hit!.z);
-  const arc = aimGuide(getCourse(g.state), from, 0, 0.7, 0, "chip");
-  expect(arc.hit).toBeUndefined();
-  expect(Math.max(...arc.points.map((p) => p.y))).toBeGreaterThan(1);
+it("direction guidance stays short and never predicts a landing or rebound", () => {
+  const from = { x: 0, y: 0.22, z: 0 };
+  for (const power of [0.03, 0.25, 0.5, 1]) {
+    const guide = aimGuide(from, 0.6, power);
+    expect(guide.points).toHaveLength(2);
+    expect(
+      Math.hypot(guide.points[1].x, guide.points[1].z),
+    ).toBeLessThanOrEqual(2.401);
+    expect(guide.points.every((p) => p.y === from.y)).toBe(true);
+  }
 });
 it("uses the same fixed simulation duration across uneven render timings and caps long pauses", () => {
   const loop = new FixedStepper();
@@ -128,25 +124,40 @@ it("completes all four Riviera holes from their tees, without repositioning or p
   const g = game(1);
   const routes = [
     [
-      [5.675135116162207, 0.65],
-      [0, 0.8],
-      [1.443389087069408, 0.5],
+      [-0.6947382761967033, 0.3],
+      [5.877818513168, 0.5],
+      [0.89695098496682, 0.4],
+      [-0.04542562177051052, 0.65],
+      [-0.0020321076083116693, 0.65],
+      [0.9701825235329092, 0.8],
     ],
     [
       [0, 1],
-      [6.080501910173792, 0.4],
-      [0.4665132121711916, 0.5],
+      [0.4053667940115862, 0.22],
+      [-0.07605085228882334, 1],
+      [0.03440295833723532, 0.65],
+      [0, 1],
+      [0.05429413656794196, 0.4],
     ],
     [
       [0, 0.8],
-      [0.6080501910173793, 0.4],
-      [1.4187837790405518, 1],
-      [0.10506813708759045, 0.8],
+      [0.2026833970057931, 0.8],
+      [4.053667940115862, 0.3],
+      [1.4187837790405518, 0.8],
+      [0.2026833970057931, 0.5],
+      [-0.37438646072938886, 0.65],
+      [-0.02305944427192695, 0.65],
     ],
     [
-      [0.4053667940115862, 0.4],
-      [0.04717565632885135, 0.65],
-      [0.4053667940115862, 1],
+      [0, 1],
+      [0.4053667940115862, 0.22],
+      [-0.08334725790865377, 1],
+      [2.8493919289432257, 0.22],
+      [-0.5346632767290767, 0.4],
+      [6.080501910173792, 0.3],
+      [-0.21420489567324294, 0.8],
+      [1.1854270905439717, 0.65],
+      [1.1854440762118827, 0.15],
     ],
   ];
   let highest = 0;
@@ -164,5 +175,5 @@ it("completes all four Riviera holes from their tees, without repositioning or p
   }
   expect(highest).toBeGreaterThan(3.8);
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([3, 3, 4, 3]);
+  expect(g.state.players[0].scores).toEqual([6, 6, 7, 9]);
 });

@@ -19,7 +19,7 @@ const http = createServer(async (req, res) => {
     res.end(
       JSON.stringify({
         ok: true,
-        protocol: 3,
+        protocol: 4,
         rooms: rooms.size,
         maxPlayers: capacity,
       }),
@@ -165,7 +165,7 @@ io.on("connection", (socket) => {
             id: pid,
             token: d.token,
             code: candidate.game.state.code,
-            protocol: 3,
+            protocol: 4,
           });
           io.to(candidate.game.state.code).emit("state", snapshot(candidate));
         } catch (error) {
@@ -243,15 +243,8 @@ io.on("connection", (socket) => {
           if (
             typeof d.angle !== "number" ||
             typeof d.power !== "number" ||
-            (d.style !== undefined &&
-              d.style !== "putt" &&
-              d.style !== "chip") ||
-            !room.game.shoot(
-              pid,
-              d.angle as number,
-              d.power as number,
-              d.style as "putt" | "chip" | undefined,
-            )
+            d.style !== undefined ||
+            !room.game.shoot(pid, d.angle as number, d.power as number)
           )
             throw Error("Golpe rechazado: espera tu turno");
           break;

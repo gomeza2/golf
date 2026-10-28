@@ -38,7 +38,7 @@ describe("authoritative rules and physics", () => {
   });
   it("collides with the garden crosswall, dissipates energy and stops", () => {
     const g = make(1);
-    g.shoot("0", 0, 0.45);
+    g.shoot("0", 0, 0.6);
     let bounced = false;
     for (let i = 0; i < 1100 && g.state.moving; i++) {
       g.tick();
@@ -52,7 +52,9 @@ describe("authoritative rules and physics", () => {
     const g = make(1);
     g.state.hole = 1;
     g.load();
-    g.shoot("0", 0, 0.95);
+    g.shoot("0", 0, 0.4);
+    settle(g);
+    g.shoot("0", 0, 1);
     let high = 0;
     for (let i = 0; i < 1100 && g.state.moving; i++) {
       g.tick();
@@ -123,16 +125,22 @@ describe("authoritative rules and physics", () => {
     const g = make(1);
     const routes = [
       [
-        [5.877818513168, 1],
-        [1.1093312025564188, 0.22],
+        [1.2161003820347587, 0.8],
+        [0.054853656141002224, 0.8],
+        [-1.545823317050767, 0.8],
+        [5.472451719156414, 0.5],
+        [1.1901565555751958, 0.5],
       ],
       [
-        [0.4053667940115862, 0.8],
-        [-0.30228398111630306, 0.15],
+        [0, 0.4],
+        [0.6080501910173793, 1],
+        [-0.19314647427264958, 0.3],
       ],
       [
-        [0.4053667940115862, 1],
-        [-1.0039639632405317, 0.22],
+        [1.0026915943204695, 0.4],
+        [-0.021941736210232248, 0.5],
+        [1.6214671760463448, 1],
+        [-0.005684812548253181, 0.4],
       ],
     ];
     for (let hole = 0; hole < 3; hole++) {
@@ -145,7 +153,7 @@ describe("authoritative rules and physics", () => {
       if (hole < 2) g.next();
     }
     expect(g.state.phase).toBe("finished");
-    expect(g.state.players[0].scores).toEqual([2, 2, 2]);
+    expect(g.state.players[0].scores).toEqual([5, 3, 4]);
   });
   it("moves rotating obstacle colliders", () => {
     const g = make();
@@ -254,13 +262,16 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
   g.start();
   const routes = [
     [
-      [5.675135116162207, 1],
-      [-2.4761564468670225, 0.08],
+      [1.1902899496825317, 0.5],
+      [0.4053667940115862, 0.5],
+      [0.4053667940115862, 1],
     ],
     [[0, 1]],
     [
-      [0.4053667940115862, 1],
-      [-2.325120615416012, 0.22],
+      [0.7328151017865066, 0.22],
+      [0.0005464805026951569, 0.4],
+      [5.675135116162207, 1],
+      [1.0134169850289656, 0.3],
     ],
   ];
   for (let hole = 0; hole < 3; hole++) {
@@ -272,7 +283,7 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
     if (hole < 2) g.next();
   }
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([2, 1, 2]);
+  expect(g.state.players[0].scores).toEqual([3, 1, 4]);
 });
 
 it("plays all larger park holes from the tees without repositioning", () => {
@@ -283,18 +294,24 @@ it("plays all larger park holes from the tees without repositioning", () => {
   g.start();
   const routes = [
     [
-      [5.877818513168, 0.8],
-      [2.6348841610753104, 1],
-      [-0.6846840844496217, 0.22],
+      [0.8107335880231724, 0.8],
+      [0.4053667940115862, 1],
+      [-1.5983031859596035, 1],
+      [-0.048154767410561586, 0.5],
+      [1.5651664677745454, 0.65],
+      [0, 0.8],
     ],
     [
-      [5.472451719156414, 1],
-      [2.4322007640695174, 1],
-      [-1.4409367066912935, 0.22],
+      [-0.9367736071314745, 0.5],
+      [5.877818513168, 0.5],
+      [1.4187837790405518, 0.8],
+      [0.2026833970057931, 0.65],
+      [-0.9642500874239865, 0.5],
     ],
     [
-      [5.675135116162207, 1],
-      [0.43372850069181684, 0.4],
+      [1.3156139361740782, 0.65],
+      [0.0019395272005365517, 0.5],
+      [0.4053667940115862, 1],
     ],
   ];
   for (let hole = 0; hole < 3; hole++) {
@@ -306,7 +323,7 @@ it("plays all larger park holes from the tees without repositioning", () => {
     if (hole < 2) g.next();
   }
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([3, 3, 2]);
+  expect(g.state.players[0].scores).toEqual([6, 5, 3]);
 });
 
 it("drops through a real opening and keeps the camera's turn during the fall", () => {

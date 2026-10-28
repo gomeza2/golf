@@ -58,6 +58,26 @@ export function HoleMap({ s }: { s: State }) {
             fill="#d9bf86"
           />
         ))}
+        {course.rough?.map((zone, i) => (
+          <rect
+            key={`rough${i}`}
+            x={zone.x - zone.width / 2}
+            y={zone.z - zone.length / 2}
+            width={zone.width}
+            height={zone.length}
+            fill="#536b38"
+          />
+        ))}
+        {course.dirt?.map((zone, i) => (
+          <rect
+            key={`dirt${i}`}
+            x={zone.x - zone.width / 2}
+            y={zone.z - zone.length / 2}
+            width={zone.width}
+            height={zone.length}
+            fill="#967352"
+          />
+        ))}
         {course.blocks.map((b, i) => {
           const pose = blockPose(b, s.time);
           return (

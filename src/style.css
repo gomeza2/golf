@@ -1596,3 +1596,189 @@ button > span {
   margin-bottom: 0;
   padding: 10px 0;
 }
+.locked-control {
+  color: #e7cf91;
+  font-size: 9px;
+  letter-spacing: 0.7px;
+}
+.personal-record {
+  grid-column: 1/-1;
+  border-top: 1px solid #ffffff20;
+  margin-top: 14px;
+  padding-top: 12px;
+  order: 8;
+}
+.personal-record small {
+  font-size: 7px;
+  color: #c9bc98;
+  letter-spacing: 1px;
+}
+.personal-record strong,
+.personal-record span {
+  display: block;
+  margin-top: 5px;
+}
+.personal-record strong {
+  font:
+    24px "Barlow Condensed",
+    sans-serif;
+  color: #f2d08c;
+}
+.personal-record p,
+.personal-record span {
+  color: #b9cbbb;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.round-report {
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid #dcc78470;
+  border-radius: 8px;
+  background: #25493a;
+}
+.round-report strong {
+  color: #f4d18a;
+}
+.round-report p {
+  font-size: 12px;
+}
+.course-terrain-tags {
+  display: block;
+  margin: 7px 0;
+  color: #c5d6ad !important;
+}
+/* Compact playing desk: the field stays in view; fine controls are optional. */
+.shot-panel {
+  width: min(540px, calc(100% - 24px));
+  padding: 10px 14px;
+  bottom: max(10px, env(safe-area-inset-bottom));
+}
+.control-mode-row {
+  margin: 3px 0;
+  gap: 8px;
+}
+.expand-shot {
+  font-size: 10px;
+  padding: 6px 0;
+  min-height: 30px;
+}
+.locked-control {
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.shot-panel[data-expanded="false"] .shot-options,
+.shot-panel[data-expanded="false"] .power-presets,
+.shot-panel[data-expanded="false"] > small {
+  display: none;
+}
+.shot-panel .shot-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 130px;
+  gap: 12px;
+  margin: 5px 0 0;
+}
+.shot-panel .shot-controls input {
+  margin-top: 5px;
+  min-height: 32px;
+}
+.shot-panel .shoot {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px;
+  font-size: 12px;
+}
+.shot-panel[data-control-mode="pull"] .shot-controls,
+.shot-panel[data-control-mode="pulse"] .shot-controls {
+  display: flex;
+  justify-content: center;
+}
+.shot-panel[data-moving="true"] .shot-controls,
+.shot-panel[data-moving="true"] .charge-track {
+  display: none;
+}
+.shot-top span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.turn-toast {
+  left: 22px;
+  top: 205px;
+  bottom: auto;
+  transform: none;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  width: 190px;
+  gap: 5px 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  white-space: normal;
+  pointer-events: none;
+}
+.turn-toast strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.turn-toast span {
+  grid-column: 2 / 4;
+  grid-row: 2;
+}
+.turn-toast b {
+  grid-column: 3;
+  grid-row: 1;
+}
+.turn-intro {
+  left: 22px;
+  top: 285px;
+  transform: none;
+  width: 190px;
+  gap: 9px;
+  padding: 12px;
+  border-radius: 8px;
+  animation: none;
+}
+.turn-intro .turn-orb {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.turn-intro strong {
+  font-size: 20px;
+}
+.turn-intro span {
+  font-size: 9px;
+}
+@media (max-width: 800px) {
+  .shot-panel {
+    padding: 8px 12px;
+  }
+  .shot-panel .shot-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 98px;
+    gap: 10px;
+  }
+  .shot-panel .shoot {
+    font-size: 10px;
+    grid-column: auto;
+  }
+  .turn-toast {
+    left: 12px;
+    top: 173px;
+    width: 150px;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .turn-toast span {
+    font-size: 9px;
+  }
+  .turn-intro {
+    left: 12px;
+    top: 246px;
+    width: 150px;
+    padding: 9px;
+  }
+  .turn-intro strong {
+    font-size: 18px;
+  }
+}
