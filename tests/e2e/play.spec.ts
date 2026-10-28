@@ -308,6 +308,8 @@ test("touch aiming never shoots accidentally and the lunar circuit works with co
       page.getByRole("heading", { name: /Las diagonales/ }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+    await expect(page.locator(".turn-intro")).toHaveCount(0);
+    await page.waitForTimeout(300);
     await page.touchscreen.tap(220, 400);
     await expect(
       page.getByRole("slider", { name: "Ángulo", exact: true }),

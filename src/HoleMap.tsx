@@ -1,20 +1,21 @@
-import { getCourse, blockPose, colors } from "../shared/courses";
+import { getCourse, blockPose, colors, courseSize } from "../shared/courses";
 import type { State } from "../shared/game";
 export function HoleMap({ s }: { s: State }) {
   const course = getCourse(s);
+  const { width, length } = courseSize(course);
   return (
     <aside className="hole-map">
       <div className="eyebrow">TU LÍNEA, DESDE ARRIBA</div>
       <svg
-        viewBox="-7 -13 14 26"
+        viewBox={`${-width / 2 - 1} ${-length / 2 - 1} ${width + 2} ${length + 2}`}
         role="img"
         aria-label={`Mapa de ${course.name}`}
       >
         <rect
-          x={-6.2}
-          y={-12.2}
-          width={12.4}
-          height={24.4}
+          x={-width / 2 - 0.2}
+          y={-length / 2 - 0.2}
+          width={width + 0.4}
+          height={length + 0.4}
           rx={0.3}
           fill="#205b4b"
           stroke="#c4d4be"

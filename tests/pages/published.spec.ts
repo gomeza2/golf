@@ -33,10 +33,10 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
       page.getByRole("button", { name: /Jugar online/ }),
     ).toBeDisabled();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
-  await page.getByRole("button", { name: /Jardín lunar/ }).click();
+  await page.getByRole("button", { name: /Gran Parque/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(
-    page.getByRole("heading", { name: /Las diagonales/ }),
+    page.getByRole("heading", { name: /La gran serpiente/ }),
   ).toBeVisible();
   await page.getByRole("slider", { name: "Potencia", exact: true }).fill("0.4");
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
@@ -49,6 +49,14 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
     "1",
   );
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+  await page.getByRole("button", { name: "Mapa", exact: true }).click();
+  await expect(page.getByRole("img", { name: /Mapa de La gran serpiente/ })).toHaveAttribute("viewBox", "-9 -19 18 38");
+  await page.getByRole("button", { name: "Cerrar mapa", exact: true }).click();
+  await page.getByRole("button", { name: "Ver campo", exact: true }).click();
+  await page.waitForTimeout(1400);
+  await page.screenshot({ path: "work/pages-park-overview.png" });
+  await page.getByRole("button", { name: "Seguir pelota", exact: true }).click();
+  await page.waitForTimeout(1400);
   await page.screenshot({ path: "work/pages-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeInViewport();

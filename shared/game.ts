@@ -3,6 +3,9 @@ import {
   getCircuit,
   getCourse,
   geometry,
+  cupGreen,
+  cupWalls,
+  courseSize,
   blockPose,
   type Block,
   type CircuitId,
@@ -66,6 +69,7 @@ export class Game {
   dynamicBlocks: { body: RAPIER.RigidBody; block: Block }[] = [];
   elapsed = 0;
   quiet = 0;
+  capturedAt: number | null = null;
   last: V3 = { x: 0, y: 0, z: 0 };
   add(id: string, name: string) {
     if (this.state.phase !== "lobby" || this.state.players.length >= 8)
@@ -134,7 +138,19 @@ export class Game {
       }
     };
     const shape = geometry(c);
-    [...shape.surfaces, ...shape.walls, ...c.blocks].forEach(box);
+    [...shape.surfaces, ...shape.walls, ...c.blocks, ...cupWalls(c)].forEach(
+      box,
+    );
+    const green = cupGreen(c);
+    this.world.createCollider(
+      RAPIER.ColliderDesc.trimesh(
+        new Float32Array(green.vertices),
+        new Uint32Array(green.indices),
+      )
+        .setFriction(0.08)
+        .setRestitution(0.65),
+    );
+    this.capturedAt = null;
     this.ball = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(c.start.x, c.start.y, c.start.z)
@@ -199,6 +215,7 @@ export class Game {
     s.moving = true;
     this.elapsed = 0;
     this.quiet = 0;
+    this.capturedAt = null;
     s.message = "La pelota está en juego";
     return true;
   }
@@ -237,16 +254,26 @@ export class Game {
     p.pos = { ...pos };
     const c = getCourse(s);
     const speed = Math.hypot(v.x, v.z);
+    // A putt only counts once the ball physically drops below the rim.
+    // Keep simulating for half a second so everybody sees it fall before changing turn.
     if (
-      Math.hypot(pos.x - c.cup.x, pos.z - c.cup.z) < 0.48 &&
-      Math.abs(pos.y - (c.cup.y + 0.22)) < 0.45 &&
-      speed < 5
-    ) {
-      p.done = true;
-      if (p.strokes === 1) p.aces++;
-      p.pos = { ...c.cup, y: c.cup.y - 0.2 };
-      s.message = `¡${p.name} embocó en ${p.strokes}!`;
-      this.endTurn();
+      Math.hypot(pos.x - c.cup.x, pos.z - c.cup.z) < 0.5 &&
+      pos.y < c.cup.y - 0.28
+    )
+      this.capturedAt ??= this.elapsed;
+    if (
+      this.capturedAt !== null &&
+      (pos.y > c.cup.y - 0.1 ||
+        Math.hypot(pos.x - c.cup.x, pos.z - c.cup.z) > 0.5)
+    )
+      this.capturedAt = null;
+    if (this.capturedAt !== null) {
+      if (this.elapsed - this.capturedAt > 0.55) {
+        p.done = true;
+        if (p.strokes === 1) p.aces++;
+        s.message = `¡${p.name} embocó en ${p.strokes}!`;
+        this.endTurn();
+      }
       return;
     }
     // Rolling resistance is applied only on the surface, preserving airborne arcs.
@@ -254,7 +281,12 @@ export class Game {
       const f = Math.max(0, 1 - 0.016 / Math.max(0.05, speed));
       this.ball.setLinvel({ x: v.x * f, y: v.y, z: v.z * f }, true);
     }
-    if (pos.y < -4 || Math.abs(pos.x) > 7 || Math.abs(pos.z) > 14) {
+    const bounds = courseSize(c);
+    if (
+      pos.y < -4 ||
+      Math.abs(pos.x) > bounds.width / 2 + 1 ||
+      Math.abs(pos.z) > bounds.length / 2 + 2
+    ) {
       p.pos = { ...this.last };
       p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
       s.message = "Fuera de campo: regreso y un golpe de penalización";
