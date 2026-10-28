@@ -14,3 +14,9 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Build for GitHub Pages
+        run: npm run build
+        env:
+          PAGES_BASE_PATH: /golf/
+          VITE_STATIC_HOST: "true"
+      - run: npm run test:pages

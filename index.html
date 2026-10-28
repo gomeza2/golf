@@ -7,10 +7,38 @@
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
     <meta name="theme-color" content="#102b29" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <meta
+      name="description"
+      content="Minigolf 3D competitivo. Dos recorridos, seis hoyos y partidas locales con amigos."
+    />
     <title>Mini Golf Battle · Club del atardecer</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div
+        style="
+          min-height: 100svh;
+          display: grid;
+          place-content: center;
+          padding: 32px;
+          background: #153c37;
+          color: #f7f1df;
+          font-family: system-ui, sans-serif;
+          text-align: center;
+        "
+      >
+        <div style="color: #f5cc77; letter-spacing: 4px; font-weight: 700">
+          MINI GOLF BATTLE
+        </div>
+        <h1>Abriendo el club…</h1>
+        <p>Estamos cargando el campo y el motor de físicas.</p>
+        <p>La primera visita puede tardar unos segundos.</p>
+      </div>
+    </div>
+    <noscript
+      >Para jugar necesitas activar JavaScript en el navegador.</noscript
+    >
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

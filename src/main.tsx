@@ -6,12 +6,16 @@ import { colors, getCircuit, type CircuitId } from "../shared/courses";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
+import { AppErrorBoundary } from "./AppErrorBoundary";
 import { CircuitPicker } from "./CircuitPicker";
 import { readLocal, saveLocal, readSession, saveSession } from "./storage";
 import "@fontsource/barlow-condensed/700.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/700.css";
 import "./style.css";
+const onlineAvailable =
+  import.meta.env.VITE_STATIC_HOST !== "true" ||
+  Boolean(import.meta.env.VITE_SERVER_URL);
 const initial: State = {
   phase: "lobby",
   players: [],
@@ -135,6 +139,12 @@ function App() {
     setError("");
   }
   function connect(type: "create" | "join" | "resume") {
+    if (!onlineAvailable) {
+      setError(
+        "Online no está disponible en este sitio. Puedes jugar en este dispositivo.",
+      );
+      return;
+    }
     game.current?.dispose();
     game.current = null;
     socket.current?.disconnect();
@@ -296,10 +306,20 @@ function App() {
               {ready ? "Jugar en este dispositivo" : "Cargando físicas…"}{" "}
               <span>→</span>
             </button>
-            <button className="secondary" onClick={() => setScreen("online")}>
+            <button
+              className="secondary"
+              disabled={!onlineAvailable}
+              onClick={() => setScreen("online")}
+            >
               Jugar online <span>→</span>
             </button>
           </div>
+          {!onlineAvailable && (
+            <p className="availability">
+              Juega con hasta 8 personas en este dispositivo. Online no está
+              disponible en este sitio.
+            </p>
+          )}
           <div className="hero-meta">
             <span>01—08 JUGADORES</span>
             <span>6 HOYOS CON PERSONALIDAD</span>
@@ -509,6 +529,8 @@ function App() {
 }
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </React.StrictMode>,
 );
