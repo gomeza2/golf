@@ -22,6 +22,8 @@ import {
   ImpactEffect,
   useGrassTexture,
 } from "./CourseEffects";
+import type { ControlMode } from "./shotControls";
+import type { useShotControls } from "./useShotControls";
 import { followPose, turnAngle } from "./camera";
 function Box({
   b,
@@ -226,6 +228,10 @@ function NoGraphics() {
 function World({
   s,
   angle,
+  cameraAngle,
+  controlMode,
+  canShoot,
+  shotInput,
   power,
   style,
   overview,
@@ -235,6 +241,10 @@ function World({
 }: {
   s: State;
   angle: number;
+  cameraAngle: number;
+  controlMode: ControlMode;
+  canShoot: boolean;
+  shotInput: ReturnType<typeof useShotControls>;
   power: number;
   style: ShotStyle;
   onPower: (p: number) => void;
@@ -253,6 +263,21 @@ function World({
     angle: number;
     power: number;
   } | null>(null);
+  const activePointer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!canShoot || (controlMode === "pull" && !shotInput.active)) {
+      activePointer.current = null;
+      drag.current = null;
+    }
+  }, [canShoot, controlMode, shotInput.active]);
+  useEffect(() => {
+    const reset = () => {
+      activePointer.current = null;
+      drag.current = null;
+    };
+    window.addEventListener("blur", reset);
+    return () => window.removeEventListener("blur", reset);
+  }, []);
   const p = s.players[s.turn]?.pos || c.start;
   const blocks = shape.walls
     .map((b) => ({ ...b, color: theme.edge }))
@@ -279,7 +304,7 @@ function World({
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
-      <Camera s={s} overview={overview} angle={angle} focusId={focusId} />
+      <Camera s={s} overview={overview} angle={cameraAngle} focusId={focusId} />
       <SceneReady />
       <CourseWater course={c} />
       <ImpactEffect event={s.event} time={s.time} />
@@ -353,6 +378,11 @@ function World({
         position={[0, p.y, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerMove={(e) => {
+          if (activePointer.current !== e.pointerId) return;
+          if (controlMode === "pull") {
+            shotInput.move(e.clientX, e.clientY);
+            return;
+          }
           if (!drag.current || !e.buttons) return;
           const dx = e.clientX - drag.current.x,
             dy = e.clientY - drag.current.y;
@@ -361,14 +391,32 @@ function World({
           onPower(Math.max(0.03, Math.min(1, drag.current.power - dy * 0.003)));
         }}
         onPointerUp={(e) => {
+          if (activePointer.current !== e.pointerId) return;
+          activePointer.current = null;
+          if (controlMode === "pull") shotInput.release();
           drag.current = null;
           (e.target as unknown as Element).releasePointerCapture(e.pointerId);
         }}
-        onPointerCancel={() => {
+        onPointerCancel={(e) => {
+          if (activePointer.current !== e.pointerId) return;
+          activePointer.current = null;
+          shotInput.cancel();
           drag.current = null;
         }}
         onPointerDown={(e) => {
           e.stopPropagation();
+          if (
+            !canShoot ||
+            activePointer.current !== null ||
+            (controlMode === "pulse" && shotInput.active)
+          )
+            return;
+          activePointer.current = e.pointerId;
+          if (controlMode === "pull") {
+            (e.target as unknown as Element).setPointerCapture(e.pointerId);
+            shotInput.start(e.clientX, e.clientY);
+            return;
+          }
           const aimed = Math.atan2(e.point.x - p.x, -(e.point.z - p.z));
           drag.current = { x: e.clientX, y: e.clientY, angle: aimed, power };
           (e.target as unknown as Element).setPointerCapture(e.pointerId);

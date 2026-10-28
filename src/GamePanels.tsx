@@ -1,7 +1,14 @@
-import { useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { ranking, total, position, canStart, type State } from "../shared/game";
 import { wrapAngle, type ShotStyle } from "../shared/shot";
 import { getCourse, getCircuit, courseSize, colors } from "../shared/courses";
+import { controlModes, type ControlMode } from "./shotControls";
 import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
 import { useFullscreen } from "./useFullscreen";
@@ -16,6 +23,13 @@ type Props = {
   canShoot: boolean;
   angle: number;
   power: number;
+  controlMode: ControlMode;
+  setControlMode: Setter<ControlMode>;
+  chargeActive: boolean;
+  referencePower: number;
+  startCharge: () => void;
+  releaseCharge: () => void;
+  cancelCharge: () => void;
   style: ShotStyle;
   setStyle: Setter<ShotStyle>;
   overview: boolean;
@@ -39,6 +53,13 @@ export function GamePanels({
   canShoot,
   angle,
   power,
+  controlMode,
+  setControlMode,
+  chargeActive,
+  referencePower,
+  startCharge,
+  releaseCharge,
+  cancelCharge,
   style,
   setStyle,
   overview,
@@ -53,6 +74,10 @@ export function GamePanels({
   leave,
 }: Props) {
   const [mapOpen, setMapOpen] = useState(false);
+  const chargePointer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!chargeActive) chargePointer.current = null;
+  }, [chargeActive]);
   const fullscreen = useFullscreen(setError);
   const current = s.players[s.turn],
     circuit = getCircuit(s.circuit),
@@ -244,7 +269,7 @@ export function GamePanels({
             </span>
             <b>{current.strokes}/12</b>
           </div>
-          <section className="shot-panel">
+          <section className="shot-panel" data-control-mode={controlMode}>
             <div className="shot-top">
               <span>{s.message}</span>
               <b>
@@ -253,18 +278,42 @@ export function GamePanels({
                   : `${Math.max(0, Math.ceil(s.deadline - s.time))} s`}
               </b>
             </div>
+            <div className="control-mode-row">
+              <label>
+                CONTROL DEL TIRO{" "}
+                <select
+                  aria-label="Control del tiro"
+                  value={controlMode}
+                  disabled={!canShoot || chargeActive}
+                  onChange={(e) =>
+                    setControlMode(e.target.value as ControlMode)
+                  }
+                >
+                  {controlModes.map((mode) => (
+                    <option key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {chargeActive && (
+                <button className="text-button" onClick={cancelCharge}>
+                  Cancelar preparación
+                </button>
+              )}
+            </div>
             <div className="shot-options">
               <div role="group" aria-label="Tipo de golpe">
                 <button
                   aria-pressed={style === "putt"}
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   onClick={() => setStyle("putt")}
                 >
                   Rodado
                 </button>
                 <button
                   aria-pressed={style === "chip"}
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   onClick={() => setStyle("chip")}
                 >
                   Elevado
@@ -273,14 +322,14 @@ export function GamePanels({
               <div role="group" aria-label="Ajuste fino">
                 <button
                   aria-label="Girar medio grado a la izquierda"
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   onClick={() => setAngle((a) => wrapAngle(a - Math.PI / 360))}
                 >
                   −0,5°
                 </button>
                 <button
                   aria-label="Girar medio grado a la derecha"
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   onClick={() => setAngle((a) => wrapAngle(a + Math.PI / 360))}
                 >
                   +0,5°
@@ -302,7 +351,7 @@ export function GamePanels({
                   max={Math.PI}
                   step="any"
                   value={angle}
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   onChange={(e) => setAngle(Number(e.target.value))}
                 />
               </label>
@@ -315,18 +364,92 @@ export function GamePanels({
                   max="1"
                   step=".01"
                   value={power}
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   onChange={(e) => setPower(Number(e.target.value))}
                 />
               </label>
-              <button
-                className="primary shoot"
-                disabled={!canShoot}
-                onClick={shoot}
-              >
-                GOLPEAR <span>→</span>
-              </button>
+              {controlMode === "classic" ? (
+                <button
+                  className="primary shoot"
+                  disabled={!canShoot || chargeActive}
+                  onClick={shoot}
+                >
+                  GOLPEAR <span>→</span>
+                </button>
+              ) : controlMode === "pulse" ? (
+                <button
+                  className="primary shoot pulse-trigger"
+                  disabled={!canShoot}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (chargePointer.current !== null) return;
+                    chargePointer.current = e.pointerId;
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    startCharge();
+                  }}
+                  onPointerUp={(e) => {
+                    e.preventDefault();
+                    if (chargePointer.current !== e.pointerId) return;
+                    chargePointer.current = null;
+                    releaseCharge();
+                  }}
+                  onPointerCancel={(e) => {
+                    if (chargePointer.current === e.pointerId) {
+                      chargePointer.current = null;
+                      cancelCharge();
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if ([" ", "Enter"].includes(e.key)) {
+                      e.preventDefault();
+                      if (!e.repeat) startCharge();
+                    }
+                  }}
+                  onKeyUp={(e) => {
+                    if ([" ", "Enter"].includes(e.key)) {
+                      e.preventDefault();
+                      releaseCharge();
+                    }
+                  }}
+                >
+                  {chargeActive ? "SUELTA EN TU PUNTO" : "MANTENER Y SOLTAR"}
+                </button>
+              ) : (
+                <div className="pull-instruction">
+                  <strong>
+                    {chargeActive
+                      ? `${Math.round(power * 100)}% · SUELTA PARA TIRAR`
+                      : s.moving
+                        ? "PELOTA EN JUEGO"
+                        : !canShoot
+                          ? "ESPERA TU TURNO"
+                          : "TIRA HACIA ATRÁS"}
+                  </strong>
+                  <small>Mantén sobre el campo y arrastra</small>
+                </div>
+              )}
             </div>
+            {controlMode !== "classic" && (
+              <div
+                className={`charge-track ${controlMode}`}
+                role="progressbar"
+                aria-label={
+                  controlMode === "pulse"
+                    ? "Pulso de potencia"
+                    : "Potencia de arrastre"
+                }
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(power * 100)}
+              >
+                <span style={{ width: `${power * 100}%` }} />
+                <i
+                  style={{
+                    left: `${Math.max(0, Math.min(0.95, referencePower - 0.025)) * 100}%`,
+                  }}
+                />
+              </div>
+            )}
             <div
               className="power-presets"
               role="group"
@@ -335,7 +458,7 @@ export function GamePanels({
               {[0.25, 0.5, 0.75, 1].map((value) => (
                 <button
                   key={value}
-                  disabled={!canShoot}
+                  disabled={!canShoot || chargeActive}
                   aria-pressed={Math.abs(power - value) < 0.005}
                   onClick={() => setPower(value)}
                 >
@@ -344,8 +467,11 @@ export function GamePanels({
               ))}
             </div>
             <small>
-              Arrastra: dirección y fuerza · Shift + flechas: ajuste fino ·
-              Soltar no dispara
+              {controlMode === "classic"
+                ? "Flecha y potencia · Shift + flechas: ajuste fino · Golpear confirma"
+                : controlMode === "pull"
+                  ? "Arrastra hacia atrás: fuerza y dirección · Soltar dispara · Escape cancela"
+                  : "La dirección y la fuerza oscilan · Mantén y suelta en tu instante · Escape cancela"}
             </small>
           </section>
         </>

@@ -3,7 +3,7 @@ export function followPose(ball: V3, heading: number, aspect: number) {
   const compact = aspect < 0.8;
   const distance = compact ? 12 : 10.5,
     height = compact ? 8.6 : 7.5;
-  const ahead = compact ? 0.15 : 1.8;
+  const ahead = compact ? 0.15 : 0.35;
   const dx = Math.sin(heading),
     dz = -Math.cos(heading);
   return {

@@ -301,8 +301,8 @@ test("touch aiming never shoots accidentally and the lunar circuit works with co
       sessionStorage.setItem("golf-session", "{broken"),
     );
     await page.goto("/");
-    await page.getByRole("button", { name: /Jugar en este/ }).tap();
     await page.getByRole("button", { name: /Jardín lunar/ }).tap();
+    await page.getByRole("button", { name: /Jugar en este/ }).tap();
     await page.getByRole("button", { name: /Comenzar recorrido/ }).tap();
     await expect(
       page.getByRole("heading", { name: /Las diagonales/ }),
@@ -332,7 +332,7 @@ test("water penalties and elevated shots in Riviera are authoritative across rea
       name: "Ana",
       circuit: "riviera",
     });
-    expect(sa.protocol).toBe(2);
+    expect(sa.protocol).toBe(3);
     await enter(b, { type: "join", name: "Luis", code: sa.code });
     let pending = waitState(a, (s) => s.players.every((p: any) => p.ready));
     a.emit("action", { type: "ready" });
@@ -375,8 +375,8 @@ test("dragging adjusts aim and power without firing; fine adjustments and shot s
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
+  await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   const angle = page.getByRole("slider", { name: "Ángulo", exact: true }),

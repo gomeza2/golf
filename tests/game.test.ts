@@ -124,12 +124,15 @@ describe("authoritative rules and physics", () => {
     const routes = [
       [
         [5.877818513168, 1],
-        [0.7004962396096744, 0.22],
+        [1.1093312025564188, 0.22],
       ],
-      [[0.16514867741462683, 0.8]],
       [
-        [5.675135116162207, 1],
-        [0.0916344530121638, 0.22],
+        [0.4053667940115862, 0.8],
+        [-0.30228398111630306, 0.15],
+      ],
+      [
+        [0.4053667940115862, 1],
+        [-1.0039639632405317, 0.22],
       ],
     ];
     for (let hole = 0; hole < 3; hole++) {
@@ -142,7 +145,7 @@ describe("authoritative rules and physics", () => {
       if (hole < 2) g.next();
     }
     expect(g.state.phase).toBe("finished");
-    expect(g.state.players[0].scores).toEqual([2, 1, 2]);
+    expect(g.state.players[0].scores).toEqual([2, 2, 2]);
   });
   it("moves rotating obstacle colliders", () => {
     const g = make();
@@ -252,15 +255,12 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
   const routes = [
     [
       [5.675135116162207, 1],
-      [-0.9946713645749212, 0.15],
+      [-2.4761564468670225, 0.08],
     ],
-    [
-      [0.6080501910173793, 1],
-      [1.2571460423292329, 0.15],
-    ],
+    [[0, 1]],
     [
       [0.4053667940115862, 1],
-      [-2.1035202396793387, 0.22],
+      [-2.325120615416012, 0.22],
     ],
   ];
   for (let hole = 0; hole < 3; hole++) {
@@ -272,7 +272,7 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
     if (hole < 2) g.next();
   }
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([2, 2, 2]);
+  expect(g.state.players[0].scores).toEqual([2, 1, 2]);
 });
 
 it("plays all larger park holes from the tees without repositioning", () => {
@@ -283,17 +283,18 @@ it("plays all larger park holes from the tees without repositioning", () => {
   g.start();
   const routes = [
     [
-      [5.877818513168, 1],
+      [5.877818513168, 0.8],
       [2.6348841610753104, 1],
-      [-1.2093491188511798, 0.15],
+      [-0.6846840844496217, 0.22],
     ],
     [
-      [0.8107335880231724, 1],
-      [0.4188573949464391, 0.4],
+      [5.472451719156414, 1],
+      [2.4322007640695174, 1],
+      [-1.4409367066912935, 0.22],
     ],
     [
-      [5.877818513168, 1],
-      [1.7573092070873253, 0.4],
+      [5.675135116162207, 1],
+      [0.43372850069181684, 0.4],
     ],
   ];
   for (let hole = 0; hole < 3; hole++) {
@@ -305,7 +306,7 @@ it("plays all larger park holes from the tees without repositioning", () => {
     if (hole < 2) g.next();
   }
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([3, 2, 2]);
+  expect(g.state.players[0].scores).toEqual([3, 3, 2]);
 });
 
 it("drops through a real opening and keeps the camera's turn during the fall", () => {

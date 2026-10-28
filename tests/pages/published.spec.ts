@@ -28,12 +28,17 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle(/Club del Último Golpe/);
   await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Vuelta completa/ }),
+  ).toBeVisible();
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
+  await page.screenshot({ path: "work/pages-catalogue-desktop.png" });
   if (!process.env.VITE_SERVER_URL)
     await expect(
       page.getByRole("button", { name: /Jugar online/ }),
     ).toBeDisabled();
-  await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
+  await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(
     page.getByRole("heading", { name: /Las dos orillas/ }),
@@ -65,6 +70,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeInViewport();
   await page.screenshot({ path: "work/pages-mobile.png" });
+  await page.getByRole("button", { name: "Salir", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
+  await page.screenshot({ path: "work/pages-catalogue-mobile.png" });
   expect(errors).toEqual([]);
   expect(failures).toEqual([]);
   console.log(

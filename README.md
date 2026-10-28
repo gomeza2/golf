@@ -6,7 +6,7 @@ Versión jugable de minigolf 3D competitivo, en español. React + TypeScript + T
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.
 
-Pages sirve el juego local completo para 1–8 personas y los cuatro recorridos. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
+Pages sirve el juego local completo para 1–8 personas y las seis opciones de recorrido. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
@@ -34,9 +34,14 @@ Abre **http://localhost:5173**. Vite reenvía `/socket.io` al servidor en el pue
 
 ### En el mismo dispositivo
 
-1. Pulsa **Jugar en este dispositivo**; introduce de 1 a 8 nombres.
-2. Elige uno de los cuatro recorridos; **Riviera Salvaje** contiene agua, arena, rampas y los desafíos largos y comienza el recorrido. La cámara se colocará detrás de la pelota del jugador que tiene el turno. Apunta tocando/haciendo clic en el campo o con el deslizador de ángulo.
-3. Elige **Rodado** o **Elevado**. Haz clic/toca para apuntar; arrastra horizontalmente para ajustar dirección y verticalmente para potencia. **Soltar nunca dispara**: confirma con **GOLPEAR**. Hay ajustes de medio grado y potencias rápidas de 25/50/75/100%. Flechas ajustan ángulo/fuerza; **Shift** permite ajustes finos y espacio lanza cuando el foco no está en un control. La guía muestra un primer rebote aproximado o el arco inicial, sin resolver el recorrido entero.
+1. En el catálogo inicial elige recorrido y control de tiro. **Desafío Maestro** añade cinco hoyos largos; **Vuelta completa** reúne los 18 hoyos en una sola partida.
+2. Pulsa **Jugar en este dispositivo**, introduce de 1 a 8 nombres y comienza. La cámara se coloca detrás de la pelota activa.
+3. Elige el estilo **Rodado** o **Elevado** y uno de los tres controles:
+   - **Flecha**: apunta con el campo o deslizador, regula potencia y pulsa **GOLPEAR**. Arrastrar aquí solo ajusta; no dispara al soltar.
+   - **Arrastre**: mantén sobre el campo, tira hacia atrás y suelta para golpear en dirección opuesta. La distancia del arrastre marca la fuerza, hasta 100%. Solo el primer dedo controla el gesto; retirar un segundo dedo no dispara. Un desplazamiento inferior a 12 px cancela el gesto. No hace falta pulsar otro botón.
+   - **Pulso**: mantén el botón (o espacio) y suelta cuando coincidan fuerza y dirección. La potencia oscila en ciclos de 1,5 s y el ángulo varía hasta unos 7°. La marca de referencia conserva la potencia elegida antes de empezar. No hay azar: se ejecutan los valores del instante de soltar. Un toque de menos de 150 ms cancela.
+   Escape, pérdida de foco, cancelación táctil o cambio de turno cancelan cualquier preparación sin gastar golpes. La cámara mantiene su orientación al preparar Arrastre o Pulso. El control es una preferencia de cada dispositivo: las reglas, velocidades y validaciones del servidor son las mismas para todos. Flechas ajustan dirección/fuerza; Shift permite ajustes finos. Los estilos Rodado/Elevado están disponibles en los tres controles.
+
 4. Pasa el dispositivo al jugador indicado cuando la pelota se detenga.
 5. Al completar cada hoyo consulta la tabla y pulsa **Siguiente hoyo**; al terminar, juega una revancha o pulsa **Elegir otro recorrido**.
 
@@ -59,7 +64,7 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 
 ## Recorridos y reglas
 
-**13 hoyos en cuatro recorridos**. Club del atardecer y Jardín lunar tienen tres hoyos/par 11; Gran Parque, tres/par 15; Riviera Salvaje, cuatro/par 26. Las canchas crecen desde 12 × 24 m hasta 22 × 60 m. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
+**18 hoyos distintos y seis opciones de recorrido**. Club del atardecer y Jardín lunar tienen tres hoyos/par 11; Gran Parque, tres/par 15; Riviera Salvaje, cuatro/par 26; Desafío Maestro, cinco/par 31. **Vuelta completa** enlaza esos 18 hoyos en una única partida y clasificación (par 94). Las canchas crecen desde 12 × 24 m hasta 22 × 72 m. El catálogo no cuenta dos veces los hoyos incluidos en la vuelta completa. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
 
 | Recorrido          | Hoyo              | Diseño                                             | Par |
 | ------------------ | ----------------- | -------------------------------------------------- | --- |
@@ -76,6 +81,11 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 | Riviera Salvaje | El acueducto | 54 m, rampa a 3,6 m y puente estrecho con compuerta | 6 |
 | Riviera Salvaje | Archipiélago | 60 m, islas conectadas en S, arena y péndulo | 7 |
 | Riviera Salvaje | La presa final | 60 m, cresta, bajada lateral o salto sobre el embalse | 7 |
+| Desafío Maestro | La costura | 48 m, diagonales y arena de aproximación | 5 |
+| Desafío Maestro | El ocho | 54 m, bandas alternadas y péndulo | 6 |
+| Desafío Maestro | La terraza | 60 m, subida y green elevado | 6 |
+| Desafío Maestro | Dos canales | 66 m, puente izquierdo y puente derecho unidos por isla | 7 |
+| Desafío Maestro | El último aliento | 72 m, colocación, arena y obstáculo giratorio | 7 |
 
 - Un golpe por turno; cada pelota conserva su posición. Las pelotas rivales son fantasmas para evitar bloqueos.
 - Menos golpes acumulados gana. Desempate por mayor número de hoyos en uno; si persiste, victoria compartida.
@@ -86,6 +96,7 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 - **Arena**: aumenta la resistencia de rodadura; no afecta al vuelo por encima.
 - Fuera de límites: vuelve al punto anterior al golpe con un golpe adicional. La simulación limita cada movimiento a 18 segundos como protección contra bloqueos.
 - El motor comparte pasos fijos de 60 Hz y acumula intervalos variables, tanto en cliente como en servidor. Limita la recuperación tras pausas largas a 250 ms para evitar bloqueos. Una pelota esperando sobre una rampa conserva su posición hasta el golpe; la resistencia solo se aplica cuando hay suelo debajo.
+- La elasticidad se separa por material: **césped y rampas 0; bandas 0,62; copa 0,08; pelota 0**, con combinación máxima. El suelo absorbe el aterrizaje; las bandas reflejan con pérdida de energía. No se usa elasticidad de pared en el suelo. Se comprueba con caídas, rebotes medidos y tiros cortos que paran en menos de tres segundos.
 - La fricción, resistencia, gravedad, CCD y restitución se calculan en Rapier. El cliente interpola posiciones para suavizar los estados de red.
 - Vista del campo o seguimiento suave en tercera persona de la pelota activa. Cámara adaptada al ancho de pantalla. No se lanza al mover la cámara: el golpe tiene un botón separado.
 - Ajustes: volumen persistente, silencio e instrucciones de ratón, teclado y tacto. Sonidos sintetizados con Web Audio.
@@ -100,9 +111,10 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 33 pruebas de física, reglas, recuperación y cámara. Se completan los trece hoyos desde las salidas, sin recolocar la pelota: 2/1/2 golpes en el club, 2/2/2 en el jardín lunar, 3/2/2 en Gran Parque y 3/3/5/4 en Riviera (sin penalizaciones). También se comprueban agua, puente, vuelo sobre agua, arena, espera sobre pendientes, tiro elevado, rebote de la guía, paso fijo y validación de URLs de servidor. Se comprueba la caída real dentro del hoyo y que un golpe rápido puede pasar de largo. Además hay pruebas aisladas de detección de hoyo, pérdida de pelota, retiro, turnos futuros, selección de circuito, preparación, empates y almacenamiento corrupto/bloqueado.
+`npm test`: 39 pruebas de física, reglas, controles, recuperación y cámara. Se completan todos los recorridos desde la salida sin recolocar la pelota, incluida una partida continua de 18 hoyos sin penalizaciones. También se comprueban aterrizajes sin rebotes repetidos, pérdida de energía en bandas, parada de tiros cortos, potencia/dirección del arrastre y señal determinista del Pulso; además de agua, puente, arena, pendientes, copa, turnos, empate y reconexión. Las rutas de prueba se recalibran cuando cambia la física y usan solo golpes válidos.
 
-`npm run test:e2e`: ocho pruebas con Chromium y sockets reales. Cubren juego local, reconexión, selección de circuito sincronizada entre navegadores, retiro del anfitrión durante un golpe, salida/expulsión de invitados desconectados, revocación de sesiones, recuperación del anfitrión tras desconectarse todos, capacidad de ocho clientes (rechazo del noveno) y controles táctiles con datos de sesión corruptos. Incluyen penalización por agua y tiro elevado autoritativos observados por otro cliente, rechazo de estilos inválidos, latencia real, arrastre sin disparo, ajustes finos y potencias rápidas. También comprueban la cámara del siguiente jugador, el cambio entre seguimiento y vista general, el minimapa y la entrada/salida de pantalla completa cuando el navegador la permite. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe; si no, el Chromium instalado por Playwright. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegir otro ejecutable. Las capturas de revisión se guardan en `work/`, fuera del control de versiones.
+
+`npm run test:e2e`: doce pruebas con Chromium y sockets reales. Cubren juego local, reconexión, selección de circuito sincronizada entre navegadores, retiro del anfitrión durante un golpe, salida/expulsión de invitados desconectados, revocación de sesiones, recuperación del anfitrión tras desconectarse todos, capacidad de ocho clientes (rechazo del noveno) y controles táctiles con datos de sesión corruptos. Incluyen penalización por agua y tiro elevado autoritativos observados por otro cliente, rechazo de estilos inválidos, latencia real, arrastre de Flecha sin disparo, ajustes finos y potencias rápidas. Cuatro casos adicionales cubren el catálogo con vuelta de 18 hoyos, Arrastre con disparo único al soltar, cancelación con Escape y foco, Pulso con medidor real y disparo táctil mediante eventos de pantalla reales. También comprueban la cámara del siguiente jugador, el cambio entre seguimiento y vista general, el minimapa y la entrada/salida de pantalla completa cuando el navegador la permite. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe; si no, el Chromium instalado por Playwright. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegir otro ejecutable. Las capturas de revisión se guardan en `work/`, fuera del control de versiones.
 
 `PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la edición estática publicada, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública solo se ejecuta la partida real; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
@@ -119,7 +131,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo (2), número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo (3), número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 
@@ -137,6 +149,8 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 ## Organización
 
 - `shared/courses.ts`: definiciones reutilizables de hoyos, geometría, salidas y objetivos.
+- `src/ClubCatalog.tsx`, `src/ShotModePicker.tsx`: catálogo inicial conjunto de recorridos, controles y partida.
+- `src/shotControls.ts`, `src/useShotControls.ts`: gestos, potencia de arrastre, oscilación del Pulso y cancelación segura.
 - `shared/shot.ts`, `shared/timing.ts`: velocidades de golpe, guía del primer rebote y temporización física.
 - `src/CourseEffects.tsx`: césped procedural, agua animada y efectos de impactos.
 - `src/serverUrl.ts`: validación de orígenes y conexiones externas.
@@ -157,7 +171,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye cuatro recorridos (13 hoyos), selección local/online y revancha. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos de rampa o golpe elevado. Faltan túneles y plataformas que transporten pelotas.
+Incluye seis opciones de recorrido (18 hoyos distintos, con vuelta completa), selección local/online y revancha. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos de rampa o golpe elevado. Faltan túneles y plataformas que transporten pelotas.
 
 El rendimiento está limitado a un solo hoyo visible, DPR máximo 1.6, geometría sencilla, sombras de 1024 y una pelota física activa. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 
@@ -186,8 +200,8 @@ El contenedor usa Node 22, usuario sin privilegios y `/health`. Se comprobó la 
 
 ## Avance por fases
 
-- Base y partidas locales: implementadas, con 13 hoyos, clasificación y revancha.
+- Base y partidas locales: implementadas, con 18 hoyos, clasificación y revancha.
 - Multijugador: salas privadas autoritativas, 2–8 clientes, reconexión, latencia, invitación con servidor y controles de versión. **Pendiente: disponer de hosting persistente y comprobarlo por Internet.**
-- Experiencia visual y controles: cámara de seguimiento, carga real, césped procedural, agua animada, impactos, guía de rebote, arrastre y tiro elevado.
+- Experiencia visual y controles: cámara de seguimiento, carga real, césped procedural, agua animada, impactos, guía de rebote, Flecha, Arrastre, Pulso y tiro elevado.
 - Variedad: rampas, puentes, canales, islas, arena, barreras móviles y elecciones entre ruta segura y salto.
-- Pulido: pruebas automáticas de los 13 hoyos y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
+- Pulido: pruebas automáticas de los 18 hoyos y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.

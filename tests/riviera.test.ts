@@ -130,25 +130,23 @@ it("completes all four Riviera holes from their tees, without repositioning or p
     [
       [5.675135116162207, 0.65],
       [0, 0.8],
-      [1.4523668995160717, 0.5],
+      [1.443389087069408, 0.5],
     ],
     [
       [0, 1],
       [6.080501910173792, 0.4],
-      [0.5015667029657229, 0.5],
+      [0.4665132121711916, 0.5],
     ],
     [
       [0, 0.8],
       [0.6080501910173793, 0.4],
-      [1.6214671760463448, 0.3],
-      [0.10815062406596199, 1],
-      [0.6332329326080699, 0.15],
+      [1.4187837790405518, 1],
+      [0.10506813708759045, 0.8],
     ],
     [
       [0.4053667940115862, 0.4],
-      [0.04626821768011707, 0.65],
-      [0.0363638553237968, 1],
-      [-2.9606672987833447, 0.15],
+      [0.04717565632885135, 0.65],
+      [0.4053667940115862, 1],
     ],
   ];
   let highest = 0;
@@ -166,5 +164,5 @@ it("completes all four Riviera holes from their tees, without repositioning or p
   }
   expect(highest).toBeGreaterThan(3.8);
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([3, 3, 5, 4]);
+  expect(g.state.players[0].scores).toEqual([3, 3, 4, 3]);
 });
