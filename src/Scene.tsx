@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   getCourse,
@@ -10,6 +10,7 @@ import {
   type Block,
 } from "../shared/courses";
 import type { State } from "../shared/game";
+import { followPose, turnAngle } from "./camera";
 function Box({ b, time }: { b: Block; time: number }) {
   const pose = blockPose(b, time);
   return (
@@ -65,42 +66,99 @@ function Ball({
     </group>
   );
 }
-function Camera({ s, overview }: { s: State; overview: boolean }) {
-  const { camera, size } = useThree();
-  const target = useRef(new THREE.Vector3());
+function Camera({
+  s,
+  overview,
+  angle,
+  focusId,
+}: {
+  s: State;
+  overview: boolean;
+  angle: number;
+  focusId?: string;
+}) {
+  const { camera, size, gl } = useThree();
+  const target = useRef(new THREE.Vector3()),
+    ball = useRef(new THREE.Vector3()),
+    heading = useRef(0),
+    desiredHeading = useRef(0),
+    wasMoving = useRef(false);
+  const active = s.players.find((p) => p.id === focusId) || s.players[s.turn];
+  useEffect(() => {
+    gl.domElement.dataset.cameraMode = overview ? "overview" : "follow";
+    gl.domElement.dataset.focusPlayer = active?.id || "";
+  }, [overview, active?.id, gl]);
   useFrame((_, dt) => {
-    const p = s.players[s.turn]?.pos || getCourse(s).start;
-    const focus = overview
-      ? new THREE.Vector3(0, 0, 0)
-      : new THREE.Vector3(p.x * 0.25, p.y * 0.4, p.z * 0.35);
-    target.current.lerp(focus, Math.min(1, dt * 3));
-    const desired = overview
-      ? new THREE.Vector3(19, 28, 26)
-      : new THREE.Vector3(
-          target.current.x + 14,
-          target.current.y + 22,
-          target.current.z + 20,
-        );
-    desired
-      .sub(target.current)
-      .multiplyScalar(Math.max(1, 1.05 / (size.width / size.height)))
-      .add(target.current);
-    camera.position.lerp(desired, Math.min(1, dt * 2));
+    const p = active?.pos || getCourse(s).start;
+    if (
+      active?.id === s.players[s.turn]?.id &&
+      (!s.moving || !wasMoving.current)
+    )
+      desiredHeading.current = angle;
+    wasMoving.current = s.moving;
+    heading.current = turnAngle(
+      heading.current,
+      desiredHeading.current,
+      1 - Math.exp(-dt * 4),
+    );
+    ball.current.lerp(new THREE.Vector3(p.x, p.y, p.z), 1 - Math.exp(-dt * 9));
+    let position: THREE.Vector3, look: THREE.Vector3;
+    if (overview) {
+      position = new THREE.Vector3(19, 28, 26).multiplyScalar(
+        Math.max(1, 1.05 / (size.width / size.height)),
+      );
+      look = new THREE.Vector3(0, 0, 0);
+    } else {
+      const pose = followPose(
+        ball.current,
+        heading.current,
+        size.width / size.height,
+      );
+      position = new THREE.Vector3(
+        pose.position.x,
+        pose.position.y,
+        pose.position.z,
+      );
+      look = new THREE.Vector3(pose.target.x, pose.target.y, pose.target.z);
+    }
+    camera.position.lerp(position, 1 - Math.exp(-dt * 3.2));
+    target.current.lerp(look, 1 - Math.exp(-dt * 5));
     camera.lookAt(target.current);
   });
   return null;
+}
+function SceneReady() {
+  const sent = useRef(false);
+  useFrame(() => {
+    if (!sent.current) {
+      sent.current = true;
+      requestAnimationFrame(() => {
+        void document.fonts.ready.then(() =>
+          window.dispatchEvent(new Event("club:scene-ready")),
+        );
+      });
+    }
+  });
+  return null;
+}
+function NoGraphics() {
+  return (
+    <p>El campo necesita WebGL 2. Activa la aceleración gráfica para jugar.</p>
+  );
 }
 function World({
   s,
   angle,
   power,
   overview,
+  focusId,
   onAim,
 }: {
   s: State;
   angle: number;
   power: number;
   overview: boolean;
+  focusId?: string;
   onAim: (a: number) => void;
 }) {
   const c = getCourse(s),
@@ -132,7 +190,8 @@ function World({
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
-      <Camera s={s} overview={overview} />
+      <Camera s={s} overview={overview} angle={angle} focusId={focusId} />
+      <SceneReady />
       <mesh position={[0, -1, 0]} receiveShadow>
         <boxGeometry args={[14, 1.5, 26]} />
         <meshStandardMaterial
@@ -271,7 +330,7 @@ export function Scene(props: Parameters<typeof World>[0]) {
           setFailed(true),
         )
       }
-      fallback={<p>WebGL no está disponible en este dispositivo.</p>}
+      fallback={<NoGraphics />}
     >
       <Suspense fallback={null}>
         <World {...props} />

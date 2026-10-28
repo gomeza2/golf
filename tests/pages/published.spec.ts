@@ -26,6 +26,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   }
   const response = await page.goto(baseURL!);
   expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle(/Club del Último Golpe/);
   await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
   if (!process.env.VITE_SERVER_URL)
     await expect(
@@ -43,6 +44,11 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await expect(page.locator(".turn-toast strong")).toHaveText("Golfista 2", {
     timeout: 35000,
   });
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-focus-player",
+    "1",
+  );
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   await page.screenshot({ path: "work/pages-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeInViewport();
@@ -53,4 +59,81 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
     "PAGES VERIFIED: HTTP 200, all assets loaded, WebGL scene rendered, physical shot completed, next local turn available: " +
       baseURL,
   );
+});
+
+test("the loading bar waits for real bytes and only disappears after physics and graphics are ready", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(
+    Boolean(process.env.PUBLIC_GAME_URL),
+    "Network throttling belongs to the local production build test.",
+  );
+  let release!: () => void;
+  const blocked = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/assets/physics-*.js", async (route) => {
+    await blocked;
+    await route.continue();
+  });
+  try {
+    await page.goto(baseURL!, { waitUntil: "domcontentloaded" });
+    const progress = page.getByRole("progressbar", { name: "Carga del club" });
+    await expect(progress).toBeVisible();
+    await expect
+      .poll(async () => Number(await progress.getAttribute("aria-valuenow")))
+      .toBeGreaterThan(0);
+    expect(Number(await progress.getAttribute("aria-valuenow"))).toBeLessThan(
+      90,
+    );
+    await page.screenshot({ path: "work/loading-progress.png" });
+    release();
+    await expect(page.locator("#boot-screen")).toHaveCount(0, {
+      timeout: 30000,
+    });
+    await expect(
+      page.getByRole("button", { name: /Jugar en este/ }),
+    ).toBeEnabled();
+    await expect(page).toHaveTitle(/Club del Último Golpe/);
+  } finally {
+    release();
+  }
+});
+test("an interrupted download offers a retry instead of staying blank", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(
+    Boolean(process.env.PUBLIC_GAME_URL),
+    "Inject failures only against the local production build.",
+  );
+  await page.route("**/assets/physics-*.js", (route) => route.abort("failed"));
+  await page.goto(baseURL!, { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("La carga se interrumpió")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Reintentar carga" }),
+  ).toBeVisible();
+});
+
+test("even a blocked entry script leaves a visible recovery action", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(
+    Boolean(process.env.PUBLIC_GAME_URL),
+    "Inject failures only against the local production build.",
+  );
+  await page.route("**/assets/index-*.js", (route) => route.abort("failed"));
+  await page.goto(baseURL!, { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("No pudimos iniciar la descarga")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Reintentar carga" }),
+  ).toBeVisible();
+  await page.unroute("**/assets/index-*.js");
+  await page.getByRole("button", { name: "Reintentar carga" }).click();
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
+  await expect(
+    page.getByRole("button", { name: /Jugar en este/ }),
+  ).toBeEnabled();
 });

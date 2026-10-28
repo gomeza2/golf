@@ -1,4 +1,4 @@
-# Mini Golf Battle — Dos recorridos, una rivalidad
+# Club del Último Golpe — Minigolf competitivo
 
 Versión jugable de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
@@ -9,6 +9,16 @@ URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiz
 Pages sirve el juego local completo para 1–8 personas y ambos recorridos. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación. Para habilitarlo, despliega el servidor y configura la variable de repositorio `VITE_SERVER_URL` con su URL HTTPS; permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor y vuelve a ejecutar la publicación. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
+
+## Presentación y cámara
+
+El juego se llama **Club del Último Golpe**. La URL del repositorio se conserva para no romper enlaces.
+
+- La pantalla inicial aparece antes de cargar React/Three/Rapier. El manifiesto de compilación enumera los archivos y sus tamaños; la barra muestra los bytes realmente recibidos hasta el 90%. El resto corresponde a la inicialización de Rapier y al primer fotograma 3D con las fuentes preparadas. No se rellena con un temporizador.
+- Si la red se atasca se muestra un aviso; si falla una descarga o el arranque, aparece una acción para reintentar. La preparación tiene un límite de dos minutos para no quedar esperando indefinidamente.
+- Durante la partida se utiliza todo el viewport, con cámara en tercera persona detrás de la pelota activa. Sigue su posición completa y mantiene la dirección del golpe durante el movimiento para evitar giros bruscos en los rebotes.
+- Al pasar el turno, la cámara conserva brevemente el final del golpe y se desplaza al siguiente jugador. Se muestra su nombre y se bloquea el golpe durante esa transición. En local también se pausa el reloj durante la presentación; online el servidor mantiene su tiempo autoritativo.
+- **Ver campo** conserva la vista general. **Mapa** despliega una vista cenital con paredes, obstáculos móviles y pelotas reales. **Pantalla completa** utiliza la API del navegador si está disponible; al salir de la partida se abandona también ese modo.
 
 ## Instalar y jugar
 
@@ -25,7 +35,7 @@ Abre **http://localhost:5173**. Vite reenvía `/socket.io` al servidor en el pue
 ### En el mismo dispositivo
 
 1. Pulsa **Jugar en este dispositivo**; introduce de 1 a 8 nombres.
-2. Elige **Club del atardecer** o **Jardín lunar** y comienza el recorrido. Apunta tocando/haciendo clic en el campo o con el deslizador de ángulo.
+2. Elige **Club del atardecer** o **Jardín lunar** y comienza el recorrido. La cámara se colocará detrás de la pelota del jugador que tiene el turno. Apunta tocando/haciendo clic en el campo o con el deslizador de ángulo.
 3. Ajusta la potencia y pulsa **GOLPEAR**. Flechas izquierda/derecha ajustan el ángulo; arriba/abajo, la fuerza; espacio lanza cuando el foco no está en un control.
 4. Pasa el dispositivo al jugador indicado cuando la pelota se detenga.
 5. Al completar cada hoyo consulta la tabla y pulsa **Siguiente hoyo**; al terminar, juega una revancha o pulsa **Elegir otro recorrido**.
@@ -67,7 +77,7 @@ Ambos recorridos tienen tres hoyos y par total 11. Las bandas, rampas y obstácu
 - **45 segundos por turno**. Si expiran, se suma un golpe y se pasa al siguiente jugador, también cuando alguien está desconectado. Así una sesión abandonada puede terminar sin bloquear al resto.
 - Fuera de límites: vuelve al punto anterior al golpe con un golpe adicional. La simulación limita cada movimiento a 18 segundos como protección contra bloqueos.
 - La fricción, resistencia, gravedad, CCD y restitución se calculan en Rapier. El cliente interpola posiciones para suavizar los estados de red.
-- Vista del campo o seguimiento suave de pelota. Cámara adaptada al ancho de pantalla. No se lanza al mover la cámara: el golpe tiene un botón separado.
+- Vista del campo o seguimiento suave en tercera persona de la pelota activa. Cámara adaptada al ancho de pantalla. No se lanza al mover la cámara: el golpe tiene un botón separado.
 - Ajustes: volumen persistente, silencio e instrucciones de ratón, teclado y tacto. Sonidos sintetizados con Web Audio.
 
 ## Verificar
@@ -80,11 +90,11 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 18 pruebas de física, reglas y recuperación. Se completan ambos recorridos desde las salidas, sin recolocar la pelota: 5/1/4 golpes en el club y 5/1/2 en el jardín lunar. Además hay pruebas aisladas de detección de hoyo, pérdida de pelota, retiro, turnos futuros, selección de circuito, preparación, empates y almacenamiento corrupto/bloqueado.
+`npm test`: 21 pruebas de física, reglas, recuperación y cámara. Se completan ambos recorridos desde las salidas, sin recolocar la pelota: 5/1/4 golpes en el club y 5/1/2 en el jardín lunar. Además hay pruebas aisladas de detección de hoyo, pérdida de pelota, retiro, turnos futuros, selección de circuito, preparación, empates y almacenamiento corrupto/bloqueado.
 
-`npm run test:e2e`: seis pruebas con Chromium y sockets reales. Cubren juego local, reconexión, selección de circuito sincronizada entre navegadores, retiro del anfitrión durante un golpe, salida/expulsión de invitados desconectados, revocación de sesiones, recuperación del anfitrión tras desconectarse todos, capacidad de ocho clientes (rechazo del noveno) y controles táctiles con datos de sesión corruptos. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe; si no, el Chromium instalado por Playwright. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegir otro ejecutable. Las capturas de revisión se guardan en `work/`, fuera del control de versiones.
+`npm run test:e2e`: seis pruebas con Chromium y sockets reales. Cubren juego local, reconexión, selección de circuito sincronizada entre navegadores, retiro del anfitrión durante un golpe, salida/expulsión de invitados desconectados, revocación de sesiones, recuperación del anfitrión tras desconectarse todos, capacidad de ocho clientes (rechazo del noveno) y controles táctiles con datos de sesión corruptos. También comprueban la cámara del siguiente jugador, el cambio entre seguimiento y vista general, el minimapa y la entrada/salida de pantalla completa cuando el navegador la permite. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe; si no, el Chromium instalado por Playwright. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegir otro ejecutable. Las capturas de revisión se guardan en `work/`, fuera del control de versiones.
 
-`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la edición estática publicada, bajo el prefijo real y sin fallback de rutas. Detecta 404 de scripts/fuentes, errores de JavaScript y fallos del golpe. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
+`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la edición estática publicada, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública solo se ejecuta la partida real; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
 `npm run build`: comprobación TypeScript, cliente en `dist/` y servidor en `dist-server/`. La CI ejecuta los tres comandos. WebGL con renderizado por software permite automatizar estas comprobaciones; no sustituye pruebas de rendimiento en teléfonos físicos.
 
@@ -121,7 +131,9 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 - `src/Scene.tsx`: representación 3D, cámara, materiales, obstáculos y pelotas interpoladas.
 - `src/main.tsx`: flujos de inicio, conexión online, sesión local y controles.
 - `src/GamePanels.tsx`: lobby, HUD de partida y resultados.
-- `src/AppErrorBoundary.tsx` e `index.html`: mensajes de carga y recuperación ante un fallo, evitando pantallas vacías.
+- `src/boot.ts`, `index.html` y el manifiesto generado por Vite: carga inicial por bytes y preparación real.
+- `src/AppErrorBoundary.tsx`: recuperación ante errores de arranque.
+- `src/camera.ts`, `src/useTurnPresentation.ts`, `src/useFullscreen.ts`, `src/HoleMap.tsx`: cámara, cambios de jugador, pantalla completa y minimapa.
 - `.github/workflows/pages.yml`, `scripts/serve-pages.mjs`, `tests/pages/`: publicación y comprobación del juego compilado en su ruta pública.
 - `src/CircuitPicker.tsx`: selección de recorrido compartida por los menús y el lobby.
 - `src/storage.ts`: preferencias y sesiones tolerantes a datos corruptos o almacenamiento bloqueado.

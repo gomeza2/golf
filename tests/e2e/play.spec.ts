@@ -16,6 +16,47 @@ test("local game renders WebGL and executes a physical shot on desktop and mobil
   await expect(page.locator(".turn-toast strong")).toHaveText("Golfista 2", {
     timeout: 25000,
   });
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-camera-mode",
+    "follow",
+  );
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-focus-player",
+    "1",
+  );
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+  await page.getByRole("button", { name: "Mapa", exact: true }).click();
+  await expect(page.getByRole("img", { name: /Mapa de/ })).toBeVisible();
+  await page.getByRole("button", { name: "Cerrar mapa", exact: true }).click();
+  await page.getByRole("button", { name: "Ver campo", exact: true }).click();
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-camera-mode",
+    "overview",
+  );
+  await page
+    .getByRole("button", { name: "Seguir pelota", exact: true })
+    .click();
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-camera-mode",
+    "follow",
+  );
+  const fullscreen = page.getByRole("button", {
+    name: "Pantalla completa",
+    exact: true,
+  });
+  if (await fullscreen.isVisible()) {
+    await fullscreen.click();
+    await expect
+      .poll(() => page.evaluate(() => Boolean(document.fullscreenElement)))
+      .toBe(true);
+    await page
+      .getByRole("button", { name: "Salir de pantalla completa", exact: true })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => Boolean(document.fullscreenElement)))
+      .toBe(false);
+  }
+  await page.waitForTimeout(1000);
   await page.screenshot({ path: "work/desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeInViewport();
@@ -266,6 +307,7 @@ test("touch aiming never shoots accidentally and the lunar circuit works with co
     await expect(
       page.getByRole("heading", { name: /Las diagonales/ }),
     ).toBeVisible();
+    await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
     await page.touchscreen.tap(220, 400);
     await expect(
       page.getByRole("slider", { name: "Ángulo", exact: true }),
