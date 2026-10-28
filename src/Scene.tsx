@@ -290,7 +290,14 @@ function World({
   return (
     <>
       <color attach="background" args={[theme.background]} />
-      <fog attach="fog" args={[theme.background, 100, 230]} />
+      <fog
+        attach="fog"
+        args={[
+          theme.background,
+          Math.max(100, dimensions.length * 6),
+          Math.max(230, dimensions.length * 12),
+        ]}
+      />
       <ambientLight intensity={1.15} />
       <hemisphereLight args={["#e9fff5", "#6b7050", 1.3]} />
       <directionalLight
@@ -477,7 +484,7 @@ export function Scene(props: Parameters<typeof World>[0]) {
     <Canvas
       shadows
       dpr={[1, 1.6]}
-      camera={{ position: [19, 28, 26], fov: 43, near: 0.1, far: 300 }}
+      camera={{ position: [19, 28, 26], fov: 43, near: 0.1, far: 1000 }}
       onCreated={({ gl }) =>
         gl.domElement.addEventListener("webglcontextlost", () =>
           setFailed(true),
