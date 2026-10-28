@@ -15,9 +15,35 @@ import {
   type Block,
 } from "../shared/courses";
 import type { State } from "../shared/game";
+import { wrapAngle, type ShotStyle } from "../shared/shot";
+import {
+  AimLine,
+  CourseWater,
+  ImpactEffect,
+  useGrassTexture,
+} from "./CourseEffects";
 import { followPose, turnAngle } from "./camera";
-function Box({ b, time }: { b: Block; time: number }) {
+function Box({
+  b,
+  time,
+  grass,
+}: {
+  b: Block;
+  time: number;
+  grass?: THREE.Texture;
+}) {
   const pose = blockPose(b, time);
+  const box = useMemo(() => {
+    const result = new THREE.BoxGeometry(...b.size);
+    if (grass) {
+      const uv = result.attributes.uv,
+        vertices = result.attributes.position;
+      for (let i = 0; i < uv.count; i++)
+        uv.setXY(i, vertices.getX(i) / 4, vertices.getZ(i) / 4);
+    }
+    return result;
+  }, [b.size[0], b.size[1], b.size[2], grass]);
+  useEffect(() => () => box.dispose(), [box]);
   return (
     <mesh
       position={pose.pos}
@@ -25,8 +51,12 @@ function Box({ b, time }: { b: Block; time: number }) {
       castShadow
       receiveShadow
     >
-      <boxGeometry args={b.size} />
-      <meshStandardMaterial color={b.color || "#dbc89f"} roughness={0.65} />
+      <primitive object={box} attach="geometry" />
+      <meshStandardMaterial
+        color={b.color || "#dbc89f"}
+        roughness={0.8}
+        map={grass}
+      />
     </mesh>
   );
 }
@@ -37,12 +67,22 @@ function Green({
   course: ReturnType<typeof getCourse>;
   color: string;
 }) {
+  const grass = useGrassTexture();
   const mesh = useMemo(() => {
     const data = cupGreen(course),
       result = new THREE.BufferGeometry();
     result.setAttribute(
       "position",
       new THREE.Float32BufferAttribute(data.vertices, 3),
+    );
+    result.setAttribute(
+      "uv",
+      new THREE.Float32BufferAttribute(
+        data.vertices.flatMap((_, i) =>
+          i % 3 === 0 ? [data.vertices[i] / 4, data.vertices[i + 2] / 4] : [],
+        ),
+        2,
+      ),
     );
     result.setIndex(data.indices);
     result.computeVertexNormals();
@@ -53,6 +93,7 @@ function Green({
     <mesh geometry={mesh} receiveShadow>
       <meshStandardMaterial
         color={color}
+        map={grass}
         roughness={0.9}
         side={THREE.DoubleSide}
       />
@@ -186,13 +227,17 @@ function World({
   s,
   angle,
   power,
+  style,
   overview,
+  onPower,
   focusId,
   onAim,
 }: {
   s: State;
   angle: number;
   power: number;
+  style: ShotStyle;
+  onPower: (p: number) => void;
   overview: boolean;
   focusId?: string;
   onAim: (a: number) => void;
@@ -201,6 +246,13 @@ function World({
     theme = getCircuit(s.circuit),
     shape = geometry(c),
     dimensions = courseSize(c);
+  const grass = useGrassTexture();
+  const drag = useRef<{
+    x: number;
+    y: number;
+    angle: number;
+    power: number;
+  } | null>(null);
   const p = s.players[s.turn]?.pos || c.start;
   const blocks = shape.walls
     .map((b) => ({ ...b, color: theme.edge }))
@@ -229,6 +281,8 @@ function World({
       />
       <Camera s={s} overview={overview} angle={angle} focusId={focusId} />
       <SceneReady />
+      <CourseWater course={c} />
+      <ImpactEffect event={s.event} time={s.time} />
       <mesh position={[0, -1.7, 0]} receiveShadow>
         <boxGeometry
           args={[dimensions.width + 2, 1.3, dimensions.length + 2]}
@@ -242,7 +296,12 @@ function World({
         <Box key={`cup-${i}`} b={{ ...b, color: "#132e2b" }} time={s.time} />
       ))}
       {shape.surfaces.map((b, i) => (
-        <Box key={i} b={{ ...b, color: theme.ground }} time={s.time} />
+        <Box
+          key={i}
+          b={{ ...b, color: theme.ground }}
+          time={s.time}
+          grass={grass}
+        />
       ))}
       {blocks.map((b, i) => (
         <Box key={i} b={b} time={s.time} />
@@ -281,32 +340,42 @@ function World({
         <Ball pos={c.start} color={colors[0]} active />
       )}
       {!s.moving && s.phase === "playing" && (
-        <group position={[p.x, p.y, p.z]} rotation={[0, -angle, 0]}>
-          <mesh
-            position={[0, 0, -(0.7 + power * 2)]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <cylinderGeometry args={[0.025, 0.045, 1 + power * 4, 8]} />
-            <meshBasicMaterial color="#ffdc85" />
-          </mesh>
-          <mesh
-            position={[0, 0, -(1.3 + power * 4)]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <coneGeometry args={[0.18, 0.5, 12]} />
-            <meshBasicMaterial color="#ffdc85" />
-          </mesh>
-        </group>
+        <AimLine
+          course={c}
+          from={p}
+          angle={angle}
+          power={power}
+          time={s.time}
+          style={style}
+        />
       )}
       <mesh
         position={[0, p.y, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
+        onPointerMove={(e) => {
+          if (!drag.current || !e.buttons) return;
+          const dx = e.clientX - drag.current.x,
+            dy = e.clientY - drag.current.y;
+          if (Math.hypot(dx, dy) < 8) return;
+          onAim(wrapAngle(drag.current.angle + dx * 0.008));
+          onPower(Math.max(0.03, Math.min(1, drag.current.power - dy * 0.003)));
+        }}
+        onPointerUp={(e) => {
+          drag.current = null;
+          (e.target as unknown as Element).releasePointerCapture(e.pointerId);
+        }}
+        onPointerCancel={() => {
+          drag.current = null;
+        }}
         onPointerDown={(e) => {
           e.stopPropagation();
-          onAim(Math.atan2(e.point.x - p.x, -(e.point.z - p.z)));
+          const aimed = Math.atan2(e.point.x - p.x, -(e.point.z - p.z));
+          drag.current = { x: e.clientX, y: e.clientY, angle: aimed, power };
+          (e.target as unknown as Element).setPointerCapture(e.pointerId);
+          onAim(aimed);
         }}
       >
-        <planeGeometry args={[80, 80]} />
+        <planeGeometry args={[200, 200]} />
         <meshBasicMaterial
           side={THREE.DoubleSide}
           transparent

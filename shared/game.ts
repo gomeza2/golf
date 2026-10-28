@@ -6,11 +6,13 @@ import {
   cupGreen,
   cupWalls,
   courseSize,
+  inZone,
   blockPose,
   type Block,
   type CircuitId,
   type V3,
 } from "./courses";
+import { shotVelocity, type ShotStyle } from "./shot";
 let initialization: Promise<void> | undefined;
 export const initPhysics = () => (initialization ??= RAPIER.init());
 export const MAX_STROKES = 12;
@@ -25,6 +27,7 @@ export type Player = {
   withdrawn: boolean;
   pos: V3;
   aces: number;
+  penalties: number;
 };
 export type State = {
   phase: "lobby" | "playing" | "scores" | "finished";
@@ -38,6 +41,12 @@ export type State = {
   message: string;
   host: string;
   code: string;
+  event?: {
+    seq: number;
+    kind: "bounce" | "water" | "cup";
+    pos: V3;
+    time: number;
+  };
 };
 export function ranking(players: Player[]) {
   return [...players].sort(
@@ -70,6 +79,8 @@ export class Game {
   elapsed = 0;
   quiet = 0;
   capturedAt: number | null = null;
+  eventSeq = 0;
+  lastBounce = -1;
   last: V3 = { x: 0, y: 0, z: 0 };
   add(id: string, name: string) {
     if (this.state.phase !== "lobby" || this.state.players.length >= 8)
@@ -85,6 +96,7 @@ export class Game {
       withdrawn: false,
       pos: { ...getCourse({ ...this.state, hole: 0 }).start },
       aces: 0,
+      penalties: 0,
     };
     this.state.players.push(p);
     if (!this.state.host) this.state.host = id;
@@ -97,6 +109,7 @@ export class Game {
     for (const p of this.state.players) {
       p.scores = [];
       p.aces = 0;
+      p.penalties = 0;
     }
     this.load();
   }
@@ -151,6 +164,7 @@ export class Game {
         .setRestitution(0.65),
     );
     this.capturedAt = null;
+    this.state.event = undefined;
     this.ball = this.world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(c.start.x, c.start.y, c.start.z)
@@ -189,7 +203,7 @@ export class Game {
     this.ball.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.state.deadline = this.state.time + 45;
   }
-  shoot(id: string, angle: number, power: number) {
+  shoot(id: string, angle: number, power: number, style: ShotStyle = "putt") {
     const s = this.state,
       p = s.players[s.turn];
     if (
@@ -199,19 +213,15 @@ export class Game {
       !Number.isFinite(angle) ||
       !Number.isFinite(power) ||
       power < 0.03 ||
-      power > 1
+      power > 1 ||
+      (style !== "putt" && style !== "chip")
     )
       return false;
     p.strokes++;
     this.last = { ...p.pos };
-    this.ball.setLinvel(
-      {
-        x: Math.sin(angle) * power * 20,
-        y: 0,
-        z: -Math.cos(angle) * power * 20,
-      },
-      true,
-    );
+    // A ball waiting on a slope stays at its saved lie until its next shot.
+    this.ball.setTranslation(p.pos, true);
+    this.ball.setLinvel(shotVelocity(angle, power, style), true);
     s.moving = true;
     this.elapsed = 0;
     this.quiet = 0;
@@ -237,11 +247,17 @@ export class Game {
         w: Math.cos(pose.yaw / 2),
       });
     }
+    if (!s.moving) {
+      this.ball.setTranslation(s.players[s.turn].pos, true);
+      this.ball.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    }
+    const before = this.ball.linvel();
     this.world.step();
     if (!s.moving) {
       if (s.time > s.deadline) {
         const p = s.players[s.turn];
         p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
+        p.penalties++;
         s.message = "Tiempo agotado: un golpe de penalización";
         this.endTurn();
       }
@@ -254,6 +270,26 @@ export class Game {
     p.pos = { ...pos };
     const c = getCourse(s);
     const speed = Math.hypot(v.x, v.z);
+    const beforeSpeed = Math.hypot(before.x, before.z);
+    if (
+      beforeSpeed > 1.2 &&
+      Math.hypot(v.x - before.x, v.z - before.z) > 1.8 &&
+      v.x * before.x + v.z * before.z <
+        beforeSpeed * Math.max(speed, 0.1) * 0.65 &&
+      s.time - this.lastBounce > 0.12
+    ) {
+      this.emitEvent("bounce", pos);
+      this.lastBounce = s.time;
+    }
+    if (c.water?.some((zone) => inZone(zone, pos) && pos.y < zone.y + 0.24)) {
+      this.emitEvent("water", pos);
+      p.pos = { ...this.last };
+      p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
+      p.penalties++;
+      s.message = "Al agua: un golpe de penalización y regreso al último punto";
+      this.endTurn();
+      return;
+    }
     // A putt only counts once the ball physically drops below the rim.
     // Keep simulating for half a second so everybody sees it fall before changing turn.
     if (
@@ -272,13 +308,27 @@ export class Game {
         p.done = true;
         if (p.strokes === 1) p.aces++;
         s.message = `¡${p.name} embocó en ${p.strokes}!`;
+        this.emitEvent("cup", pos);
         this.endTurn();
       }
       return;
     }
     // Rolling resistance is applied only on the surface, preserving airborne arcs.
-    if (Math.abs(v.y) < 0.15) {
-      const f = Math.max(0, 1 - 0.016 / Math.max(0.05, speed));
+    const grounded = this.world.castRay(
+      new RAPIER.Ray(pos, { x: 0, y: -1, z: 0 }),
+      0.26,
+      true,
+      undefined,
+      undefined,
+      undefined,
+      this.ball,
+    );
+    if (grounded && Math.abs(v.y) < 0.3) {
+      const sand = c.sand?.some(
+        (zone) => inZone(zone, pos) && Math.abs(pos.y - zone.y - 0.22) < 0.2,
+      );
+      const resistance = sand ? 0.085 : 0.016;
+      const f = Math.max(0, 1 - resistance / Math.max(0.05, speed));
       this.ball.setLinvel({ x: v.x * f, y: v.y, z: v.z * f }, true);
     }
     const bounds = courseSize(c);
@@ -289,6 +339,7 @@ export class Game {
     ) {
       p.pos = { ...this.last };
       p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
+      p.penalties++;
       s.message = "Fuera de campo: regreso y un golpe de penalización";
       this.endTurn();
       return;
@@ -297,6 +348,14 @@ export class Game {
     if (this.quiet > 20 || this.elapsed > 18) {
       this.endTurn();
     }
+  }
+  emitEvent(kind: "bounce" | "water" | "cup", pos: V3) {
+    this.state.event = {
+      seq: ++this.eventSeq,
+      kind,
+      pos: { ...pos },
+      time: this.state.time,
+    };
   }
   endTurn() {
     const s = this.state,
@@ -390,6 +449,7 @@ export class Game {
       p.strokes = 0;
       p.scores = [];
       p.aces = 0;
+      p.penalties = 0;
       p.pos = { ...getCourse(this.state).start };
     }
   }

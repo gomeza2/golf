@@ -7,6 +7,7 @@ import { gzip as gzipCallback } from "node:zlib";
 import { promisify } from "node:util";
 const gzip = promisify(gzipCallback);
 import { Game, initPhysics, canStart } from "../shared/game";
+import { FixedStepper } from "../shared/timing";
 import { isCircuitId } from "../shared/courses";
 await initPhysics();
 const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173").split(
@@ -15,7 +16,14 @@ const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173").split(
 const http = createServer(async (req, res) => {
   if (req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end('{"ok":true}');
+    res.end(
+      JSON.stringify({
+        ok: true,
+        protocol: 2,
+        rooms: rooms.size,
+        maxPlayers: capacity,
+      }),
+    );
     return;
   }
   try {
@@ -63,7 +71,13 @@ const io = new Server(http, {
   maxHttpBufferSize: 2048,
   cors: { origin: origins },
   allowRequest: (req, cb) =>
-    cb(null, !req.headers.origin || origins.includes(req.headers.origin)),
+    cb(
+      null,
+      !req.headers.origin ||
+        origins.includes(req.headers.origin) ||
+        req.headers.origin === `https://${req.headers.host}` ||
+        req.headers.origin === `http://${req.headers.host}`,
+    ),
 });
 type Room = {
   game: Game;
@@ -151,6 +165,7 @@ io.on("connection", (socket) => {
             id: pid,
             token: d.token,
             code: candidate.game.state.code,
+            protocol: 2,
           });
           io.to(candidate.game.state.code).emit("state", snapshot(candidate));
         } catch (error) {
@@ -169,6 +184,9 @@ io.on("connection", (socket) => {
         }
       };
       switch (d.type) {
+        case "ping":
+          if (typeof ack === "function") ack();
+          return;
         case "leave": {
           const previous = room,
             code = s.code;
@@ -225,7 +243,15 @@ io.on("connection", (socket) => {
           if (
             typeof d.angle !== "number" ||
             typeof d.power !== "number" ||
-            !room.game.shoot(pid, d.angle, d.power)
+            (d.style !== undefined &&
+              d.style !== "putt" &&
+              d.style !== "chip") ||
+            !room.game.shoot(
+              pid,
+              d.angle as number,
+              d.power as number,
+              d.style as "putt" | "chip" | undefined,
+            )
           )
             throw Error("Golpe rechazado: espera tu turno");
           break;
@@ -268,18 +294,25 @@ io.on("connection", (socket) => {
     io.to(s.code).emit("state", snapshot(room));
   });
 });
-let frames = 0;
+const stepper = new FixedStepper();
+let lastBroadcast = 0;
 setInterval(() => {
-  frames++;
+  const now = performance.now();
+  const broadcast = now - lastBroadcast >= 50;
+  if (broadcast) lastBroadcast = now;
+  const active: Room[] = [];
   for (const [code, r] of rooms) {
     if (!r.sockets.size && Date.now() - r.touched > 15 * 60_000) {
       r.game.dispose();
       rooms.delete(code);
       continue;
     }
-    r.game.tick();
-    if (frames % 3 === 0 && r.sockets.size)
-      io.to(code).emit("state", snapshot(r));
+    active.push(r);
+  }
+  stepper.advance(now, () => active.forEach((r) => r.game.tick()));
+  for (const r of active) {
+    if (broadcast && r.sockets.size)
+      io.to(r.game.state.code).emit("state", snapshot(r));
   }
 }, 1000 / 60);
 http.listen(Number(process.env.PORT) || 3001, "0.0.0.0", () =>

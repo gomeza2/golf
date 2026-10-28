@@ -1,5 +1,8 @@
 let context: AudioContext | undefined;
-export function tone(kind: "shot" | "cup" | "turn", volume: number) {
+export function tone(
+  kind: "shot" | "cup" | "turn" | "bounce" | "splash",
+  volume: number,
+) {
   if (!volume) return;
   try {
     context ??= new AudioContext();
@@ -8,9 +11,17 @@ export function tone(kind: "shot" | "cup" | "turn", volume: number) {
       g = context.createGain();
     o.connect(g);
     g.connect(context.destination);
-    o.type = "sine";
+    o.type = kind === "splash" ? "triangle" : "sine";
     o.frequency.setValueAtTime(
-      kind === "cup" ? 740 : kind === "shot" ? 180 : 440,
+      kind === "cup"
+        ? 740
+        : kind === "shot"
+          ? 180
+          : kind === "bounce"
+            ? 120
+            : kind === "splash"
+              ? 280
+              : 440,
       context.currentTime,
     );
     o.frequency.exponentialRampToValueAtTime(
