@@ -337,7 +337,7 @@ test("only normal shots are accepted and synchronized across real clients", asyn
       name: "Ana",
       circuit: "riviera",
     });
-    expect(sa.protocol).toBe(4);
+    expect(sa.protocol).toBe(5);
     await enter(b, { type: "join", name: "Luis", code: sa.code });
     let pending = waitState(a, (s) => s.players.every((p: any) => p.ready));
     a.emit("action", { type: "ready" });

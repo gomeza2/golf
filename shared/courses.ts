@@ -8,6 +8,7 @@ export type Block = {
   yaw?: number;
   motion?: "slide";
   phase?: number;
+  bevel?: number;
 };
 export type Zone = {
   x: number;
@@ -61,20 +62,32 @@ export function curvedBank(
 export const courses: Course[] = [
   {
     name: "Jardín de rebotes",
-    subtitle: "Busca el ángulo. El camino directo no siempre gana.",
+    subtitle:
+      "Dos islas oblicuas, una chicana abierta. Controla tu siguiente posición.",
     par: 3,
     start: { x: -3, y: 0.24, z: 9 },
     cup: { x: 3, y: 0, z: -9 },
-    blocks: [wall(-1, 2, 8, 0.5), wall(2, -4, 8, 0.5)],
+    blocks: [
+      { ...wall(-1.5, 2, 6.8, 0.65), yaw: -0.14 },
+      { ...wall(1.5, -4, 6.8, 0.65), yaw: 0.14 },
+    ],
+    sand: [{ x: -4.5, z: 5, width: 2, length: 2.5, y: 0 }],
   },
   {
     name: "La torre dorada",
-    subtitle: "Sube la rampa. Controla la caída y conquista la cima.",
+    subtitle:
+      "Rampa continua y banda curva en la terraza. Sube con decisión y afina arriba.",
     par: 4,
     start: { x: 0, y: 0.24, z: 9 },
     cup: { x: 3, y: 2.4, z: -9 },
     ramp: true,
-    blocks: [{ pos: [-2, 2.8, -7], size: [0.5, 0.8, 4] }, wall(-4, 5, 3, 0.5)],
+    blocks: [
+      ...curvedBank(-2, -7, 1.5, -Math.PI / 2, 0, 5).map((b) => ({
+        ...b,
+        pos: [b.pos[0], 2.8, b.pos[2]] as [number, number, number],
+      })),
+      wall(-4, 5, 3, 0.65),
+    ],
   },
   {
     name: "El péndulo",
@@ -416,6 +429,20 @@ mastersCourses[4].dirt = [{ x: 6, z: 10, width: 5, length: 5, y: 0 }];
 parkCourses[2].blocks.push(
   ...curvedBank(-4, -9, 2.2, -Math.PI / 2, Math.PI / 2, 8),
 );
+// Close only accidental near-wall slits; intended routes remain at least 0.9 m wide.
+export function sealSideSlits(course: Course) {
+  const half = courseSize(course).width / 2;
+  for (const b of course.blocks) {
+    b.bevel = Math.min(0.06, ...b.size.map((v) => v / 4));
+    if (b.moving || b.rotation || b.yaw || b.size[0] < b.size[2] * 2) continue;
+    let left = b.pos[0] - b.size[0] / 2,
+      right = b.pos[0] + b.size[0] / 2;
+    if (left + half > 0 && left + half < 0.9) left = -half;
+    if (half - right > 0 && half - right < 0.9) right = half;
+    b.pos[0] = (left + right) / 2;
+    b.size[0] = right - left;
+  }
+}
 export const uniqueCourses = [
   ...courses,
   ...nightCourses,
@@ -428,6 +455,7 @@ export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.z - zone.z) < zone.length / 2 + margin;
 export const courseSize = (course: Course) =>
   course.dimensions || { width: 12, length: 24 };
+uniqueCourses.forEach(sealSideSlits);
 export const circuits = [
   {
     id: "sunset" as const,
@@ -519,7 +547,7 @@ export function geometry(course: Course): {
   const surfaces: Block[] = course.ramp
     ? [
         { pos: [0, -0.2, 7], size: [12, 0.4, 10] },
-        { pos: [0, 1, -1], size: [12, 0.4, 6.46], rotation: Math.atan(0.4) },
+        rampDeck(0, 12, 2, -4, 0, 2.4),
         { pos: [0, 2.2, -8], size: [12, 0.4, 8] },
       ]
     : [{ pos: [0, -0.2, 0], size: [width, 0.4, length] }];
@@ -568,14 +596,19 @@ export const CUP_RADIUS = 0.5;
 export const CUP_DEPTH = 0.85;
 // Annular mesh: radial spokes connect the circular rim to a rectangular outer edge.
 // Identical triangles are rendered and passed to Rapier, so no invisible floor covers the cup.
-export function cupGreen(course: Course) {
+export function greenArea(course: Course) {
   const { width, length } = courseSize(course);
-  const bounds = course.greenBounds || {
-    minX: -width / 2,
-    maxX: width / 2,
-    minZ: course.ramp ? -12 : -length / 2,
-    maxZ: course.ramp ? -4 : length / 2,
-  };
+  return (
+    course.greenBounds || {
+      minX: -width / 2,
+      maxX: width / 2,
+      minZ: -length / 2,
+      maxZ: course.ramp ? -4 : length / 2,
+    }
+  );
+}
+export function cupGreen(course: Course) {
+  const bounds = greenArea(course);
   const { minX, maxX, minZ, maxZ } = bounds;
   const { x, y, z } = course.cup;
   const angles = Array.from({ length: 64 }, (_, i) => (i * Math.PI * 2) / 64);
@@ -648,3 +681,24 @@ export const rollingResistance = {
   dirt: 0.055,
   sand: 0.085,
 } as const;
+
+export function surfaceHeight(
+  block: Block,
+  x: number,
+  z: number,
+): number | null {
+  const yaw = block.yaw || 0,
+    dx = x - block.pos[0],
+    dz = z - block.pos[2];
+  const localX = Math.cos(yaw) * dx - Math.sin(yaw) * dz;
+  const localZ = Math.sin(yaw) * dx + Math.cos(yaw) * dz;
+  const angle = block.rotation || 0,
+    cosine = Math.cos(angle);
+  const along = (localZ - (Math.sin(angle) * block.size[1]) / 2) / cosine;
+  if (
+    Math.abs(localX) > block.size[0] / 2 + 1e-6 ||
+    Math.abs(along) > block.size[2] / 2 + 1e-6
+  )
+    return null;
+  return block.pos[1] + block.size[1] / (2 * cosine) - Math.tan(angle) * localZ;
+}

@@ -12,9 +12,13 @@ import { controlModes, type ControlMode } from "./shotControls";
 import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
 import { goalLabels, type RoundReport } from "./personalRecords";
+import type { CameraLook } from "./camera";
 import { useFullscreen } from "./useFullscreen";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
+  lookMode: boolean;
+  toggleLook: () => void;
+  onLook: (delta: Partial<CameraLook>) => void;
   s: State;
   roundReport: RoundReport | null;
   mode: "local" | "online";
@@ -43,6 +47,9 @@ type Props = {
   leave: () => void;
 };
 export function GamePanels({
+  lookMode,
+  toggleLook,
+  onLook,
   s,
   roundReport,
   mode,
@@ -254,6 +261,13 @@ export function GamePanels({
                   : "Pantalla completa"}
               </button>
             )}
+            <button
+              aria-label={lookMode ? "Volver a apuntar" : "Mirar"}
+              aria-pressed={lookMode}
+              onClick={toggleLook}
+            >
+              {lookMode ? "Apuntar" : "Mirar"}
+            </button>
             <button onClick={() => setSettings(true)}>Controles</button>
             <button onClick={leave}>Salir</button>
           </div>
@@ -265,13 +279,61 @@ export function GamePanels({
                 ? "Cambio de jugador"
                 : s.moving
                   ? "Pelota en movimiento"
-                  : canShoot
-                    ? "Tu turno de golpear"
-                    : "Preparando su golpe"}
+                  : lookMode
+                    ? "Explorando el campo"
+                    : canShoot
+                      ? "Tu turno de golpear"
+                      : "Preparando su golpe"}
             </span>
             <b>{current.strokes}/12</b>
           </div>
+          {lookMode && (
+            <section className="camera-dock" aria-label="Explorar cámara">
+              <small>
+                ARRASTRA EL CAMPO PARA MIRAR · EL TIRO ESTÁ BLOQUEADO
+              </small>
+              <div>
+                <button
+                  aria-label="Girar cámara a la izquierda"
+                  onClick={() => onLook({ yaw: -0.22 })}
+                >
+                  ←
+                </button>
+                <button
+                  aria-label="Subir cámara"
+                  onClick={() => onLook({ pitch: 0.12 })}
+                >
+                  ↑
+                </button>
+                <button
+                  aria-label="Bajar cámara"
+                  onClick={() => onLook({ pitch: -0.12 })}
+                >
+                  ↓
+                </button>
+                <button
+                  aria-label="Girar cámara a la derecha"
+                  onClick={() => onLook({ yaw: 0.22 })}
+                >
+                  →
+                </button>
+                <button
+                  aria-label="Acercar cámara"
+                  onClick={() => onLook({ zoom: -0.12 })}
+                >
+                  +
+                </button>
+                <button
+                  aria-label="Alejar cámara"
+                  onClick={() => onLook({ zoom: 0.12 })}
+                >
+                  −
+                </button>
+              </div>
+            </section>
+          )}
           <section
+            hidden={lookMode}
             className="shot-panel"
             data-control-mode={controlMode}
             data-expanded={expanded}

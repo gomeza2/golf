@@ -17,6 +17,7 @@ import {
   persistPersonalRecords,
   type RoundReport,
 } from "./personalRecords";
+import { defaultLook, changeLook, type CameraLook } from "./camera";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
@@ -89,6 +90,8 @@ function App() {
     [roundId, setRoundId] = useState(0),
     [roundControl, setRoundControl] = useState<ControlMode>("classic"),
     [overview, setOverview] = useState(false),
+    [lookMode, setLookMode] = useState(false),
+    [cameraLook, setCameraLook] = useState<CameraLook>(defaultLook),
     [settings, setSettings] = useState(false),
     [volume, setVolume] = useState(Number(readLocal("golf-volume", ".6"))),
     [ready, setReady] = useState(false);
@@ -211,8 +214,19 @@ function App() {
     s.phase === "playing" &&
     !s.moving &&
     !settings &&
+    !lookMode &&
     !transitioning &&
     (mode === "local" || (current?.id === id && status === "Conectado"));
+  const toggleLook = () => {
+    setLookMode((v) => !v);
+    setCameraLook(defaultLook);
+  };
+  useEffect(() => {
+    setLookMode(false);
+    setCameraLook(defaultLook);
+  }, [turnKey, screen]);
+  const adjustCamera = (delta: Partial<CameraLook>) =>
+    setCameraLook((v) => changeLook(v, delta));
   const shoot = (shot?: Shot) => {
     if (!canShoot) return;
     tone("shot", volume);
@@ -341,7 +355,7 @@ function App() {
     });
     sock.on("session", (session) => {
       if (socket.current !== sock) return;
-      if (session.protocol !== 4) {
+      if (session.protocol !== 5) {
         setError(
           "El servidor necesita actualizarse para admitir el golpe normal equilibrado",
         );
@@ -432,6 +446,9 @@ function App() {
           s={screen === "game" ? s : { ...initial, circuit }}
           angle={angle}
           cameraAngle={controls.cameraAngle}
+          lookMode={screen === "game" && lookMode}
+          cameraLook={cameraLook}
+          onLook={adjustCamera}
           canShoot={canShoot}
           controlMode={activeControl}
           shotInput={controls}
@@ -662,6 +679,9 @@ function App() {
       {screen === "game" && (
         <GamePanels
           roundReport={roundReport}
+          lookMode={lookMode}
+          toggleLook={toggleLook}
+          onLook={adjustCamera}
           s={s}
           mode={mode}
           status={status}

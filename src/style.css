@@ -1782,3 +1782,51 @@ button > span {
     font-size: 18px;
   }
 }
+.shot-panel[hidden] {
+  display: none;
+}
+.camera-dock {
+  position: absolute;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(430px, calc(100% - 24px));
+  border: 1px solid #cbd8c044;
+  border-radius: 10px;
+  padding: 12px;
+  background: #102e29f5;
+  text-align: center;
+}
+.camera-dock small {
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: #c9d6c8;
+}
+.camera-dock div {
+  display: flex;
+  gap: 8px;
+  margin-top: 9px;
+  justify-content: center;
+}
+.camera-dock button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #f5cf7855;
+  border-radius: 6px;
+  background: #244a3f;
+  color: #f5cf78;
+  font-size: 20px;
+}
+@media (max-width: 800px) {
+  .in-match .view-controls {
+    max-width: calc(100% - 24px);
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .view-controls button {
+    padding: 8px;
+  }
+  .camera-dock div {
+    gap: 6px;
+  }
+}

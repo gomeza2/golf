@@ -31,3 +31,28 @@ it("crosses the -180/180 boundary without spinning a full revolution", () => {
   expect(Math.abs(next - a)).toBeCloseTo(0.02);
   expect(turnAngle(0, 1, 10)).toBe(1);
 });
+it("inspection orbits the ball while keeping its target and a safe height", async () => {
+  const { changeLook, defaultLook } = await import("../src/camera");
+  const ball = { x: 3, y: 0.22, z: 1 };
+  const look = changeLook(defaultLook, { yaw: 0.7, pitch: 0.3, zoom: -0.1 });
+  const pose = followPose(ball, 0, 0.46, look);
+  expect(pose.position.x).toBeLessThan(ball.x);
+  expect(pose.position.y).toBeGreaterThan(ball.y + 6);
+  expect(
+    Math.hypot(pose.target.x - ball.x, pose.target.z - ball.z),
+  ).toBeLessThan(0.4);
+});
+it("inspection limits pitch and zoom and wraps horizontal rotation", async () => {
+  const { changeLook, defaultLook } = await import("../src/camera");
+  expect(changeLook(defaultLook, { pitch: 100, zoom: -100 })).toMatchObject({
+    pitch: 0.55,
+    zoom: 0.75,
+  });
+  expect(changeLook(defaultLook, { pitch: -100, zoom: 100 })).toMatchObject({
+    pitch: -0.22,
+    zoom: 1.65,
+  });
+  expect(
+    Math.abs(changeLook(defaultLook, { yaw: 100 }).yaw),
+  ).toBeLessThanOrEqual(Math.PI);
+});

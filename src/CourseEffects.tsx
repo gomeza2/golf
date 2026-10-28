@@ -17,10 +17,10 @@ export function useGrassTexture() {
       const x = seed % 128;
       seed = (seed * 16807) % 2147483647;
       const y = seed % 128;
-      ctx.fillStyle = i % 2 ? "rgba(22,64,39,.15)" : "rgba(245,255,211,.16)";
-      ctx.fillRect(x, y, 1, 2);
+      ctx.fillStyle = i % 2 ? "rgba(22,64,39,.07)" : "rgba(245,255,211,.08)";
+      ctx.fillRect(x, y, 1, 1);
     }
-    ctx.fillStyle = "rgba(18,50,30,.035)";
+    ctx.fillStyle = "rgba(18,50,30,.07)";
     ctx.fillRect(0, 0, 64, 128);
     const result = new THREE.CanvasTexture(canvas);
     result.wrapS = result.wrapT = THREE.RepeatWrapping;
@@ -102,45 +102,42 @@ export function AimLine({
   power: number;
 }) {
   const guide = aimGuide(from, angle, power);
-  const line = useMemo(() => {
-    const geometry = new THREE.BufferGeometry().setFromPoints(
-      guide.points.map((p) => new THREE.Vector3(p.x, p.y, p.z)),
-    );
-    const material = new THREE.LineDashedMaterial({
-      color: "#ffdd88",
-      dashSize: 0.3,
-      gapSize: 0.15,
-      transparent: true,
-      opacity: 0.85,
-      depthTest: false,
-    });
-    const result = new THREE.Line(geometry, material);
-    result.computeLineDistances();
-    result.renderOrder = 5;
-    return result;
-  }, [course, from.x, from.y, from.z, angle, power]);
-  useEffect(
-    () => () => {
-      line.geometry.dispose();
-      (line.material as THREE.Material).dispose();
-    },
-    [line],
+  const length = Math.hypot(
+    guide.points[1].x - from.x,
+    guide.points[1].z - from.z,
   );
+  const color = power > 0.8 ? "#ffba73" : "#ffe4a2";
   return (
-    <>
-      <primitive object={line} />
-      <group
-        position={[guide.points[1].x, guide.points[1].y, guide.points[1].z]}
-        rotation={[0, -angle, 0]}
-      >
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.085, 0.25, 10]} />
-          <meshBasicMaterial color="#ffdd88" depthTest={false} />
+    <group
+      position={[from.x, from.y + 0.015, from.z]}
+      rotation={[0, -angle, 0]}
+    >
+      <mesh position={[0, -0.012, -length / 2]} renderOrder={6}>
+        <boxGeometry args={[0.1, 0.018, length]} />
+        <meshBasicMaterial color="#284b40" depthTest={false} />
+      </mesh>
+      <mesh position={[0, 0, -length / 2]} renderOrder={7}>
+        <boxGeometry args={[0.045, 0.025, length]} />
+        <meshBasicMaterial color={color} depthTest={false} />
+      </mesh>
+      {[0.25, 0.5, 0.75].map((t) => (
+        <mesh key={t} position={[0, 0.01, -length * t]} renderOrder={8}>
+          <boxGeometry args={[0.16, 0.025, 0.035]} />
+          <meshBasicMaterial color={color} depthTest={false} />
         </mesh>
-      </group>
-    </>
+      ))}
+      <mesh
+        position={[0, 0.02, -length + 0.14]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        renderOrder={9}
+      >
+        <coneGeometry args={[0.13, 0.28, 3]} />
+        <meshBasicMaterial color={color} depthTest={false} />
+      </mesh>
+    </group>
   );
 }
+
 export function ImpactEffect({
   event,
   time,

@@ -96,7 +96,7 @@ export function HoleMap({ s }: { s: State }) {
           cx={course.cup.x}
           cy={course.cup.z}
           r={0.55}
-          fill="#0a2422"
+          fill="#bbc5c7"
           stroke="#f5cc77"
           strokeWidth={0.2}
         />

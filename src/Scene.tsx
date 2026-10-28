@@ -6,7 +6,7 @@ import {
   getCircuit,
   geometry,
   cupGreen,
-  cupWalls,
+  greenArea,
   courseSize,
   CUP_RADIUS,
   CUP_DEPTH,
@@ -24,7 +24,8 @@ import {
 } from "./CourseEffects";
 import type { ControlMode } from "./shotControls";
 import type { useShotControls } from "./useShotControls";
-import { followPose, turnAngle } from "./camera";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { followPose, turnAngle, type CameraLook } from "./camera";
 function Box({
   b,
   time,
@@ -36,7 +37,9 @@ function Box({
 }) {
   const pose = blockPose(b, time);
   const box = useMemo(() => {
-    const result = new THREE.BoxGeometry(...b.size);
+    const result = b.bevel
+      ? new RoundedBoxGeometry(...b.size, 2, b.bevel)
+      : new THREE.BoxGeometry(...b.size);
     if (grass) {
       const uv = result.attributes.uv,
         vertices = result.attributes.position;
@@ -44,7 +47,7 @@ function Box({
         uv.setXY(i, vertices.getX(i) / 4, vertices.getZ(i) / 4);
     }
     return result;
-  }, [b.size[0], b.size[1], b.size[2], grass]);
+  }, [b.size[0], b.size[1], b.size[2], b.bevel, grass]);
   useEffect(() => () => box.dispose(), [box]);
   return (
     <mesh
@@ -102,6 +105,72 @@ function Green({
     </mesh>
   );
 }
+function CupLiner() {
+  const shape = useMemo(() => {
+    const shape = new THREE.CylinderGeometry(
+      CUP_RADIUS,
+      CUP_RADIUS,
+      CUP_DEPTH,
+      64,
+      1,
+      true,
+    );
+    const positions = shape.attributes.position,
+      colors: number[] = [];
+    const bottom = new THREE.Color("#758b93"),
+      top = new THREE.Color("#d0d8db");
+    for (let i = 0; i < positions.count; i++) {
+      const color = bottom
+        .clone()
+        .lerp(top, positions.getY(i) / CUP_DEPTH + 0.5);
+      colors.push(color.r, color.g, color.b);
+    }
+    shape.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    return shape;
+  }, []);
+  useEffect(() => () => shape.dispose(), [shape]);
+  return (
+    <mesh geometry={shape} position={[0, -CUP_DEPTH / 2, 0]}>
+      <meshBasicMaterial vertexColors side={THREE.BackSide} />
+    </mesh>
+  );
+}
+function GreenSupport({ course }: { course: ReturnType<typeof getCourse> }) {
+  const b = greenArea(course),
+    height = course.cup.y + 1.05,
+    y = (course.cup.y - 1.05) / 2;
+  return (
+    <group>
+      {[
+        {
+          pos: [b.minX + 0.075, y, (b.minZ + b.maxZ) / 2],
+          size: [0.15, height, b.maxZ - b.minZ],
+        },
+        {
+          pos: [b.maxX - 0.075, y, (b.minZ + b.maxZ) / 2],
+          size: [0.15, height, b.maxZ - b.minZ],
+        },
+        {
+          pos: [(b.minX + b.maxX) / 2, y, b.minZ + 0.075],
+          size: [b.maxX - b.minX, height, 0.15],
+        },
+        {
+          pos: [(b.minX + b.maxX) / 2, y, b.maxZ - 0.075],
+          size: [b.maxX - b.minX, height, 0.15],
+        },
+      ].map((b, i) => (
+        <mesh
+          key={i}
+          position={b.pos as [number, number, number]}
+          receiveShadow
+        >
+          <boxGeometry args={b.size as [number, number, number]} />
+          <meshStandardMaterial color="#51746b" roughness={0.95} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 function Ball({
   pos,
   color,
@@ -148,7 +217,9 @@ function Camera({
   overview,
   angle,
   focusId,
+  cameraLook,
 }: {
+  cameraLook: CameraLook;
   s: State;
   overview: boolean;
   angle: number;
@@ -179,6 +250,8 @@ function Camera({
       1 - Math.exp(-dt * 4),
     );
     ball.current.lerp(new THREE.Vector3(p.x, p.y, p.z), 1 - Math.exp(-dt * 9));
+    gl.domElement.dataset.lookYaw = String(cameraLook.yaw);
+    gl.domElement.dataset.lookPitch = String(cameraLook.pitch);
     let position: THREE.Vector3, look: THREE.Vector3;
     if (overview) {
       position = new THREE.Vector3(19, 28, 26).multiplyScalar(
@@ -186,12 +259,17 @@ function Camera({
           courseSize(getCourse(s)).length) /
           24,
       );
+      position
+        .applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraLook.yaw)
+        .multiplyScalar(cameraLook.zoom);
+      position.y *= 1 + cameraLook.pitch;
       look = new THREE.Vector3(0, 0, 0);
     } else {
       const pose = followPose(
         ball.current,
         heading.current,
         size.width / size.height,
+        cameraLook,
       );
       position = new THREE.Vector3(
         pose.position.x,
@@ -229,6 +307,9 @@ function World({
   s,
   angle,
   cameraAngle,
+  cameraLook,
+  lookMode,
+  onLook,
   controlMode,
   canShoot,
   shotInput,
@@ -241,6 +322,9 @@ function World({
   s: State;
   angle: number;
   cameraAngle: number;
+  cameraLook: CameraLook;
+  lookMode: boolean;
+  onLook: (delta: Partial<CameraLook>) => void;
   controlMode: ControlMode;
   canShoot: boolean;
   shotInput: ReturnType<typeof useShotControls>;
@@ -262,6 +346,12 @@ function World({
     power: number;
   } | null>(null);
   const activePointer = useRef<number | null>(null);
+  const orbitDrag = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    activePointer.current = null;
+    drag.current = null;
+    orbitDrag.current = null;
+  }, [lookMode]);
   useEffect(() => {
     if (!canShoot || (controlMode === "pull" && !shotInput.active)) {
       activePointer.current = null;
@@ -278,7 +368,7 @@ function World({
   }, []);
   const p = s.players[s.turn]?.pos || c.start;
   const blocks = shape.walls
-    .map((b) => ({ ...b, color: theme.edge }))
+    .map((b): Block => ({ ...b, color: theme.edge }))
     .concat(
       c.blocks.map((b) => ({
         ...b,
@@ -309,7 +399,13 @@ function World({
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
       />
-      <Camera s={s} overview={overview} angle={cameraAngle} focusId={focusId} />
+      <Camera
+        s={s}
+        overview={overview}
+        angle={cameraAngle}
+        focusId={focusId}
+        cameraLook={cameraLook}
+      />
       <SceneReady />
       <CourseWater course={c} />
       <ImpactEffect event={s.event} time={s.time} />
@@ -321,10 +417,21 @@ function World({
           color={s.circuit === "moonlight" ? "#284658" : "#234b43"}
         />
       </mesh>
+      <GreenSupport course={c} />
       <Green course={c} color={theme.ground} />
-      {cupWalls(c).map((b, i) => (
-        <Box key={`cup-${i}`} b={{ ...b, color: "#132e2b" }} time={s.time} />
-      ))}
+      <group position={[c.start.x, c.start.y - 0.21, c.start.z]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.57, 0.6, 32, 1, 0, Math.PI]} />
+          <meshBasicMaterial color="#d1d9be" transparent opacity={0.65} />
+        </mesh>
+        {[-0.85, 0.85].map((x) => (
+          <mesh key={x} position={[x, 0.04, 0]}>
+            <cylinderGeometry args={[0.09, 0.1, 0.08, 10]} />
+            <meshStandardMaterial color="#f5d69b" />
+          </mesh>
+        ))}
+      </group>
+
       {shape.surfaces.map((b, i) => (
         <Box
           key={i}
@@ -338,21 +445,26 @@ function World({
       ))}
       <group position={[c.cup.x, c.cup.y + 0.015, c.cup.z]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[CUP_RADIUS, CUP_RADIUS + 0.035, 64]} />
-          <meshStandardMaterial color="#eee6cc" roughness={0.4} />
+          <ringGeometry args={[CUP_RADIUS, CUP_RADIUS + 0.12, 64]} />
+          <meshStandardMaterial
+            color="#cbd0d0"
+            roughness={0.35}
+            metalness={0.25}
+          />
         </mesh>
         <mesh
           position={[0, -CUP_DEPTH - 0.005, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <circleGeometry args={[CUP_RADIUS, 40]} />
-          <meshBasicMaterial color="#071918" />
+          <meshBasicMaterial color="#81969e" />
         </mesh>
-        <mesh position={[0.66, 1.2, 0]}>
-          <cylinderGeometry args={[0.035, 0.035, 2.4, 8]} />
+        <CupLiner />
+        <mesh position={[0, 1.2, 0]}>
+          <cylinderGeometry args={[0.025, 0.025, 2.4, 8]} />
           <meshStandardMaterial color="#f8ead3" />
         </mesh>
-        <mesh position={[1.13, 2.1, 0]}>
+        <mesh position={[0.47, 2.1, 0]}>
           <boxGeometry args={[0.9, 0.55, 0.04]} />
           <meshStandardMaterial color={theme.accent} />
         </mesh>
@@ -377,6 +489,14 @@ function World({
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerMove={(e) => {
           if (activePointer.current !== e.pointerId) return;
+          if (lookMode && orbitDrag.current) {
+            onLook({
+              yaw: -(e.clientX - orbitDrag.current.x) * 0.006,
+              pitch: (e.clientY - orbitDrag.current.y) * 0.004,
+            });
+            orbitDrag.current = { x: e.clientX, y: e.clientY };
+            return;
+          }
           if (controlMode === "pull") {
             shotInput.move(e.clientX, e.clientY);
             return;
@@ -391,6 +511,11 @@ function World({
         onPointerUp={(e) => {
           if (activePointer.current !== e.pointerId) return;
           activePointer.current = null;
+          if (lookMode) {
+            orbitDrag.current = null;
+            (e.target as unknown as Element).releasePointerCapture(e.pointerId);
+            return;
+          }
           if (controlMode === "pull") shotInput.release();
           drag.current = null;
           (e.target as unknown as Element).releasePointerCapture(e.pointerId);
@@ -403,6 +528,13 @@ function World({
         }}
         onPointerDown={(e) => {
           e.stopPropagation();
+          if (lookMode) {
+            if (activePointer.current !== null) return;
+            activePointer.current = e.pointerId;
+            orbitDrag.current = { x: e.clientX, y: e.clientY };
+            (e.target as unknown as Element).setPointerCapture(e.pointerId);
+            return;
+          }
           if (
             !canShoot ||
             activePointer.current !== null ||
