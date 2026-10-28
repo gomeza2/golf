@@ -951,7 +951,8 @@ button > span {
     height: 36px;
   }
   .view-controls {
-    bottom: 292px;
+    top: 122px;
+    bottom: auto;
     max-width: 92%;
     gap: 5px;
   }
@@ -961,7 +962,8 @@ button > span {
     min-height: 32px;
   }
   .hole-map {
-    bottom: 335px;
+    top: 166px;
+    bottom: auto;
     width: 108px;
     padding: 9px;
   }

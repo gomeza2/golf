@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { io, type Socket } from "socket.io-client";
 import { Game, initPhysics, type State } from "../shared/game";
-import { colors, getCircuit, type CircuitId } from "../shared/courses";
+import { colors, circuits, getCircuit, type CircuitId } from "../shared/courses";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
@@ -322,7 +322,7 @@ function App() {
             Mucha <em>rivalidad.</em>
           </h1>
           <p>
-            Dos recorridos. Tus amigos. Una sola victoria.
+            {circuits.length} recorridos. Tus amigos. Una sola victoria.
             <br />
             Cada golpe cuenta en el Club del Último Golpe.
           </p>
@@ -351,7 +351,9 @@ function App() {
           )}
           <div className="hero-meta">
             <span>01—08 JUGADORES</span>
-            <span>6 HOYOS CON PERSONALIDAD</span>
+            <span>
+              {circuits.reduce((count, circuit) => count + circuit.courses.length, 0)} HOYOS CON PERSONALIDAD
+            </span>
             <span>SIN REGISTRO</span>
           </div>
           <div className="course-tag">
