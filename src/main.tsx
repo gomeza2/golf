@@ -1,8 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { io, type Socket } from "socket.io-client";
+import { normalizeServerUrl } from "./serverUrl";
+import { FixedStepper } from "../shared/timing";
+import { wrapAngle, type ShotStyle } from "../shared/shot";
 import { Game, initPhysics, type State } from "../shared/game";
-import { colors, circuits, getCircuit, type CircuitId } from "../shared/courses";
+import {
+  colors,
+  circuits,
+  getCircuit,
+  type CircuitId,
+} from "../shared/courses";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
@@ -14,9 +22,6 @@ import "@fontsource/barlow-condensed/700.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/700.css";
 import "./style.css";
-const onlineAvailable =
-  import.meta.env.VITE_STATIC_HOST !== "true" ||
-  Boolean(import.meta.env.VITE_SERVER_URL);
 const initial: State = {
   phase: "lobby",
   players: [],
@@ -35,6 +40,10 @@ function App() {
     [screen, setScreen] = useState<"home" | "local" | "online" | "game">(
       "home",
     ),
+    [serverUrl, setServerUrl] = useState(
+      new URLSearchParams(location.search).get("server") ||
+        readLocal("golf-server-url", import.meta.env.VITE_SERVER_URL || ""),
+    ),
     [mode, setMode] = useState<"local" | "online">("local"),
     [circuit, setCircuit] = useState<CircuitId>("sunset"),
     [names, setNames] = useState(["Golfista 1", "Golfista 2"]),
@@ -43,14 +52,18 @@ function App() {
       new URLSearchParams(location.search).get("room") || "",
     ),
     [error, setError] = useState(""),
+    [latency, setLatency] = useState<number | null>(null),
     [status, setStatus] = useState("Sin conexión"),
     [id, setId] = useState(""),
     [angle, setAngle] = useState(0),
     [power, setPower] = useState(0.55),
+    [style, setStyle] = useState<ShotStyle>("putt"),
     [overview, setOverview] = useState(false),
     [settings, setSettings] = useState(false),
     [volume, setVolume] = useState(Number(readLocal("golf-volume", ".6"))),
     [ready, setReady] = useState(false);
+  const onlineAvailable =
+    import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
   const turnKey =
     screen === "game" && s.phase === "playing"
       ? `${s.circuit}:${s.hole}:${s.players[s.turn]?.id}`
@@ -88,13 +101,21 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    const interval = setInterval(() => {
+    const stepper = new FixedStepper();
+    let frame = 0,
+      lastPaint = 0;
+    const loop = (now: number) => {
       if (game.current && !handoff.current) {
-        for (let i = 0; i < 3; i++) game.current.tick();
-        setS(structuredClone(game.current.state));
-      }
-    }, 50);
-    return () => clearInterval(interval);
+        stepper.advance(now, () => game.current?.tick());
+        if (now - lastPaint >= 50) {
+          setS(structuredClone(game.current.state));
+          lastPaint = now;
+        }
+      } else stepper.reset(now);
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
   }, []);
   useEffect(() => {
     saveLocal("golf-volume", String(volume));
@@ -102,11 +123,42 @@ function App() {
   useEffect(() => {
     const key = `${s.hole}:${s.turn}:${s.phase}`;
     if (lastTurn.current && key !== lastTurn.current) {
-      tone(s.message.includes("embocó") ? "cup" : "turn", volume);
+      if (!s.message.includes("embocó")) tone("turn", volume);
       setAngle(0);
     }
     lastTurn.current = key;
   }, [s.turn, s.hole, s.phase]);
+  const lastEvent = useRef(0);
+  useEffect(() => {
+    if (s.event && s.event.seq !== lastEvent.current) {
+      lastEvent.current = s.event.seq;
+      tone(
+        s.event.kind === "water"
+          ? "splash"
+          : s.event.kind === "bounce"
+            ? "bounce"
+            : "cup",
+        volume,
+      );
+    }
+  }, [s.event?.seq]);
+  useEffect(() => {
+    if (status !== "Conectado") {
+      setLatency(null);
+      return;
+    }
+    const measure = () => {
+      const started = performance.now();
+      socket.current
+        ?.timeout(3000)
+        .emit("action", { type: "ping" }, (error: Error | null) =>
+          setLatency(error ? null : Math.round(performance.now() - started)),
+        );
+    };
+    measure();
+    const timer = setInterval(measure, 5000);
+    return () => clearInterval(timer);
+  }, [status]);
   const current = s.players[s.turn];
   const canShoot =
     s.phase === "playing" &&
@@ -118,9 +170,10 @@ function App() {
     if (!canShoot) return;
     tone("shot", volume);
     if (mode === "local") {
-      game.current?.shoot(current.id, angle, power);
+      game.current?.shoot(current.id, angle, power, style);
       setS(structuredClone(game.current!.state));
-    } else socket.current?.emit("action", { type: "shoot", angle, power });
+    } else
+      socket.current?.emit("action", { type: "shoot", angle, power, style });
   };
   const shotRef = useRef(shoot);
   shotRef.current = shoot;
@@ -133,14 +186,17 @@ function App() {
         e.preventDefault();
         if (e.key === " ") shotRef.current();
         else if (e.key === "ArrowLeft")
-          setAngle((a) => ((a - 0.04 + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+          setAngle((a) => wrapAngle(a - (e.shiftKey ? 0.005 : 0.04)));
         else if (e.key === "ArrowRight")
-          setAngle((a) => ((a + 0.04 + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+          setAngle((a) => wrapAngle(a + (e.shiftKey ? 0.005 : 0.04)));
         else
           setPower((p) =>
             Math.min(
               1,
-              Math.max(0.03, p + (e.key === "ArrowUp" ? 0.03 : -0.03)),
+              Math.max(
+                0.03,
+                p + (e.key === "ArrowUp" ? 1 : -1) * (e.shiftKey ? 0.01 : 0.03),
+              ),
             ),
           );
       }
@@ -175,7 +231,16 @@ function App() {
     setError("");
     setStatus("Conectando…");
     setMode("online");
-    const sock = io(import.meta.env.VITE_SERVER_URL || undefined, {
+    let endpoint: string;
+    try {
+      endpoint = normalizeServerUrl(serverUrl, location.protocol === "https:");
+    } catch (e) {
+      setError((e as Error).message);
+      setStatus("Dirección no válida");
+      return;
+    }
+    saveLocal("golf-server-url", endpoint);
+    const sock = io(endpoint || undefined, {
       timeout: 7000,
       reconnectionAttempts: 10,
     });
@@ -193,6 +258,14 @@ function App() {
     });
     sock.on("session", (session) => {
       if (socket.current !== sock) return;
+      if (session.protocol !== 2) {
+        setError(
+          "El servidor necesita actualizarse para admitir agua y golpes elevados",
+        );
+        setStatus("Servidor de otra versión");
+        sock.disconnect();
+        return;
+      }
       setStatus("Conectado");
       setId(session.id);
       setCode(session.code);
@@ -271,6 +344,10 @@ function App() {
           s={screen === "game" ? s : { ...initial, circuit }}
           angle={angle}
           power={power}
+          style={style}
+          onPower={(p) => {
+            if (canShoot) setPower(p);
+          }}
           overview={screen !== "game" || s.phase !== "playing" || overview}
           focusId={focusId}
           onAim={(a) => {
@@ -346,13 +423,23 @@ function App() {
           {!onlineAvailable && (
             <p className="availability">
               Juega con hasta 8 personas en este dispositivo. Online no está
-              disponible en este sitio.
+              disponible en este sitio.{" "}
+              <button
+                className="text-button"
+                onClick={() => setScreen("online")}
+              >
+                Conectar un servidor
+              </button>
             </p>
           )}
           <div className="hero-meta">
             <span>01—08 JUGADORES</span>
             <span>
-              {circuits.reduce((count, circuit) => count + circuit.courses.length, 0)} HOYOS CON PERSONALIDAD
+              {circuits.reduce(
+                (count, circuit) => count + circuit.courses.length,
+                0,
+              )}{" "}
+              HOYOS CON PERSONALIDAD
             </span>
             <span>SIN REGISTRO</span>
           </div>
@@ -435,6 +522,20 @@ function App() {
             tu competencia.
           </h2>
           <label className="field">
+            Servidor online
+            <input
+              aria-label="Servidor online"
+              value={serverUrl}
+              onChange={(e) => setServerUrl(e.target.value)}
+              placeholder="https://tu-servidor.example.com"
+              type="url"
+            />
+            <small>
+              Necesitas un servidor del club activo. En desarrollo puedes
+              dejarlo vacío para usar el servidor local.
+            </small>
+          </label>
+          <label className="field">
             Tu nombre
             <input
               value={name}
@@ -446,7 +547,7 @@ function App() {
           <CircuitPicker value={circuit} onChange={setCircuit} />
           <button
             className="primary"
-            disabled={!name.trim() || !ready}
+            disabled={!name.trim() || !ready || !onlineAvailable}
             onClick={() => connect("create")}
           >
             Crear sala →
@@ -463,7 +564,9 @@ function App() {
           </label>
           <button
             className="secondary"
-            disabled={!name.trim() || code.length !== 6 || !ready}
+            disabled={
+              !name.trim() || code.length !== 6 || !ready || !onlineAvailable
+            }
             onClick={() => connect("join")}
           >
             Unirme a la sala
@@ -483,7 +586,11 @@ function App() {
           s={s}
           mode={mode}
           status={status}
+          serverUrl={serverUrl}
+          latency={latency}
           id={id}
+          style={style}
+          setStyle={setStyle}
           canShoot={canShoot}
           angle={angle}
           power={power}
@@ -539,18 +646,22 @@ function App() {
             </button>
             <p>
               Apunta tocando el campo o con el control de ángulo. Ajusta la
-              potencia y pulsa GOLPEAR.
+              potencia y pulsa GOLPEAR. Arrastra sobre el campo para afinar
+              dirección y potencia sin disparar al soltar. Elige Rodado para
+              controlar el suelo o Elevado para saltar obstáculos.
             </p>
             <p>
               Teclado: ← → para apuntar, ↑ ↓ para potencia y espacio para
-              lanzar. La cámara en tercera persona sigue al jugador activo. Usa
-              “Ver campo” para planear desde arriba y “Mapa” para consultar el
-              recorrido sin cambiar la vista.
+              lanzar. Mantén Shift para ajustes finos. La cámara en tercera
+              persona sigue al jugador activo. Usa “Ver campo” para planear
+              desde arriba y “Mapa” para consultar el recorrido sin cambiar la
+              vista.
             </p>
             <p>
               12 golpes por hoyo. 45 segundos por turno: al agotarse se suma un
-              golpe y pasa el turno. Fuera de campo: un golpe adicional. Las
-              demás pelotas son fantasmas y no bloquean tu trayectoria.
+              golpe y pasa el turno. Agua o fuera de campo: un golpe adicional y
+              regreso al último punto. La arena frena más la pelota. Las demás
+              pelotas son fantasmas y no bloquean tu trayectoria.
             </p>
             <button className="primary" onClick={() => setSettings(false)}>
               Entendido

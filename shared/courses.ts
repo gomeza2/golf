@@ -9,6 +9,13 @@ export type Block = {
   motion?: "slide";
   phase?: number;
 };
+export type Zone = {
+  x: number;
+  z: number;
+  width: number;
+  length: number;
+  y: number;
+};
 export type Course = {
   name: string;
   subtitle: string;
@@ -17,6 +24,10 @@ export type Course = {
   cup: V3;
   blocks: Block[];
   ramp?: boolean;
+  terrain?: Block[];
+  greenBounds?: { minX: number; maxX: number; minZ: number; maxZ: number };
+  water?: Zone[];
+  sand?: Zone[];
   dimensions?: { width: number; length: number };
 };
 const wall = (x: number, z: number, w: number, d: number): Block => ({
@@ -71,7 +82,7 @@ export const colors = [
   "#f6f0da",
 ];
 
-export type CircuitId = "sunset" | "moonlight" | "park";
+export type CircuitId = "sunset" | "moonlight" | "park" | "riviera";
 export const nightCourses: Course[] = [
   {
     name: "Las diagonales",
@@ -163,6 +174,126 @@ export const parkCourses: Course[] = [
     ],
   },
 ];
+// Terrain pieces describe the actual playable deck, not an invisible flat floor.
+export const deck = (
+  x: number,
+  z: number,
+  width: number,
+  length: number,
+  y = 0,
+): Block => ({ pos: [x, y - 0.2, z], size: [width, 0.4, length] });
+export function rampDeck(
+  x: number,
+  width: number,
+  fromZ: number,
+  toZ: number,
+  fromY: number,
+  toY: number,
+): Block {
+  const angle = Math.atan2(toY - fromY, fromZ - toZ);
+  return {
+    pos: [
+      x,
+      (fromY + toY) / 2 - 0.2 * Math.cos(angle),
+      (fromZ + toZ) / 2 - 0.2 * Math.sin(angle),
+    ],
+    size: [width, 0.4, Math.hypot(fromZ - toZ, toY - fromY)],
+    rotation: angle,
+  };
+}
+export const rivieraCourses: Course[] = [
+  {
+    name: "Las dos orillas",
+    par: 6,
+    subtitle:
+      "Puente a la izquierda; rampa de salto a la derecha. El agua suma un golpe.",
+    dimensions: { width: 20, length: 48 },
+    start: { x: -6, y: 0.24, z: 21 },
+    cup: { x: 6, y: 0, z: -21 },
+    greenBounds: { minX: -10, maxX: 10, minZ: -24, maxZ: -2 },
+    terrain: [
+      deck(0, 15, 20, 18),
+      deck(-5, 2, 3, 8),
+      rampDeck(4, 4, 12, 6, 0, 2.4),
+    ],
+    water: [{ x: 0, z: 2, width: 20, length: 8, y: -0.3 }],
+    sand: [{ x: 6, z: -9, width: 5, length: 4, y: 0 }],
+    blocks: [wall(-2, 16, 10, 0.5), { ...wall(0, -11, 9, 0.6), yaw: -0.35 }],
+  },
+  {
+    name: "El acueducto",
+    par: 6,
+    subtitle:
+      "Asciende 3,6 metros y domina el puente suspendido. No hay barandilla que te salve.",
+    dimensions: { width: 20, length: 54 },
+    start: { x: 0, y: 0.24, z: 24 },
+    cup: { x: 4, y: 3.6, z: -24 },
+    greenBounds: { minX: -10, maxX: 10, minZ: -27, maxZ: -16 },
+    terrain: [
+      deck(0, 19.5, 20, 15),
+      rampDeck(0, 6, 12, 2, 0, 3.6),
+      deck(0, -7, 4, 18, 3.6),
+    ],
+    water: [{ x: 0, z: -2, width: 20, length: 28, y: -0.3 }],
+    blocks: [
+      { pos: [0, 4.1, -7], size: [2, 1, 0.4], moving: true, motion: "slide" },
+      { pos: [-10.2, 4.05, -21.5], size: [0.4, 0.9, 11] },
+      { pos: [10.2, 4.05, -21.5], size: [0.4, 0.9, 11] },
+      { pos: [0, 4.05, -27.2], size: [20, 0.9, 0.4] },
+      { pos: [-2, 4, -21], size: [6, 0.8, 0.5], yaw: 0.4 },
+    ],
+  },
+  {
+    name: "Archipiélago",
+    par: 7,
+    subtitle:
+      "Sesenta metros de islas. Traza la S, controla la arena y no te precipites.",
+    dimensions: { width: 22, length: 60 },
+    start: { x: -7, y: 0.24, z: 27 },
+    cup: { x: 7, y: 0, z: -27 },
+    greenBounds: { minX: -11, maxX: 11, minZ: -30, maxZ: -18 },
+    terrain: [
+      deck(0, 24, 22, 12),
+      deck(-7, 9, 6, 18),
+      deck(0, 0, 10, 4),
+      deck(7, -9, 6, 18),
+    ],
+    water: [{ x: 0, z: 0, width: 22, length: 36, y: -0.3 }],
+    sand: [
+      { x: -7, z: 6, width: 5.8, length: 4, y: 0 },
+      { x: 7, z: -12, width: 5.8, length: 4, y: 0 },
+    ],
+    blocks: [
+      { pos: [7, 0.5, -6], size: [3, 1, 0.4], moving: true },
+      { ...wall(-1, -23, 10, 0.55), yaw: -0.3 },
+    ],
+  },
+  {
+    name: "La presa final",
+    par: 7,
+    subtitle:
+      "Cruza la cresta: bajada lateral segura o salto sobre el embalse. Elige tu final.",
+    dimensions: { width: 22, length: 60 },
+    start: { x: 0, y: 0.24, z: 27 },
+    cup: { x: 6, y: 0, z: -27 },
+    greenBounds: { minX: -11, maxX: 11, minZ: -30, maxZ: -8 },
+    terrain: [
+      deck(0, 24, 22, 12),
+      rampDeck(0, 10, 18, 8, 0, 3.2),
+      deck(0, 4, 10, 8, 3.2),
+      rampDeck(-3.5, 3, 0, -8, 3.2, 0),
+    ],
+    water: [{ x: 0, z: 5, width: 22, length: 26, y: -0.3 }],
+    sand: [{ x: -5, z: -15, width: 6, length: 5, y: 0 }],
+    blocks: [
+      { ...wall(2, -17, 12, 0.5), yaw: 0.35 },
+      { pos: [3, 0.5, -23], size: [6, 1, 0.4], moving: true },
+    ],
+  },
+];
+export const inZone = (zone: Zone, p: V3, margin = 0) =>
+  Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
+  Math.abs(p.z - zone.z) < zone.length / 2 + margin;
 export const courseSize = (course: Course) =>
   course.dimensions || { width: 12, length: 24 };
 export const circuits = [
@@ -197,6 +328,17 @@ export const circuits = [
     edge: "#e5d2ad",
     background: "#263d37",
     accent: "#f4b578",
+  },
+  {
+    id: "riviera" as const,
+    name: "Riviera Salvaje",
+    description:
+      "4 desafíos de 48–60 m: agua, arena, puentes y saltos. PAR 26.",
+    courses: rivieraCourses,
+    ground: "#45896a",
+    edge: "#d7c6a1",
+    background: "#153d47",
+    accent: "#f4b36b",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
@@ -244,7 +386,8 @@ export function geometry(course: Course): {
     },
     { pos: [0, 0.45, length / 2 + 0.2], size: [width, 0.9, 0.4] },
   );
-  surfaces.pop(); // Cup platform is supplied by cupGreen(), including its opening.
+  if (course.terrain) surfaces.splice(0, surfaces.length, ...course.terrain);
+  else surfaces.pop(); // Cup platform is supplied by cupGreen(), including its opening.
   return { surfaces, walls };
 }
 export function blockPose(block: Block, time: number) {
@@ -263,23 +406,28 @@ export const CUP_DEPTH = 0.85;
 // Identical triangles are rendered and passed to Rapier, so no invisible floor covers the cup.
 export function cupGreen(course: Course) {
   const { width, length } = courseSize(course);
-  const minZ = course.ramp ? -12 : -length / 2;
-  const maxZ = course.ramp ? -4 : length / 2;
+  const bounds = course.greenBounds || {
+    minX: -width / 2,
+    maxX: width / 2,
+    minZ: course.ramp ? -12 : -length / 2,
+    maxZ: course.ramp ? -4 : length / 2,
+  };
+  const { minX, maxX, minZ, maxZ } = bounds;
   const { x, y, z } = course.cup;
   const angles = Array.from({ length: 64 }, (_, i) => (i * Math.PI * 2) / 64);
-  for (const bx of [-width / 2, width / 2])
+  for (const bx of [minX, maxX])
     for (const bz of [minZ, maxZ])
       angles.push((Math.atan2(bz - z, bx - x) + Math.PI * 2) % (Math.PI * 2));
   angles.sort((a, b) => a - b);
+  for (let i = angles.length - 1; i > 0; i--)
+    if (angles[i] - angles[i - 1] < 1e-8) angles.splice(i, 1);
   const vertices: number[] = [],
     indices: number[] = [];
   for (const angle of angles) {
     const dx = Math.cos(angle),
       dz = Math.sin(angle);
     const tx =
-      Math.abs(dx) < 1e-9
-        ? Infinity
-        : (dx > 0 ? width / 2 - x : -width / 2 - x) / dx;
+      Math.abs(dx) < 1e-9 ? Infinity : (dx > 0 ? maxX - x : minX - x) / dx;
     const tz =
       Math.abs(dz) < 1e-9 ? Infinity : (dz > 0 ? maxZ - z : minZ - z) / dz;
     const distance = Math.min(tx, tz);

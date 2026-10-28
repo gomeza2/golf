@@ -154,12 +154,12 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
     await expect(
       a.getByRole("button", { name: /Comenzar partida/ }),
     ).toBeEnabled();
-    await a.getByRole("button", { name: /Jardín lunar/ }).click();
+    await a.getByRole("button", { name: /Riviera Salvaje/ }).click();
     await expect(
       a.getByRole("button", { name: /Comenzar partida/ }),
     ).toBeDisabled();
     await expect(
-      b.getByRole("button", { name: /Jardín lunar/ }),
+      b.getByRole("button", { name: /Riviera Salvaje/ }),
     ).toHaveAttribute("aria-pressed", "true");
     await expect(
       b.getByRole("button", { name: /Club del atardecer/ }),
@@ -172,7 +172,7 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
     await a.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(b.getByText("Pelota en movimiento")).toBeVisible();
     await expect(
-      b.getByRole("heading", { name: /Las diagonales/ }),
+      b.getByRole("heading", { name: /Las dos orillas/ }),
     ).toBeVisible();
     await a.getByRole("button", { name: "Salir", exact: true }).click();
     await expect(b.locator(".turn-toast strong")).toHaveText("Luis");
@@ -321,4 +321,89 @@ test("touch aiming never shoots accidentally and the lunar circuit works with co
   } finally {
     await context.close();
   }
+});
+
+test("water penalties and elevated shots in Riviera are authoritative across real clients", async () => {
+  const a = await openClient(),
+    b = await openClient();
+  try {
+    const sa = await enter(a, {
+      type: "create",
+      name: "Ana",
+      circuit: "riviera",
+    });
+    expect(sa.protocol).toBe(2);
+    await enter(b, { type: "join", name: "Luis", code: sa.code });
+    let pending = waitState(a, (s) => s.players.every((p: any) => p.ready));
+    a.emit("action", { type: "ready" });
+    b.emit("action", { type: "ready" });
+    await pending;
+    pending = waitState(b, (s) => s.phase === "playing");
+    a.emit("action", { type: "start" });
+    await pending;
+    pending = waitEvent(a, "notice");
+    a.emit("action", { type: "shoot", angle: 0, power: 0.7, style: "rocket" });
+    expect(await pending).toContain("rechazado");
+    pending = waitState(
+      b,
+      (s) => !s.moving && s.turn === 1 && s.players[0].penalties === 1,
+    );
+    a.emit("action", { type: "shoot", angle: -0.8, power: 1, style: "putt" });
+    const water = await pending;
+    expect(water.players[0].strokes).toBe(2);
+    expect(water.players[0].pos).toEqual({ x: -6, y: 0.24, z: 21 });
+    expect(water.event.kind).toBe("water");
+    pending = waitState(a, (s) => s.moving && s.players[1].pos.y > 0.6);
+    b.emit("action", { type: "shoot", angle: 0, power: 0.7, style: "chip" });
+    const flight = await pending;
+    expect(flight.circuit).toBe("riviera");
+    expect(flight.players[1].strokes).toBe(1);
+    await new Promise<void>((resolve, reject) =>
+      a
+        .timeout(3000)
+        .emit("action", { type: "ping" }, (error: Error | null) =>
+          error ? reject(error) : resolve(),
+        ),
+    );
+  } finally {
+    a.disconnect();
+    b.disconnect();
+  }
+});
+
+test("dragging adjusts aim and power without firing; fine adjustments and shot styles work", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Jugar en este/ }).click();
+  await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
+  await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+  const angle = page.getByRole("slider", { name: "Ángulo", exact: true }),
+    power = page.getByRole("slider", { name: "Potencia", exact: true });
+  await page.mouse.move(650, 320);
+  await page.mouse.down();
+  await page.mouse.move(700, 280, { steps: 8 });
+  await page.mouse.up();
+  await expect(power).not.toHaveValue("0.55");
+  await expect(page.locator(".turn-toast b")).toHaveText("0/12");
+  await page.getByRole("button", { name: "Elevado", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Elevado", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "25%", exact: true }).click();
+  await expect(power).toHaveValue("0.25");
+  const before = Number(await angle.inputValue());
+  await page
+    .getByRole("button", {
+      name: "Girar medio grado a la derecha",
+      exact: true,
+    })
+    .click();
+  expect(Number(await angle.inputValue()) - before).toBeCloseTo(
+    Math.PI / 360,
+    4,
+  );
+  await page.getByRole("button", { name: /GOLPEAR/ }).click();
+  await expect(page.getByText("Pelota en movimiento")).toBeVisible();
 });

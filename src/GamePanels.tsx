@@ -1,6 +1,7 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { ranking, total, position, canStart, type State } from "../shared/game";
-import { getCourse, getCircuit, colors } from "../shared/courses";
+import { wrapAngle, type ShotStyle } from "../shared/shot";
+import { getCourse, getCircuit, courseSize, colors } from "../shared/courses";
 import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
 import { useFullscreen } from "./useFullscreen";
@@ -9,10 +10,14 @@ type Props = {
   s: State;
   mode: "local" | "online";
   status: string;
+  serverUrl: string;
+  latency: number | null;
   id: string;
   canShoot: boolean;
   angle: number;
   power: number;
+  style: ShotStyle;
+  setStyle: Setter<ShotStyle>;
   overview: boolean;
   transitioning: boolean;
   setOverview: Setter<boolean>;
@@ -28,10 +33,14 @@ export function GamePanels({
   s,
   mode,
   status,
+  serverUrl,
+  latency,
   id,
   canShoot,
   angle,
   power,
+  style,
+  setStyle,
   overview,
   transitioning,
   setOverview,
@@ -65,7 +74,10 @@ export function GamePanels({
     <>
       {s.phase === "lobby" && (
         <section className="panel setup">
-          <div className="eyebrow">SALA PRIVADA / {status}</div>
+          <div className="eyebrow">
+            SALA PRIVADA / {status}
+            {latency !== null ? ` · ${latency} ms` : ""}
+          </div>
           <h2>El club está abierto.</h2>
           <p>
             Comparte el código o el enlace. Todos deben estar listos para
@@ -80,7 +92,7 @@ export function GamePanels({
               }
               navigator.clipboard
                 ?.writeText(
-                  `${location.origin}${location.pathname}?room=${s.code}`,
+                  `${location.origin}${location.pathname}?room=${s.code}${serverUrl ? `&server=${encodeURIComponent(serverUrl)}` : ""}`,
                 )
                 .then(() => setError("Enlace copiado"))
                 .catch(() => setError("Copia el código de sala: " + s.code));
@@ -151,12 +163,16 @@ export function GamePanels({
             </h2>
             <p>
               PAR {courses[s.hole].par} <span>·</span>{" "}
+              {courseSize(courses[s.hole]).length} m <span>·</span>{" "}
               {courses[s.hole].subtitle}
             </p>
           </div>
           <aside className="leaderboard">
             <div className="eyebrow">
-              CLASIFICACIÓN {mode === "online" ? "· " + status : ""}
+              CLASIFICACIÓN{" "}
+              {mode === "online"
+                ? "· " + status + (latency !== null ? ` · ${latency} ms` : "")
+                : ""}
             </div>
             {ranking(s.players).map((p, i) => (
               <div className={p.id === current.id ? "active" : ""} key={p.id}>
@@ -237,9 +253,48 @@ export function GamePanels({
                   : `${Math.max(0, Math.ceil(s.deadline - s.time))} s`}
               </b>
             </div>
+            <div className="shot-options">
+              <div role="group" aria-label="Tipo de golpe">
+                <button
+                  aria-pressed={style === "putt"}
+                  disabled={!canShoot}
+                  onClick={() => setStyle("putt")}
+                >
+                  Rodado
+                </button>
+                <button
+                  aria-pressed={style === "chip"}
+                  disabled={!canShoot}
+                  onClick={() => setStyle("chip")}
+                >
+                  Elevado
+                </button>
+              </div>
+              <div role="group" aria-label="Ajuste fino">
+                <button
+                  aria-label="Girar medio grado a la izquierda"
+                  disabled={!canShoot}
+                  onClick={() => setAngle((a) => wrapAngle(a - Math.PI / 360))}
+                >
+                  −0,5°
+                </button>
+                <button
+                  aria-label="Girar medio grado a la derecha"
+                  disabled={!canShoot}
+                  onClick={() => setAngle((a) => wrapAngle(a + Math.PI / 360))}
+                >
+                  +0,5°
+                </button>
+              </div>
+              <span className="shot-surface">
+                {courses[s.hole].water?.length
+                  ? "AGUA: +1 GOLPE"
+                  : "PRIMER REBOTE APROXIMADO"}
+              </span>
+            </div>
             <div className="shot-controls">
               <label>
-                ÁNGULO <output>{Math.round((angle * 180) / Math.PI)}°</output>
+                ÁNGULO <output>{((angle * 180) / Math.PI).toFixed(1)}°</output>
                 <input
                   aria-label="Ángulo"
                   type="range"
@@ -272,9 +327,25 @@ export function GamePanels({
                 GOLPEAR <span>→</span>
               </button>
             </div>
+            <div
+              className="power-presets"
+              role="group"
+              aria-label="Potencia rápida"
+            >
+              {[0.25, 0.5, 0.75, 1].map((value) => (
+                <button
+                  key={value}
+                  disabled={!canShoot}
+                  aria-pressed={Math.abs(power - value) < 0.005}
+                  onClick={() => setPower(value)}
+                >
+                  {value * 100}%
+                </button>
+              ))}
+            </div>
             <small>
-              Toca el campo para apuntar · Flechas: ángulo y fuerza · Espacio:
-              golpe
+              Arrastra: dirección y fuerza · Shift + flechas: ajuste fino ·
+              Soltar no dispara
             </small>
           </section>
         </>
@@ -301,6 +372,7 @@ export function GamePanels({
                   ))}
                   <th>TOTAL</th>
                   <th>ACES</th>
+                  <th>PEN.</th>
                 </tr>
               </thead>
               <tbody>
@@ -320,6 +392,7 @@ export function GamePanels({
                       <b>{total(p)}</b>
                     </td>
                     <td>{p.aces}</td>
+                    <td>{p.penalties}</td>
                   </tr>
                 ))}
               </tbody>

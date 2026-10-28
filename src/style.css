@@ -974,3 +974,101 @@ button > span {
     bottom: 246px;
   }
 }
+.shot-options,
+.shot-options > div,
+.power-presets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.shot-options {
+  margin: 0 0 13px;
+  flex-wrap: wrap;
+}
+.shot-options > div + div {
+  margin-left: 10px;
+}
+.shot-options button,
+.power-presets button {
+  min-height: 32px;
+  padding: 7px 12px;
+  border: 1px solid #527268;
+  border-radius: 6px;
+  background: #163f37;
+  color: #c9ded3;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.shot-options button[aria-pressed="true"],
+.power-presets button[aria-pressed="true"] {
+  color: #183b33;
+  background: #f2cd80;
+  border-color: #f2cd80;
+}
+.shot-options button:disabled,
+.power-presets button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.shot-surface {
+  margin-left: auto;
+  color: #ddbd84;
+  font-size: 8px;
+  letter-spacing: 0.7px;
+}
+.power-presets {
+  margin-top: 9px;
+}
+.power-presets button {
+  padding: 5px 12px;
+  min-height: 28px;
+  font-size: 10px;
+}
+@media (max-width: 800px) {
+  .shot-options {
+    gap: 5px;
+    margin-bottom: 9px;
+  }
+  .shot-options button {
+    padding: 7px 10px;
+    min-height: 34px;
+    font-size: 10px;
+  }
+  .shot-options > div + div {
+    margin-left: auto;
+  }
+  .shot-surface {
+    display: none;
+  }
+  .shot-panel {
+    padding: 14px 16px;
+  }
+  .shot-panel small {
+    font-size: 7px;
+    margin-top: 8px;
+  }
+  .turn-toast {
+    bottom: 330px;
+  }
+}
+/* Keep the larger shot desk below the active ball in both camera layouts. */
+@media (min-width: 801px) {
+  .turn-toast {
+    bottom: 288px;
+  }
+  .view-controls {
+    bottom: 290px;
+  }
+  .hole-map {
+    bottom: 335px;
+  }
+}
+.field small {
+  color: #b1c6ba;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.scene canvas {
+  touch-action: none;
+}
