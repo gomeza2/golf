@@ -1548,3 +1548,51 @@ button > span {
     bottom: auto;
   }
 }
+/* Keep play actions visible in the first desktop screen as well as on mobile. */
+.match-builder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 10px;
+}
+.match-builder > .eyebrow,
+.match-builder > .selected-round,
+.match-builder > .shot-mode-picker,
+.match-builder > .availability,
+.match-builder > small {
+  grid-column: 1/-1;
+}
+.match-builder > .primary {
+  grid-column: 1;
+  grid-row: 4;
+}
+.match-builder > .secondary {
+  grid-column: 2;
+  grid-row: 4;
+}
+.match-builder > .primary,
+.match-builder > .secondary {
+  min-width: 0;
+  padding: 12px 7px;
+  font-size: 10px;
+}
+.match-builder .shot-mode-picker {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 12px 0 4px;
+}
+.match-builder .shot-mode-picker button {
+  padding: 9px 7px;
+}
+.match-builder .shot-mode-picker small {
+  display: none;
+}
+.match-builder .shot-mode-picker strong {
+  font-size: 21px;
+}
+.match-builder .shot-mode-picker span {
+  font-size: 8px;
+  line-height: 1.4;
+}
+.match-builder > .selected-round {
+  margin-bottom: 0;
+  padding: 10px 0;
+}
