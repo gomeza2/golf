@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
     "dev:client": "vite --host 0.0.0.0",
-    "dev:server": "node --env-file-if-exists=.env --import tsx --watch server/index.ts",
+    "dev:server": "node --import tsx --watch server/dev.ts",
     "build": "tsc --noEmit && vite build && esbuild server/index.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-server/index.js",
     "start": "node --env-file-if-exists=.env dist-server/index.js",
     "test": "vitest run",

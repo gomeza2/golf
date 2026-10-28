@@ -18,6 +18,8 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run dev",
+    stdout: "pipe",
+    stderr: "pipe",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
   },
