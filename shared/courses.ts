@@ -28,12 +28,36 @@ export type Course = {
   greenBounds?: { minX: number; maxX: number; minZ: number; maxZ: number };
   water?: Zone[];
   sand?: Zone[];
+  rough?: Zone[];
+  dirt?: Zone[];
   dimensions?: { width: number; length: number };
 };
 const wall = (x: number, z: number, w: number, d: number): Block => ({
   pos: [x, 0.4, z],
   size: [w, 0.8, d],
 });
+export function curvedBank(
+  x: number,
+  z: number,
+  radius: number,
+  from: number,
+  to: number,
+  segments = 10,
+): Block[] {
+  return Array.from({ length: segments }, (_, i) => {
+    const a = from + ((to - from) * i) / segments,
+      b = from + ((to - from) * (i + 1)) / segments;
+    const x1 = x + Math.cos(a) * radius,
+      z1 = z + Math.sin(a) * radius,
+      x2 = x + Math.cos(b) * radius,
+      z2 = z + Math.sin(b) * radius;
+    return {
+      pos: [(x1 + x2) / 2, 0.4, (z1 + z2) / 2],
+      size: [Math.hypot(x2 - x1, z2 - z1) + 0.035, 0.8, 0.35],
+      yaw: -Math.atan2(z2 - z1, x2 - x1),
+    };
+  });
+}
 export const courses: Course[] = [
   {
     name: "Jardín de rebotes",
@@ -83,7 +107,7 @@ export const colors = [
 ];
 
 export type CircuitId =
-  "sunset" | "moonlight" | "park" | "riviera" | "masters" | "tour";
+  "sunset" | "moonlight" | "park" | "riviera" | "masters" | "tour" | "nine";
 export const nightCourses: Course[] = [
   {
     name: "Las diagonales",
@@ -382,6 +406,16 @@ export const mastersCourses: Course[] = [
     sand: [{ x: -6, z: -11, width: 5, length: 5, y: 0 }],
   },
 ];
+courses[0].rough = [{ x: 4, z: 4, width: 3, length: 4, y: 0 }];
+nightCourses[0].dirt = [{ x: -3, z: 0, width: 4, length: 3, y: 0 }];
+parkCourses[0].rough = [{ x: 5, z: -6, width: 4, length: 5, y: 0 }];
+rivieraCourses[0].dirt = [{ x: -5, z: -5, width: 3, length: 4, y: 0 }];
+mastersCourses[0].rough = [{ x: -4, z: 5, width: 4, length: 4, y: 0 }];
+mastersCourses[4].dirt = [{ x: 6, z: 10, width: 5, length: 5, y: 0 }];
+// A curved approach offers an optional bank while preserving an open safe route.
+parkCourses[2].blocks.push(
+  ...curvedBank(-4, -9, 2.2, -Math.PI / 2, Math.PI / 2, 8),
+);
 export const uniqueCourses = [
   ...courses,
   ...nightCourses,
@@ -458,6 +492,17 @@ export const circuits = [
     edge: "#e5cda6",
     background: "#173c3c",
     accent: "#f4cf7d",
+  },
+  {
+    id: "nine" as const,
+    name: "Vuelta de 9",
+    description:
+      "Nueve hoyos completos: jardín, luna y parque. Una ronda más corta con clasificación propia.",
+    courses: [...courses, ...nightCourses, ...parkCourses],
+    ground: "#43816a",
+    edge: "#dfc99f",
+    background: "#193d36",
+    accent: "#e5cf87",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
@@ -583,3 +628,23 @@ export function cupWalls(course: Course): Block[] {
     { pos: [x, y - CUP_DEPTH - 0.05, z], size: [1.2, 0.1, 1.2], yaw: 0 },
   ]);
 }
+
+export function surfaceAt(
+  course: Course,
+  pos: V3,
+): "grass" | "rough" | "dirt" | "sand" {
+  for (const kind of ["sand", "dirt", "rough"] as const)
+    if (
+      course[kind]?.some(
+        (zone) => inZone(zone, pos) && Math.abs(pos.y - zone.y - 0.22) < 0.2,
+      )
+    )
+      return kind;
+  return "grass";
+}
+export const rollingResistance = {
+  grass: 0.016,
+  rough: 0.04,
+  dirt: 0.055,
+  sand: 0.085,
+} as const;

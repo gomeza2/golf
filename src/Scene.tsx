@@ -15,7 +15,7 @@ import {
   type Block,
 } from "../shared/courses";
 import type { State } from "../shared/game";
-import { wrapAngle, type ShotStyle } from "../shared/shot";
+import { wrapAngle } from "../shared/shot";
 import {
   AimLine,
   CourseWater,
@@ -233,7 +233,6 @@ function World({
   canShoot,
   shotInput,
   power,
-  style,
   overview,
   onPower,
   focusId,
@@ -246,7 +245,6 @@ function World({
   canShoot: boolean;
   shotInput: ReturnType<typeof useShotControls>;
   power: number;
-  style: ShotStyle;
   onPower: (p: number) => void;
   overview: boolean;
   focusId?: string;
@@ -372,14 +370,7 @@ function World({
         <Ball pos={c.start} color={colors[0]} active />
       )}
       {!s.moving && s.phase === "playing" && (
-        <AimLine
-          course={c}
-          from={p}
-          angle={angle}
-          power={power}
-          time={s.time}
-          style={style}
-        />
+        <AimLine course={c} from={p} angle={angle} power={power} />
       )}
       <mesh
         position={[0, p.y, 0]}

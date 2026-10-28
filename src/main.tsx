@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { io, type Socket } from "socket.io-client";
 import { normalizeServerUrl } from "./serverUrl";
 import { FixedStepper } from "../shared/timing";
-import { wrapAngle, type ShotStyle } from "../shared/shot";
+import { wrapAngle } from "../shared/shot";
 import { Game, initPhysics, type State } from "../shared/game";
 import {
   colors,
@@ -11,13 +11,19 @@ import {
   getCircuit,
   type CircuitId,
 } from "../shared/courses";
+import {
+  readPersonalRecords,
+  recordCompletedRound,
+  persistPersonalRecords,
+  type RoundReport,
+} from "./personalRecords";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
 import { useTurnPresentation } from "./useTurnPresentation";
 import { AppErrorBoundary } from "./AppErrorBoundary";
 import { ClubCatalog, SelectedRound } from "./ClubCatalog";
-import { isControlMode } from "./shotControls";
+import { controlModes, isControlMode, type ControlMode } from "./shotControls";
 import { useShotControls, type Shot } from "./useShotControls";
 import { readLocal, saveLocal, readSession, saveSession } from "./storage";
 import "@fontsource/barlow-condensed/700.css";
@@ -48,7 +54,22 @@ function App() {
     ),
     [mode, setMode] = useState<"local" | "online">("local"),
     [circuit, setCircuit] = useState<CircuitId>("sunset"),
-    [names, setNames] = useState(["Golfista 1", "Golfista 2"]),
+    [names, setNames] = useState<string[]>(() => {
+      try {
+        const saved = JSON.parse(readLocal("golf-local-names", "null"));
+        if (
+          Array.isArray(saved) &&
+          saved.length >= 1 &&
+          saved.length <= 8 &&
+          saved.every(
+            (n) =>
+              typeof n === "string" && n.trim().length > 0 && n.length <= 20,
+          )
+        )
+          return saved;
+      } catch {}
+      return ["Golfista 1"];
+    }),
     [name, setName] = useState(readLocal("golf-name")),
     [code, setCode] = useState(
       new URLSearchParams(location.search).get("room") || "",
@@ -63,13 +84,17 @@ function App() {
       const saved = readLocal("golf-control-mode");
       return isControlMode(saved) ? saved : "classic";
     }),
-    [style, setStyle] = useState<ShotStyle>("putt"),
+    [personalHistory, setPersonalHistory] = useState(readPersonalRecords),
+    [roundReport, setRoundReport] = useState<RoundReport | null>(null),
+    [roundId, setRoundId] = useState(0),
+    [roundControl, setRoundControl] = useState<ControlMode>("classic"),
     [overview, setOverview] = useState(false),
     [settings, setSettings] = useState(false),
     [volume, setVolume] = useState(Number(readLocal("golf-volume", ".6"))),
     [ready, setReady] = useState(false);
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
+  const activeControl = mode === "online" ? "classic" : roundControl;
   const turnKey =
     screen === "game" && s.phase === "playing"
       ? `${s.circuit}:${s.hole}:${s.players[s.turn]?.id}`
@@ -134,6 +159,22 @@ function App() {
     }
     lastTurn.current = key;
   }, [s.turn, s.hole, s.phase]);
+  const savedRound = useRef(0);
+  useEffect(() => {
+    if (
+      mode !== "local" ||
+      s.phase !== "finished" ||
+      roundId === savedRound.current
+    )
+      return;
+    savedRound.current = roundId;
+    const result = recordCompletedRound(personalHistory, s, roundControl);
+    if (result) {
+      const persisted = persistPersonalRecords(result.history);
+      setPersonalHistory(result.history);
+      setRoundReport({ ...result.report, persisted });
+    }
+  }, [s.phase, roundId, mode]);
   const lastEvent = useRef(0);
   useEffect(() => {
     if (s.event && s.event.seq !== lastEvent.current) {
@@ -180,7 +221,6 @@ function App() {
         current.id,
         shot?.angle ?? angle,
         shot?.power ?? power,
-        style,
       );
       setS(structuredClone(game.current!.state));
     } else
@@ -188,11 +228,10 @@ function App() {
         type: "shoot",
         angle: shot?.angle ?? angle,
         power: shot?.power ?? power,
-        style,
       });
   };
   const controls = useShotControls({
-    mode: controlMode,
+    mode: activeControl,
     canShoot,
     turnKey,
     angle,
@@ -201,8 +240,8 @@ function App() {
     setPower,
     fire: shoot,
   });
-  const controlsRef = useRef({ controls, controlMode });
-  controlsRef.current = { controls, controlMode };
+  const controlsRef = useRef({ controls, controlMode: activeControl });
+  controlsRef.current = { controls, controlMode: activeControl };
   useEffect(() => saveLocal("golf-control-mode", controlMode), [controlMode]);
   const shotRef = useRef(shoot);
   shotRef.current = shoot;
@@ -251,6 +290,10 @@ function App() {
     g.selectCircuit(circuit);
     names.forEach((n, i) => g.add(String(i), n));
     g.start();
+    saveLocal("golf-local-names", JSON.stringify(names));
+    setRoundControl(controlMode);
+    setRoundId((v) => v + 1);
+    setRoundReport(null);
     game.current = g;
     setMode("local");
     setS(structuredClone(g.state));
@@ -298,9 +341,9 @@ function App() {
     });
     sock.on("session", (session) => {
       if (socket.current !== sock) return;
-      if (session.protocol !== 3) {
+      if (session.protocol !== 4) {
         setError(
-          "El servidor necesita actualizarse para admitir la nueva física y los 18 hoyos",
+          "El servidor necesita actualizarse para admitir el golpe normal equilibrado",
         );
         setStatus("Servidor de otra versión");
         sock.disconnect();
@@ -353,7 +396,12 @@ function App() {
         setScreen("local");
         return;
       }
-      type === "next" ? game.current.next() : game.current.start();
+      if (type === "next") game.current.next();
+      else {
+        game.current.start();
+        setRoundId((v) => v + 1);
+        setRoundReport(null);
+      }
       setS(structuredClone(game.current.state));
     }
   }
@@ -385,10 +433,9 @@ function App() {
           angle={angle}
           cameraAngle={controls.cameraAngle}
           canShoot={canShoot}
-          controlMode={controlMode}
+          controlMode={activeControl}
           shotInput={controls}
           power={power}
-          style={style}
           onPower={(p) => {
             if (canShoot) setPower(p);
           }}
@@ -434,6 +481,7 @@ function App() {
       )}
       {screen === "home" && (
         <ClubCatalog
+          personalHistory={personalHistory}
           circuit={circuit}
           setCircuit={setCircuit}
           controlMode={controlMode}
@@ -466,11 +514,25 @@ function App() {
           <button className="text-button" onClick={() => setScreen("home")}>
             ← Volver al club
           </button>
-          <div className="eyebrow">PASA EL DISPOSITIVO</div>
+          <div className="eyebrow">
+            {names.length === 1
+              ? "PARTIDA SOLO"
+              : "TORNEO LOCAL · PASA EL DISPOSITIVO"}
+          </div>
           <h2>
-            Una pantalla.
-            <br />
-            Todos tus rivales.
+            {names.length === 1 ? (
+              <>
+                Tu próxima
+                <br />
+                mejor marca.
+              </>
+            ) : (
+              <>
+                Una pantalla.
+                <br />
+                Todos tus rivales.
+              </>
+            )}
           </h2>
           <p>De 1 a 8 jugadores. Un golpe por turno. Menos golpes gana.</p>
           <div className="name-list">
@@ -479,6 +541,7 @@ function App() {
                 <span style={{ background: colors[i] }} />
                 {i + 1}
                 <input
+                  placeholder="Tu nombre"
                   aria-label={`Jugador ${i + 1}`}
                   value={n}
                   maxLength={20}
@@ -532,6 +595,9 @@ function App() {
             Invita a<br />
             tu competencia.
           </h2>
+          <p className="muted">
+            El online utiliza Clásico. Tu preferencia local se conserva.
+          </p>
           <label className="field">
             Servidor online
             <input
@@ -595,21 +661,19 @@ function App() {
       )}
       {screen === "game" && (
         <GamePanels
+          roundReport={roundReport}
           s={s}
           mode={mode}
           status={status}
           serverUrl={serverUrl}
           latency={latency}
           id={id}
-          controlMode={controlMode}
-          setControlMode={setControlMode}
+          controlMode={activeControl}
           referencePower={controls.targetPower}
           chargeActive={controls.active}
           startCharge={() => controls.start()}
           releaseCharge={controls.release}
           cancelCharge={controls.cancel}
-          style={style}
-          setStyle={setStyle}
           canShoot={canShoot}
           angle={angle}
           power={power}
@@ -664,10 +728,15 @@ function App() {
               {volume ? "Silenciar" : "Activar sonido"}
             </button>
             <p>
-              Apunta tocando el campo o con el control de ángulo. Ajusta la
-              potencia y pulsa GOLPEAR. Arrastra sobre el campo para afinar
-              dirección y potencia sin disparar al soltar. Elige Rodado para
-              controlar el suelo o Elevado para saltar obstáculos.
+              {
+                controlModes.find(
+                  (m) =>
+                    m.id === (screen === "game" ? activeControl : controlMode),
+                )?.description
+              }{" "}
+              El control se elige antes de empezar y queda fijo toda la ronda.
+              Solo hay golpe normal: las rampas y el terreno determinan la
+              altura.
             </p>
             <p>
               Teclado: ← → para apuntar, ↑ ↓ para potencia y espacio para

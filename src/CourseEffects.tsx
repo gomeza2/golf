@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { aimGuide, type ShotStyle } from "../shared/shot";
+import { aimGuide } from "../shared/shot";
 import type { Course, V3, Zone } from "../shared/courses";
 import type { State } from "../shared/game";
 export function useGrassTexture() {
@@ -72,7 +72,11 @@ export function CourseWater({ course }: { course: Course }) {
       {course.water?.map((zone, i) => (
         <Water key={i} zone={zone} />
       ))}
-      {course.sand?.map((zone, i) => (
+      {[
+        ...(course.rough || []).map((z) => ({ ...z, shade: "#536b38" })),
+        ...(course.dirt || []).map((z) => ({ ...z, shade: "#967352" })),
+        ...(course.sand || []).map((z) => ({ ...z, shade: "#d9bf86" })),
+      ].map((zone, i) => (
         <mesh
           key={`sand${i}`}
           position={[zone.x, zone.y + 0.008, zone.z]}
@@ -80,7 +84,7 @@ export function CourseWater({ course }: { course: Course }) {
           receiveShadow
         >
           <planeGeometry args={[zone.width, zone.length]} />
-          <meshStandardMaterial color="#d9bf86" roughness={1} />
+          <meshStandardMaterial color={zone.shade} roughness={1} />
         </mesh>
       ))}
     </>
@@ -91,23 +95,19 @@ export function AimLine({
   from,
   angle,
   power,
-  time,
-  style,
 }: {
   course: Course;
   from: V3;
   angle: number;
   power: number;
-  time: number;
-  style: ShotStyle;
 }) {
-  const guide = aimGuide(course, from, angle, power, time, style);
+  const guide = aimGuide(from, angle, power);
   const line = useMemo(() => {
     const geometry = new THREE.BufferGeometry().setFromPoints(
       guide.points.map((p) => new THREE.Vector3(p.x, p.y, p.z)),
     );
     const material = new THREE.LineDashedMaterial({
-      color: style === "chip" ? "#a0edeb" : "#ffdd88",
+      color: "#ffdd88",
       dashSize: 0.3,
       gapSize: 0.15,
       transparent: true,
@@ -118,17 +118,7 @@ export function AimLine({
     result.computeLineDistances();
     result.renderOrder = 5;
     return result;
-  }, [
-    course,
-    from.x,
-    from.y,
-    from.z,
-    angle,
-    power,
-    style,
-    guide.hit?.x,
-    guide.hit?.z,
-  ]);
+  }, [course, from.x, from.y, from.z, angle, power]);
   useEffect(
     () => () => {
       line.geometry.dispose();
@@ -139,15 +129,15 @@ export function AimLine({
   return (
     <>
       <primitive object={line} />
-      {guide.hit && (
-        <mesh
-          position={[guide.hit.x, guide.hit.y, guide.hit.z]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <ringGeometry args={[0.25, 0.31, 24]} />
+      <group
+        position={[guide.points[1].x, guide.points[1].y, guide.points[1].z]}
+        rotation={[0, -angle, 0]}
+      >
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.085, 0.25, 10]} />
           <meshBasicMaterial color="#ffdd88" depthTest={false} />
         </mesh>
-      )}
+      </group>
     </>
   );
 }

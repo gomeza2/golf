@@ -6,15 +6,17 @@ import {
   type SetStateAction,
 } from "react";
 import { ranking, total, position, canStart, type State } from "../shared/game";
-import { wrapAngle, type ShotStyle } from "../shared/shot";
+import { wrapAngle } from "../shared/shot";
 import { getCourse, getCircuit, courseSize, colors } from "../shared/courses";
 import { controlModes, type ControlMode } from "./shotControls";
 import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
+import { goalLabels, type RoundReport } from "./personalRecords";
 import { useFullscreen } from "./useFullscreen";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
   s: State;
+  roundReport: RoundReport | null;
   mode: "local" | "online";
   status: string;
   serverUrl: string;
@@ -24,14 +26,11 @@ type Props = {
   angle: number;
   power: number;
   controlMode: ControlMode;
-  setControlMode: Setter<ControlMode>;
   chargeActive: boolean;
   referencePower: number;
   startCharge: () => void;
   releaseCharge: () => void;
   cancelCharge: () => void;
-  style: ShotStyle;
-  setStyle: Setter<ShotStyle>;
   overview: boolean;
   transitioning: boolean;
   setOverview: Setter<boolean>;
@@ -45,6 +44,7 @@ type Props = {
 };
 export function GamePanels({
   s,
+  roundReport,
   mode,
   status,
   serverUrl,
@@ -54,14 +54,11 @@ export function GamePanels({
   angle,
   power,
   controlMode,
-  setControlMode,
   chargeActive,
   referencePower,
   startCharge,
   releaseCharge,
   cancelCharge,
-  style,
-  setStyle,
   overview,
   transitioning,
   setOverview,
@@ -74,6 +71,8 @@ export function GamePanels({
   leave,
 }: Props) {
   const [mapOpen, setMapOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => setExpanded(false), [s.turn, s.hole, s.moving]);
   const chargePointer = useRef<number | null>(null);
   useEffect(() => {
     if (!chargeActive) chargePointer.current = null;
@@ -90,11 +89,14 @@ export function GamePanels({
         total(p) === total(sorted[0]) &&
         p.aces === sorted[0].aces,
     );
-  const winnerLabel = !winners.length
-    ? "Partida abandonada."
-    : winners.length > 1
-      ? "Victoria compartida."
-      : `${sorted[0]?.name} gana el club.`;
+  const winnerLabel =
+    s.players.length === 1 && !s.players[0].withdrawn
+      ? "Tu vuelta, tu marca."
+      : !winners.length
+        ? "Partida abandonada."
+        : winners.length > 1
+          ? "Victoria compartida."
+          : `${sorted[0]?.name} gana el club.`;
   return (
     <>
       {s.phase === "lobby" && (
@@ -269,7 +271,12 @@ export function GamePanels({
             </span>
             <b>{current.strokes}/12</b>
           </div>
-          <section className="shot-panel" data-control-mode={controlMode}>
+          <section
+            className="shot-panel"
+            data-control-mode={controlMode}
+            data-expanded={expanded}
+            data-moving={s.moving}
+          >
             <div className="shot-top">
               <span>{s.message}</span>
               <b>
@@ -279,23 +286,17 @@ export function GamePanels({
               </b>
             </div>
             <div className="control-mode-row">
-              <label>
-                CONTROL DEL TIRO{" "}
-                <select
-                  aria-label="Control del tiro"
-                  value={controlMode}
-                  disabled={!canShoot || chargeActive}
-                  onChange={(e) =>
-                    setControlMode(e.target.value as ControlMode)
-                  }
-                >
-                  {controlModes.map((mode) => (
-                    <option key={mode.id} value={mode.id}>
-                      {mode.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <button
+                className="text-button expand-shot"
+                aria-expanded={expanded}
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? "Menos ajustes" : "Más ajustes"}
+              </button>
+              <span className="locked-control">
+                {controlModes.find((mode) => mode.id === controlMode)?.name} ·
+                FIJO
+              </span>
               {chargeActive && (
                 <button className="text-button" onClick={cancelCharge}>
                   Cancelar preparación
@@ -303,22 +304,6 @@ export function GamePanels({
               )}
             </div>
             <div className="shot-options">
-              <div role="group" aria-label="Tipo de golpe">
-                <button
-                  aria-pressed={style === "putt"}
-                  disabled={!canShoot || chargeActive}
-                  onClick={() => setStyle("putt")}
-                >
-                  Rodado
-                </button>
-                <button
-                  aria-pressed={style === "chip"}
-                  disabled={!canShoot || chargeActive}
-                  onClick={() => setStyle("chip")}
-                >
-                  Elevado
-                </button>
-              </div>
               <div role="group" aria-label="Ajuste fino">
                 <button
                   aria-label="Girar medio grado a la izquierda"
@@ -338,7 +323,7 @@ export function GamePanels({
               <span className="shot-surface">
                 {courses[s.hole].water?.length
                   ? "AGUA: +1 GOLPE"
-                  : "PRIMER REBOTE APROXIMADO"}
+                  : "GOLPE NORMAL · GUÍA CORTA"}
               </span>
             </div>
             <div className="shot-controls">
@@ -435,7 +420,7 @@ export function GamePanels({
                 role="progressbar"
                 aria-label={
                   controlMode === "pulse"
-                    ? "Pulso de potencia"
+                    ? "Precisión de potencia"
                     : "Potencia de arrastre"
                 }
                 aria-valuemin={0}
@@ -468,7 +453,7 @@ export function GamePanels({
             </div>
             <small>
               {controlMode === "classic"
-                ? "Flecha y potencia · Shift + flechas: ajuste fino · Golpear confirma"
+                ? "Clásico · Flecha y potencia · Shift + flechas: ajuste fino · Golpear confirma"
                 : controlMode === "pull"
                   ? "Arrastra hacia atrás: fuerza y dirección · Soltar dispara · Escape cancela"
                   : "La dirección y la fuerza oscilan · Mantén y suelta en tu instante · Escape cancela"}
@@ -512,7 +497,10 @@ export function GamePanels({
                       {p.withdrawn ? " · retirado" : ""}
                     </td>
                     {courses.map((_, j) => (
-                      <td key={j}>{p.scores[j] ?? "—"}</td>
+                      <td key={j}>
+                        {p.scores[j] ?? "—"}
+                        {p.capped.includes(j) ? "*" : ""}
+                      </td>
                     ))}
                     <td>
                       <b>{total(p)}</b>
@@ -524,6 +512,33 @@ export function GamePanels({
               </tbody>
             </table>
           </div>
+          <small className="muted">
+            * Límite de golpes. Estos hoyos no cuentan para récords personales.
+          </small>
+          {s.phase === "finished" && roundReport && (
+            <div className="round-report" role="status">
+              <strong>
+                {roundReport.improved
+                  ? "Nuevo récord personal"
+                  : "Ronda completada"}
+                : {roundReport.score} golpes
+              </strong>
+              <p>
+                Mejor marca de este recorrido y control: {roundReport.best}.
+              </p>
+              {roundReport.earned.length > 0 && (
+                <p>
+                  {roundReport.earned.map((g) => goalLabels[g]).join(" · ")}
+                </p>
+              )}
+              {!roundReport.persisted && (
+                <small>
+                  Tu marca se conserva durante esta sesión; el navegador no
+                  permitió guardarla.
+                </small>
+              )}
+            </div>
+          )}
           {isHost ? (
             <button
               className="primary"

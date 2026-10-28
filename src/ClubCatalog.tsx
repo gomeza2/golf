@@ -5,6 +5,7 @@ import {
   uniqueCourses,
   type CircuitId,
 } from "../shared/courses";
+import { recordKey, goalLabels, type PersonalHistory } from "./personalRecords";
 import { ShotModePicker } from "./ShotModePicker";
 import type { ControlMode } from "./shotControls";
 export function SelectedRound({
@@ -33,6 +34,7 @@ export function SelectedRound({
 }
 export function ClubCatalog({
   circuit,
+  personalHistory,
   setCircuit,
   controlMode,
   setControlMode,
@@ -42,6 +44,7 @@ export function ClubCatalog({
   onOnline,
 }: {
   circuit: CircuitId;
+  personalHistory: PersonalHistory;
   setCircuit: (id: CircuitId) => void;
   controlMode: ControlMode;
   setControlMode: (mode: ControlMode) => void;
@@ -78,6 +81,17 @@ export function ClubCatalog({
               size = courseSize(first),
               longest = Math.max(...c.courses.map((h) => courseSize(h).length)),
               par = c.courses.reduce((n, h) => n + h.par, 0);
+            const tags = [
+              c.courses.some((h) => h.water?.length) ? "Agua" : "",
+              c.courses.some((h) => h.sand?.length) ? "Arena" : "",
+              c.courses.some((h) => h.rough?.length) ? "Césped alto" : "",
+              c.courses.some((h) => h.dirt?.length) ? "Tierra" : "",
+              c.courses.some(
+                (h) => h.ramp || h.terrain?.some((b) => b.rotation),
+              )
+                ? "Pendientes"
+                : "",
+            ].filter(Boolean);
             return (
               <button
                 key={c.id}
@@ -165,6 +179,9 @@ export function ClubCatalog({
                   </small>
                   <strong>{c.name}</strong>
                   <p>{c.description}</p>
+                  <span className="course-terrain-tags">
+                    {tags.join(" · ") || "Césped · Bandas"}
+                  </span>
                   <span>
                     Hasta {longest} m por hoyo{" "}
                     {circuit === c.id ? "· SELECCIONADO" : ""}
@@ -185,6 +202,30 @@ export function ClubCatalog({
             }
           />
           <ShotModePicker value={controlMode} onChange={setControlMode} />
+          <div className="personal-record" aria-label="Récord personal">
+            <small>SOLO · ESTE RECORRIDO Y CONTROL</small>
+            {personalHistory[recordKey(circuit, controlMode)] ? (
+              <>
+                <strong>
+                  {personalHistory[recordKey(circuit, controlMode)].best} golpes
+                </strong>
+                <span>
+                  {personalHistory[recordKey(circuit, controlMode)].rounds}{" "}
+                  rondas válidas
+                </span>
+                <p>
+                  {personalHistory[recordKey(circuit, controlMode)].goals
+                    .map((g) => goalLabels[g])
+                    .join(" · ")}
+                </p>
+              </>
+            ) : (
+              <p>
+                Completa una ronda sin alcanzar el límite para registrar tu
+                mejor marca.
+              </p>
+            )}
+          </div>
           <button className="primary" disabled={!ready} onClick={onLocal}>
             {ready ? "Jugar en este dispositivo" : "Cargando físicas…"} →
           </button>

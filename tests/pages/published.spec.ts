@@ -39,6 +39,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
     ).toBeDisabled();
   await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
+  await page.getByRole("button", { name: /Añadir jugador/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(
     page.getByRole("heading", { name: /Las dos orillas/ }),

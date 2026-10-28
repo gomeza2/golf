@@ -1,12 +1,16 @@
 import { test, expect, type Page } from "@playwright/test";
-async function local(page: Page, mode: "Arrastre" | "Pulso") {
+async function local(page: Page, mode: "Retroceso" | "Precisión") {
   await page.goto("/");
-  await page.getByRole("button", { name: new RegExp(mode) }).click();
+  await page
+    .locator(".shot-mode-picker")
+    .getByRole("button", { name: new RegExp(mode) })
+    .click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.locator(".locked-control")).toContainText(mode);
   await expect(
     page.getByRole("combobox", { name: "Control del tiro" }),
-  ).toBeEnabled();
+  ).toHaveCount(0);
   await expect(page.locator(".turn-intro")).toHaveCount(0);
 }
 test("catalogue starts a single 18-hole round and keeps the chosen control", async ({
@@ -17,13 +21,14 @@ test("catalogue starts a single 18-hole round and keeps the chosen control", asy
   await expect(
     page.getByRole("button", { name: /Vuelta completa/ }),
   ).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: /Arrastre/ }).click();
+  await page.getByRole("button", { name: /Retroceso/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await expect(page.locator(".selected-round")).toContainText("18 hoyos");
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
-  await expect(
-    page.getByRole("combobox", { name: "Control del tiro" }),
-  ).toHaveValue("pull");
+  await expect(page.locator(".shot-panel")).toHaveAttribute(
+    "data-control-mode",
+    "pull",
+  );
   await expect(
     page.getByRole("heading", { name: /Jardín de rebotes/ }),
   ).toBeVisible();
@@ -31,7 +36,7 @@ test("catalogue starts a single 18-hole round and keeps the chosen control", asy
 test("pull-and-release fires once, while a small drag or Escape never fires", async ({
   page,
 }) => {
-  await local(page, "Arrastre");
+  await local(page, "Retroceso");
   await page.mouse.move(640, 290);
   await page.mouse.down();
   await page.mouse.move(645, 295);
@@ -60,14 +65,16 @@ test("pull-and-release fires once, while a small drag or Escape never fires", as
 test("pulse charges a live meter, cancels on focus loss and fires only on release", async ({
   page,
 }) => {
-  await local(page, "Pulso");
+  await local(page, "Precisión");
   const button = page.getByRole("button", {
     name: "MANTENER Y SOLTAR",
     exact: true,
   });
   await button.hover();
   await page.mouse.down();
-  const progress = page.getByRole("progressbar", { name: "Pulso de potencia" });
+  const progress = page.getByRole("progressbar", {
+    name: "Precisión de potencia",
+  });
   await expect
     .poll(async () => Number(await progress.getAttribute("aria-valuenow")))
     .toBeGreaterThan(10);
@@ -93,7 +100,7 @@ test("touch pulling releases a real shot without a separate launch button", asyn
   });
   try {
     const page = await context.newPage();
-    await local(page, "Arrastre");
+    await local(page, "Retroceso");
     const cdp = await context.newCDPSession(page);
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchStart",

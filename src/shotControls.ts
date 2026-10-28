@@ -3,19 +3,19 @@ export type ControlMode = "classic" | "pull" | "pulse";
 export const controlModes = [
   {
     id: "classic" as const,
-    name: "Flecha",
+    name: "Clásico",
     description: "Apunta, regula la potencia y pulsa Golpear.",
     difficulty: "PRECISO",
   },
   {
     id: "pull" as const,
-    name: "Arrastre",
+    name: "Retroceso",
     description: "Mantén, tira hacia atrás y suelta para golpear.",
     difficulty: "DIRECTO",
   },
   {
     id: "pulse" as const,
-    name: "Pulso",
+    name: "Precisión",
     description: "Fuerza y ángulo oscilan. Suelta en el instante exacto.",
     difficulty: "EXPERTO",
   },

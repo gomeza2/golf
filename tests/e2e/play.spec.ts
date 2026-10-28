@@ -8,6 +8,7 @@ test("local game renders WebGL and executes a physical shot on desktop and mobil
   await page.goto("/");
   await page.screenshot({ path: "work/home.png" });
   await page.getByRole("button", { name: /Jugar en este/ }).click();
+  await page.getByRole("button", { name: /Añadir jugador/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(page.getByText("Tu turno de golpear")).toBeVisible();
   await page.getByRole("slider", { name: "Potencia", exact: true }).fill("0.4");
@@ -139,6 +140,9 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
   try {
     const a = await ca.newPage(),
       b = await cb.newPage();
+    await a.addInitScript(() =>
+      localStorage.setItem("golf-control-mode", "pulse"),
+    );
     await a.goto("/");
     await a.getByRole("button", { name: /Jugar online/ }).click();
     await a.getByRole("textbox", { name: "Tu nombre" }).fill("Ana");
@@ -167,6 +171,7 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
     await a.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await b.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await a.getByRole("button", { name: /Comenzar partida/ }).click();
+    await expect(a.locator(".locked-control")).toContainText("Clásico");
     await expect(a.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
     await expect(b.getByRole("button", { name: /GOLPEAR/ })).toBeDisabled();
     await a.getByRole("button", { name: /GOLPEAR/ }).click();
@@ -323,7 +328,7 @@ test("touch aiming never shoots accidentally and the lunar circuit works with co
   }
 });
 
-test("water penalties and elevated shots in Riviera are authoritative across real clients", async () => {
+test("only normal shots are accepted and synchronized across real clients", async () => {
   const a = await openClient(),
     b = await openClient();
   try {
@@ -332,7 +337,7 @@ test("water penalties and elevated shots in Riviera are authoritative across rea
       name: "Ana",
       circuit: "riviera",
     });
-    expect(sa.protocol).toBe(3);
+    expect(sa.protocol).toBe(4);
     await enter(b, { type: "join", name: "Luis", code: sa.code });
     let pending = waitState(a, (s) => s.players.every((p: any) => p.ready));
     a.emit("action", { type: "ready" });
@@ -344,20 +349,13 @@ test("water penalties and elevated shots in Riviera are authoritative across rea
     pending = waitEvent(a, "notice");
     a.emit("action", { type: "shoot", angle: 0, power: 0.7, style: "rocket" });
     expect(await pending).toContain("rechazado");
-    pending = waitState(
-      b,
-      (s) => !s.moving && s.turn === 1 && s.players[0].penalties === 1,
-    );
-    a.emit("action", { type: "shoot", angle: -0.8, power: 1, style: "putt" });
-    const water = await pending;
-    expect(water.players[0].strokes).toBe(2);
-    expect(water.players[0].pos).toEqual({ x: -6, y: 0.24, z: 21 });
-    expect(water.event.kind).toBe("water");
-    pending = waitState(a, (s) => s.moving && s.players[1].pos.y > 0.6);
-    b.emit("action", { type: "shoot", angle: 0, power: 0.7, style: "chip" });
-    const flight = await pending;
-    expect(flight.circuit).toBe("riviera");
-    expect(flight.players[1].strokes).toBe(1);
+    pending = waitEvent(a, "notice");
+    a.emit("action", { type: "shoot", angle: 0, power: 0.7, style: "chip" });
+    expect(await pending).toContain("rechazado");
+    pending = waitState(b, (s) => s.moving && s.players[0].strokes === 1);
+    a.emit("action", { type: "shoot", angle: 0, power: 0.7 });
+    const moving = await pending;
+    expect(moving.players[0].pos.y).toBeLessThan(0.3);
     await new Promise<void>((resolve, reject) =>
       a
         .timeout(3000)
@@ -371,7 +369,7 @@ test("water penalties and elevated shots in Riviera are authoritative across rea
   }
 });
 
-test("dragging adjusts aim and power without firing; fine adjustments and shot styles work", async ({
+test("dragging adjusts aim and power without firing; fine adjustments use only the normal shot", async ({
   page,
 }) => {
   await page.goto("/");
@@ -387,10 +385,13 @@ test("dragging adjusts aim and power without firing; fine adjustments and shot s
   await page.mouse.up();
   await expect(power).not.toHaveValue("0.55");
   await expect(page.locator(".turn-toast b")).toHaveText("0/12");
-  await page.getByRole("button", { name: "Elevado", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Elevado", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("combobox", { name: "Control del tiro" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Más ajustes", exact: true }).click();
   await page.getByRole("button", { name: "25%", exact: true }).click();
   await expect(power).toHaveValue("0.25");
   const before = Number(await angle.inputValue());
