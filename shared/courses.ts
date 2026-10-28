@@ -17,6 +17,7 @@ export type Course = {
   cup: V3;
   blocks: Block[];
   ramp?: boolean;
+  dimensions?: { width: number; length: number };
 };
 const wall = (x: number, z: number, w: number, d: number): Block => ({
   pos: [x, 0.4, z],
@@ -70,7 +71,7 @@ export const colors = [
   "#f6f0da",
 ];
 
-export type CircuitId = "sunset" | "moonlight";
+export type CircuitId = "sunset" | "moonlight" | "park";
 export const nightCourses: Course[] = [
   {
     name: "Las diagonales",
@@ -113,6 +114,57 @@ export const nightCourses: Course[] = [
     ],
   },
 ];
+// Larger championship greens; dimensions are consumed by physics, camera and map.
+export const parkCourses: Course[] = [
+  {
+    name: "La gran serpiente",
+    subtitle: "Tres bandas, dos rutas. Prepara el siguiente rebote.",
+    par: 5,
+    dimensions: { width: 16, length: 36 },
+    start: { x: -5, y: 0.24, z: 15 },
+    cup: { x: 5, y: 0, z: -15 },
+    blocks: [
+      wall(-2, 8, 11, 0.55),
+      wall(2, 0, 11, 0.55),
+      wall(-2, -8, 11, 0.55),
+    ],
+  },
+  {
+    name: "El corredor del viento",
+    subtitle: "Alterna los laterales o espera la apertura de las compuertas.",
+    par: 5,
+    dimensions: { width: 16, length: 36 },
+    start: { x: 0, y: 0.24, z: 15 },
+    cup: { x: 0, y: 0, z: -15 },
+    blocks: [
+      { pos: [0, 0.5, 7], size: [8, 1, 0.5], moving: true, motion: "slide" },
+      { ...wall(-5.5, 0, 4, 0.55), yaw: -0.45 },
+      { ...wall(5.5, 0, 4, 0.55), yaw: 0.45 },
+      {
+        pos: [0, 0.5, -7],
+        size: [8, 1, 0.5],
+        moving: true,
+        motion: "slide",
+        phase: Math.PI,
+      },
+    ],
+  },
+  {
+    name: "La última carambola",
+    subtitle: "Encadena diagonales. La banda exterior te devuelve al centro.",
+    par: 5,
+    dimensions: { width: 16, length: 36 },
+    start: { x: -5, y: 0.24, z: 15 },
+    cup: { x: 4, y: 0, z: -15 },
+    blocks: [
+      { ...wall(-2, 8, 8, 0.6), yaw: -Math.PI / 5 },
+      { ...wall(2, -1, 8, 0.6), yaw: Math.PI / 5 },
+      { pos: [0, 0.5, -9], size: [6, 1, 0.4], moving: true },
+    ],
+  },
+];
+export const courseSize = (course: Course) =>
+  course.dimensions || { width: 12, length: 24 };
 export const circuits = [
   {
     id: "sunset" as const,
@@ -135,6 +187,17 @@ export const circuits = [
     background: "#162d43",
     accent: "#80dfe5",
   },
+  {
+    id: "park" as const,
+    name: "Gran Parque",
+    description:
+      "Canchas de 36 metros: serpientes, compuertas y carambolas largas.",
+    courses: parkCourses,
+    ground: "#4b875c",
+    edge: "#e5d2ad",
+    background: "#263d37",
+    accent: "#f4b578",
+  },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
   circuits.some((c) => c.id === value);
@@ -146,13 +209,14 @@ export function geometry(course: Course): {
   surfaces: Block[];
   walls: Block[];
 } {
+  const { width, length } = courseSize(course);
   const surfaces: Block[] = course.ramp
     ? [
         { pos: [0, -0.2, 7], size: [12, 0.4, 10] },
         { pos: [0, 1, -1], size: [12, 0.4, 6.46], rotation: Math.atan(0.4) },
         { pos: [0, 2.2, -8], size: [12, 0.4, 8] },
       ]
-    : [{ pos: [0, -0.2, 0], size: [12, 0.4, 24] }];
+    : [{ pos: [0, -0.2, 0], size: [width, 0.4, length] }];
   const walls: Block[] = course.ramp
     ? [-6.2, 6.2].flatMap((x) => [
         {
@@ -169,11 +233,18 @@ export function geometry(course: Course): {
           size: [0.4, 0.9, 8] as [number, number, number],
         },
       ])
-    : [-6.2, 6.2].map((x) => ({ pos: [x, 0.45, 0], size: [0.4, 0.9, 24] }));
+    : [-width / 2 - 0.2, width / 2 + 0.2].map((x) => ({
+        pos: [x, 0.45, 0],
+        size: [0.4, 0.9, length],
+      }));
   walls.push(
-    { pos: [0, course.ramp ? 2.85 : 0.45, -12.2], size: [12, 0.9, 0.4] },
-    { pos: [0, 0.45, 12.2], size: [12, 0.9, 0.4] },
+    {
+      pos: [0, course.ramp ? 2.85 : 0.45, -length / 2 - 0.2],
+      size: [width, 0.9, 0.4],
+    },
+    { pos: [0, 0.45, length / 2 + 0.2], size: [width, 0.9, 0.4] },
   );
+  surfaces.pop(); // Cup platform is supplied by cupGreen(), including its opening.
   return { surfaces, walls };
 }
 export function blockPose(block: Block, time: number) {
@@ -184,4 +255,64 @@ export function blockPose(block: Block, time: number) {
     (block.yaw || 0) +
     (block.moving && block.motion !== "slide" ? Math.sin(phase) * 1.25 : 0);
   return { pos, yaw };
+}
+
+export const CUP_RADIUS = 0.5;
+export const CUP_DEPTH = 0.85;
+// Annular mesh: radial spokes connect the circular rim to a rectangular outer edge.
+// Identical triangles are rendered and passed to Rapier, so no invisible floor covers the cup.
+export function cupGreen(course: Course) {
+  const { width, length } = courseSize(course);
+  const minZ = course.ramp ? -12 : -length / 2;
+  const maxZ = course.ramp ? -4 : length / 2;
+  const { x, y, z } = course.cup;
+  const angles = Array.from({ length: 64 }, (_, i) => (i * Math.PI * 2) / 64);
+  for (const bx of [-width / 2, width / 2])
+    for (const bz of [minZ, maxZ])
+      angles.push((Math.atan2(bz - z, bx - x) + Math.PI * 2) % (Math.PI * 2));
+  angles.sort((a, b) => a - b);
+  const vertices: number[] = [],
+    indices: number[] = [];
+  for (const angle of angles) {
+    const dx = Math.cos(angle),
+      dz = Math.sin(angle);
+    const tx =
+      Math.abs(dx) < 1e-9
+        ? Infinity
+        : (dx > 0 ? width / 2 - x : -width / 2 - x) / dx;
+    const tz =
+      Math.abs(dz) < 1e-9 ? Infinity : (dz > 0 ? maxZ - z : minZ - z) / dz;
+    const distance = Math.min(tx, tz);
+    vertices.push(
+      x + dx * CUP_RADIUS,
+      y,
+      z + dz * CUP_RADIUS,
+      x + dx * distance,
+      y,
+      z + dz * distance,
+    );
+  }
+  for (let i = 0; i < angles.length; i++) {
+    const a = i * 2,
+      b = ((i + 1) % angles.length) * 2;
+    indices.push(a, b, a + 1, b, b + 1, a + 1);
+  }
+  return { vertices, indices };
+}
+export function cupWalls(course: Course): Block[] {
+  const { x, y, z } = course.cup;
+  return Array.from({ length: 32 }, (_, i): Block => {
+    const angle = (i * Math.PI * 2) / 32;
+    return {
+      pos: [
+        x + Math.cos(angle) * 0.54,
+        y - CUP_DEPTH / 2,
+        z + Math.sin(angle) * 0.54,
+      ],
+      size: [0.1, CUP_DEPTH, 0.115],
+      yaw: -angle,
+    };
+  }).concat([
+    { pos: [x, y - CUP_DEPTH - 0.05, z], size: [1.2, 0.1, 1.2], yaw: 0 },
+  ]);
 }

@@ -24,5 +24,8 @@ export function useTurnPresentation(
       clearTimeout(ready);
     };
   }, [key, playerId]);
-  return { focusId, transitioning };
+  return {
+    focusId,
+    transitioning: transitioning || (key !== null && key !== previous.current),
+  };
 }

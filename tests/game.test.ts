@@ -127,14 +127,13 @@ describe("authoritative rules and physics", () => {
         [0.0017500320640545734, 0.45],
         [-1.530132719264862, 0.5],
         [-0.010343992699326987, 0.65],
-        [1.2943886688811341, 0.35],
+        [1.195135851988455, 0.32],
       ],
       [[0.3217505543966422, 0.95]],
       [
         [1.1050527371260164, 0.4],
         [0.31765242196413535, 0.55],
         [-0.8969301185932816, 0.85],
-        [0.4295723739678189, 0.05],
       ],
     ];
     for (let hole = 0; hole < 3; hole++) {
@@ -147,7 +146,7 @@ describe("authoritative rules and physics", () => {
       if (hole < 2) g.next();
     }
     expect(g.state.phase).toBe("finished");
-    expect(g.state.players[0].scores).toEqual([5, 1, 4]);
+    expect(g.state.players[0].scores).toEqual([5, 1, 3]);
   });
   it("moves rotating obstacle colliders", () => {
     const g = make();
@@ -256,16 +255,16 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
   g.start();
   const routes = [
     [
-      [1.1863183977578735, 0.45],
-      [-0.010982696204455439, 0.25],
-      [-1.4522786397823277, 0.5],
-      [-0.035975307594120126, 0.65],
-      [1.3485712430036696, 0.35],
+      [5.675135116162207, 1],
+      [-1.2846388527798411, 0.22],
     ],
-    [[0.6460553845713439, 0.8]],
     [
-      [-1.3924966677897854, 0.45],
-      [0.0862968889607296, 0.8],
+      [0.6080501910173793, 0.8],
+      [-3.0676981054533075, 0.15],
+    ],
+    [
+      [0.4053667940115862, 1],
+      [-1.5038134124881228, 0.15],
     ],
   ];
   for (let hole = 0; hole < 3; hole++) {
@@ -277,5 +276,72 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
     if (hole < 2) g.next();
   }
   expect(g.state.phase).toBe("finished");
-  expect(g.state.players[0].scores).toEqual([5, 1, 2]);
+  expect(g.state.players[0].scores).toEqual([2, 2, 2]);
+});
+
+it("plays all larger park holes from the tees without repositioning", () => {
+  const g = new Game();
+  games.push(g);
+  g.selectCircuit("park");
+  g.add("a", "Ana");
+  g.start();
+  const routes = [
+    [
+      [5.877818513168, 0.8],
+      [2.4322007640695174, 0.8],
+      [-0.2530592515396061, 0.3],
+    ],
+    [
+      [0.8107335880231724, 1],
+      [0.44425105682513333, 0.4],
+    ],
+    [
+      [5.877818513168, 1],
+      [2.048062839078561, 0.3],
+    ],
+  ];
+  for (let hole = 0; hole < 3; hole++) {
+    for (const [angle, power] of routes[hole]) {
+      expect(g.shoot("a", angle, power)).toBe(true);
+      settle(g);
+    }
+    expect(g.state.players[0].done).toBe(true);
+    if (hole < 2) g.next();
+  }
+  expect(g.state.phase).toBe("finished");
+  expect(g.state.players[0].scores).toEqual([3, 2, 2]);
+});
+
+it("drops through a real opening and keeps the camera's turn during the fall", () => {
+  const g = make();
+  const cup = getCourse(g.state).cup;
+  g.state.players[0].pos = { x: cup.x, y: cup.y + 0.22, z: cup.z + 0.25 };
+  g.place();
+  g.shoot("0", 0, 0.03);
+  g.tick();
+  expect(g.state.players[0].done).toBe(false);
+  expect(g.state.turn).toBe(0);
+  let belowRim = false;
+  for (let i = 0; i < 240 && g.state.moving; i++) {
+    g.tick();
+    if (g.state.players[0].pos.y < cup.y - 0.28) {
+      belowRim = true;
+      if (!g.state.players[0].done) expect(g.state.turn).toBe(0);
+    }
+  }
+  expect(belowRim).toBe(true);
+  expect(g.state.players[0].done).toBe(true);
+  expect(g.state.turn).toBe(1);
+});
+
+it("lets a fast putt cross the opening instead of automatically capturing it", () => {
+  const g = make(1),
+    cup = getCourse(g.state).cup;
+  g.state.players[0].pos = { x: cup.x, y: cup.y + 0.22, z: cup.z + 1 };
+  g.place();
+  g.shoot("0", 0, 1);
+  for (let i = 0; i < 10; i++) g.tick();
+  expect(g.state.players[0].pos.z).toBeLessThan(cup.z - 0.5);
+  expect(g.state.players[0].done).toBe(false);
+  expect(g.state.moving).toBe(true);
 });

@@ -6,7 +6,7 @@ Versión jugable de minigolf 3D competitivo, en español. React + TypeScript + T
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.
 
-Pages sirve el juego local completo para 1–8 personas y ambos recorridos. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación. Para habilitarlo, despliega el servidor y configura la variable de repositorio `VITE_SERVER_URL` con su URL HTTPS; permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor y vuelve a ejecutar la publicación. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
+Pages sirve el juego local completo para 1–8 personas y los tres recorridos. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación. Para habilitarlo, despliega el servidor y configura la variable de repositorio `VITE_SERVER_URL` con su URL HTTPS; permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor y vuelve a ejecutar la publicación. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
@@ -59,7 +59,7 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 
 ## Recorridos y reglas
 
-Ambos recorridos tienen tres hoyos y par total 11. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
+Tres recorridos de tres hoyos: Club del atardecer y Jardín lunar tienen par 11; Gran Parque tiene par 15 y canchas de 16 × 36 metros, frente a las originales de 12 × 24. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
 
 | Recorrido          | Hoyo              | Diseño                                             | Par |
 | ------------------ | ----------------- | -------------------------------------------------- | --- |
@@ -69,10 +69,13 @@ Ambos recorridos tienen tres hoyos y par total 11. Las bandas, rampas y obstácu
 | Jardín lunar       | Las diagonales    | Bandas oblicuas para cambiar los ángulos de rebote | 4   |
 | Jardín lunar       | Doble compuerta   | Dos barreras que se deslizan en fases opuestas     | 3   |
 | Jardín lunar       | Mirador lunar     | Banda diagonal antes de subir al objetivo elevado  | 4   |
+| Gran Parque | La gran serpiente | Tres bandas alternadas, rutas laterales y tiros largos | 5 |
+| Gran Parque | El corredor del viento | Compuertas opuestas con desvíos diagonales | 5 |
+| Gran Parque | La última carambola | Bandas diagonales y péndulo antes del green | 5 |
 
 - Un golpe por turno; cada pelota conserva su posición. Las pelotas rivales son fantasmas para evitar bloqueos.
 - Menos golpes acumulados gana. Desempate por mayor número de hoyos en uno; si persiste, victoria compartida.
-- Para embocar hay que pasar cerca del centro a velocidad moderada y a la altura del hoyo.
+- El hoyo es una abertura circular real de un metro de diámetro y 0,85 m de profundidad. El césped triangulado, el borde, las paredes y el fondo comparten geometría física y visual. La gravedad hace caer la pelota; un golpe rápido puede cruzar el hueco. La puntuación se confirma después de caer bajo el borde y se conserva medio segundo de seguimiento antes de cambiar el turno. No se teletransporta la pelota al aproximarse.
 - Máximo **12 golpes por hoyo**. Alcanzar el límite termina ese hoyo con 12; el resultado distingue el límite mediante el mensaje de partida.
 - **45 segundos por turno**. Si expiran, se suma un golpe y se pasa al siguiente jugador, también cuando alguien está desconectado. Así una sesión abandonada puede terminar sin bloquear al resto.
 - Fuera de límites: vuelve al punto anterior al golpe con un golpe adicional. La simulación limita cada movimiento a 18 segundos como protección contra bloqueos.
@@ -90,7 +93,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 21 pruebas de física, reglas, recuperación y cámara. Se completan ambos recorridos desde las salidas, sin recolocar la pelota: 5/1/4 golpes en el club y 5/1/2 en el jardín lunar. Además hay pruebas aisladas de detección de hoyo, pérdida de pelota, retiro, turnos futuros, selección de circuito, preparación, empates y almacenamiento corrupto/bloqueado.
+`npm test`: 24 pruebas de física, reglas, recuperación y cámara. Se completan los nueve hoyos desde las salidas, sin recolocar la pelota: 5/1/3 golpes en el club, 2/2/2 en el jardín lunar y 3/2/2 en Gran Parque. Se comprueba la caída real dentro del hoyo y que un golpe rápido puede pasar de largo. Además hay pruebas aisladas de detección de hoyo, pérdida de pelota, retiro, turnos futuros, selección de circuito, preparación, empates y almacenamiento corrupto/bloqueado.
 
 `npm run test:e2e`: seis pruebas con Chromium y sockets reales. Cubren juego local, reconexión, selección de circuito sincronizada entre navegadores, retiro del anfitrión durante un golpe, salida/expulsión de invitados desconectados, revocación de sesiones, recuperación del anfitrión tras desconectarse todos, capacidad de ocho clientes (rechazo del noveno) y controles táctiles con datos de sesión corruptos. También comprueban la cámara del siguiente jugador, el cambio entre seguimiento y vista general, el minimapa y la entrada/salida de pantalla completa cuando el navegador la permite. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe; si no, el Chromium instalado por Playwright. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegir otro ejecutable. Las capturas de revisión se guardan en `work/`, fuera del control de versiones.
 
@@ -143,7 +146,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye dos recorridos de tres hoyos, selección local/online y revancha. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, pero todavía no túneles, agua, arena especial, plataformas móviles para transportar pelotas ni saltos independientes.
+Incluye tres recorridos de tres hoyos, selección local/online y revancha. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, pero todavía no túneles, agua, arena especial, plataformas móviles para transportar pelotas ni saltos independientes.
 
 El rendimiento está limitado a un solo hoyo visible, DPR máximo 1.6, geometría sencilla, sombras de 1024 y una pelota física activa. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Los sonidos actuales cubren golpe, cambios de turno y embocada; no hay muestras específicas de cada rebote. La primera versión prioriza la partida completa y las salas reales.
 

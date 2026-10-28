@@ -1,10 +1,15 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   getCourse,
   getCircuit,
   geometry,
+  cupGreen,
+  cupWalls,
+  courseSize,
+  CUP_RADIUS,
+  CUP_DEPTH,
   blockPose,
   colors,
   type Block,
@@ -22,6 +27,35 @@ function Box({ b, time }: { b: Block; time: number }) {
     >
       <boxGeometry args={b.size} />
       <meshStandardMaterial color={b.color || "#dbc89f"} roughness={0.65} />
+    </mesh>
+  );
+}
+function Green({
+  course,
+  color,
+}: {
+  course: ReturnType<typeof getCourse>;
+  color: string;
+}) {
+  const mesh = useMemo(() => {
+    const data = cupGreen(course),
+      result = new THREE.BufferGeometry();
+    result.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(data.vertices, 3),
+    );
+    result.setIndex(data.indices);
+    result.computeVertexNormals();
+    return result;
+  }, [course]);
+  useEffect(() => () => mesh.dispose(), [mesh]);
+  return (
+    <mesh geometry={mesh} receiveShadow>
+      <meshStandardMaterial
+        color={color}
+        roughness={0.9}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -105,7 +139,9 @@ function Camera({
     let position: THREE.Vector3, look: THREE.Vector3;
     if (overview) {
       position = new THREE.Vector3(19, 28, 26).multiplyScalar(
-        Math.max(1, 1.05 / (size.width / size.height)),
+        (Math.max(1, 1.05 / (size.width / size.height)) *
+          courseSize(getCourse(s)).length) /
+          24,
       );
       look = new THREE.Vector3(0, 0, 0);
     } else {
@@ -163,7 +199,8 @@ function World({
 }) {
   const c = getCourse(s),
     theme = getCircuit(s.circuit),
-    shape = geometry(c);
+    shape = geometry(c),
+    dimensions = courseSize(c);
   const p = s.players[s.turn]?.pos || c.start;
   const blocks = shape.walls
     .map((b) => ({ ...b, color: theme.edge }))
@@ -192,42 +229,41 @@ function World({
       />
       <Camera s={s} overview={overview} angle={angle} focusId={focusId} />
       <SceneReady />
-      <mesh position={[0, -1, 0]} receiveShadow>
-        <boxGeometry args={[14, 1.5, 26]} />
+      <mesh position={[0, -1.7, 0]} receiveShadow>
+        <boxGeometry
+          args={[dimensions.width + 2, 1.3, dimensions.length + 2]}
+        />
         <meshStandardMaterial
           color={s.circuit === "moonlight" ? "#284658" : "#234b43"}
         />
       </mesh>
+      <Green course={c} color={theme.ground} />
+      {cupWalls(c).map((b, i) => (
+        <Box key={`cup-${i}`} b={{ ...b, color: "#132e2b" }} time={s.time} />
+      ))}
       {shape.surfaces.map((b, i) => (
         <Box key={i} b={{ ...b, color: theme.ground }} time={s.time} />
-      ))}
-      {Array.from({ length: 12 }, (_, i) => (
-        <mesh
-          key={i}
-          position={[0, 0.006, i * 2 - 11]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[11.8, 0.98]} />
-          <meshStandardMaterial
-            color="#ffffff"
-            transparent
-            opacity={c.ramp ? 0 : 0.035}
-          />
-        </mesh>
       ))}
       {blocks.map((b, i) => (
         <Box key={i} b={b} time={s.time} />
       ))}
       <group position={[c.cup.x, c.cup.y + 0.015, c.cup.z]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.46, 40]} />
-          <meshBasicMaterial color="#0c2325" />
+          <ringGeometry args={[CUP_RADIUS, CUP_RADIUS + 0.035, 64]} />
+          <meshStandardMaterial color="#eee6cc" roughness={0.4} />
         </mesh>
-        <mesh position={[0.48, 1.2, 0]}>
+        <mesh
+          position={[0, -CUP_DEPTH - 0.005, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <circleGeometry args={[CUP_RADIUS, 40]} />
+          <meshBasicMaterial color="#071918" />
+        </mesh>
+        <mesh position={[0.66, 1.2, 0]}>
           <cylinderGeometry args={[0.035, 0.035, 2.4, 8]} />
           <meshStandardMaterial color="#f8ead3" />
         </mesh>
-        <mesh position={[0.95, 2.1, 0]}>
+        <mesh position={[1.13, 2.1, 0]}>
           <boxGeometry args={[0.9, 0.55, 0.04]} />
           <meshStandardMaterial color={theme.accent} />
         </mesh>
@@ -238,7 +274,7 @@ function World({
             key={p.id}
             pos={p.pos}
             color={colors[i]}
-            active={i === s.turn}
+            active={i === s.turn && !p.done}
           />
         ))
       ) : (
@@ -279,8 +315,8 @@ function World({
         />
       </mesh>
       {Array.from({ length: 18 }, (_, i) => {
-        const x = (i % 2 ? 1 : -1) * (9 + (i % 3) * 2),
-          z = ((i * 7) % 33) - 16;
+        const x = (i % 2 ? 1 : -1) * (dimensions.width / 2 + 3 + (i % 3) * 2),
+          z = ((i * 7) % (dimensions.length + 9)) - (dimensions.length + 8) / 2;
         return (
           <group key={i} position={[x, -0.2, z]}>
             <mesh position={[0, 1, 0]} castShadow>
