@@ -12,33 +12,182 @@
       name="description"
       content="Minigolf 3D competitivo. Dos recorridos, seis hoyos y partidas locales con amigos."
     />
-    <title>Mini Golf Battle · Club del atardecer</title>
+    <title>Club del Último Golpe · Minigolf</title>
+    <style>
+      #boot-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: #102f2b;
+        color: #f7f1df;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        transition: opacity 0.3s ease;
+      }
+      #boot-screen.boot-complete {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .boot-brand {
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: #f5cc77;
+        font-weight: 700;
+      }
+      .boot-emblem {
+        width: 58px;
+        height: 58px;
+        border: 1px solid #f5cc7760;
+        border-radius: 50%;
+        margin-bottom: 28px;
+        position: relative;
+      }
+      .boot-emblem:before {
+        content: "";
+        position: absolute;
+        left: 28px;
+        top: 12px;
+        height: 30px;
+        border-left: 2px solid #f7f1df;
+      }
+      .boot-emblem:after {
+        content: "";
+        position: absolute;
+        left: 30px;
+        top: 12px;
+        width: 15px;
+        height: 10px;
+        background: #f5cc77;
+        clip-path: polygon(0 0, 100% 0, 70% 100%, 0 100%);
+      }
+      .boot-emblem span {
+        position: absolute;
+        bottom: 10px;
+        left: 15px;
+        width: 9px;
+        height: 9px;
+        background: #f7f1df;
+        border-radius: 50%;
+      }
+      #boot-screen h1 {
+        font-size: clamp(32px, 5vw, 58px);
+        line-height: 1.05;
+        margin: 20px 0 36px;
+        letter-spacing: -1.5px;
+      }
+      .boot-meter {
+        width: min(390px, 100%);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+      }
+      .boot-meter b {
+        color: #f5cc77;
+      }
+      #boot-progress {
+        height: 6px;
+        border-radius: 6px;
+        background: #ffffff20;
+        width: min(390px, 100%);
+        margin: 14px 0;
+      }
+      #boot-fill {
+        height: 100%;
+        width: 0;
+        background: #f5cc77;
+        border-radius: 6px;
+        transition: width 0.15s linear;
+      }
+      #boot-detail {
+        font-size: 12px;
+        line-height: 1.6;
+        max-width: 390px;
+        color: #b4cabc;
+        min-height: 40px;
+      }
+      #boot-retry {
+        background: #f5cc77;
+        color: #12372b;
+        padding: 14px 22px;
+        border: 0;
+        border-radius: 5px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .boot-failed #boot-progress {
+        background: #a458443f;
+      }
+      #boot-retry[hidden] {
+        display: none;
+      }
+    </style>
+    <script>
+      // Vite replaces the module tag during build, so recovery is registered
+      // independently and still works if the tiny entry script never arrives.
+      window.addEventListener(
+        "error",
+        function (event) {
+          if (
+            !(event.target instanceof HTMLScriptElement) ||
+            event.target.type !== "module"
+          )
+            return;
+          function recover() {
+            var label = document.getElementById("boot-label"),
+              detail = document.getElementById("boot-detail"),
+              retry = document.getElementById("boot-retry");
+            if (label) label.textContent = "No pudimos iniciar la descarga";
+            if (detail)
+              detail.textContent =
+                "Revisa la conexión y recarga para obtener la versión actual del club.";
+            if (retry) retry.hidden = false;
+          }
+          if (document.readyState === "loading")
+            document.addEventListener("DOMContentLoaded", recover, {
+              once: true,
+            });
+          else recover();
+        },
+        true,
+      );
+    </script>
   </head>
   <body>
-    <div id="root">
-      <div
-        style="
-          min-height: 100svh;
-          display: grid;
-          place-content: center;
-          padding: 32px;
-          background: #153c37;
-          color: #f7f1df;
-          font-family: system-ui, sans-serif;
-          text-align: center;
-        "
-      >
-        <div style="color: #f5cc77; letter-spacing: 4px; font-weight: 700">
-          MINI GOLF BATTLE
-        </div>
-        <h1>Abriendo el club…</h1>
-        <p>Estamos cargando el campo y el motor de físicas.</p>
-        <p>La primera visita puede tardar unos segundos.</p>
+    <div id="root"></div>
+    <section id="boot-screen" aria-label="Cargando Club del Último Golpe">
+      <div class="boot-emblem" aria-hidden="true"><span></span></div>
+      <div class="boot-brand">CLUB DEL ÚLTIMO GOLPE</div>
+      <h1>Tu próximo golpe<br />está por empezar.</h1>
+      <div class="boot-meter">
+        <span id="boot-label" aria-live="polite">Abriendo el club…</span
+        ><b id="boot-percent">0%</b>
       </div>
-    </div>
+      <div
+        id="boot-progress"
+        role="progressbar"
+        aria-label="Carga del club"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div id="boot-fill"></div>
+      </div>
+      <p id="boot-detail">
+        Preparando la descarga. La primera visita puede tardar un poco.
+      </p>
+      <button id="boot-retry" type="button" onclick="location.reload()" hidden>
+        Reintentar carga
+      </button>
+    </section>
     <noscript
       >Para jugar necesitas activar JavaScript en el navegador.</noscript
     >
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/boot.ts"></script>
   </body>
 </html>

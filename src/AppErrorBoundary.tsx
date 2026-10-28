@@ -7,11 +7,19 @@ export class AppErrorBoundary extends Component<
   static getDerivedStateFromError() {
     return { failed: true };
   }
+  componentDidCatch() {
+    window.dispatchEvent(
+      new CustomEvent("club:failed", {
+        detail:
+          "No pudimos iniciar el campo. Recarga o prueba con la aceleración gráfica activada.",
+      }),
+    );
+  }
   render() {
     if (this.state.failed)
       return (
         <main className="startup-error" role="alert">
-          <div className="eyebrow">MINI GOLF BATTLE</div>
+          <div className="eyebrow">CLUB DEL ÚLTIMO GOLPE</div>
           <h1>No pudimos abrir el campo.</h1>
           <p>
             Recarga la página. Si el problema continúa, prueba con un navegador

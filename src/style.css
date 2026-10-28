@@ -804,3 +804,171 @@ button > span {
   margin-top: 24px;
   max-width: 260px;
 }
+/* The active player owns the entire viewport; the global menu returns in the lobby. */
+.in-match > header {
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+.in-match .hole-hud {
+  top: 24px;
+}
+.in-match .leaderboard {
+  top: 24px;
+}
+.in-match .hole-hud h2 {
+  font-size: 30px;
+}
+.in-match .hole-hud p {
+  max-width: 360px;
+}
+.turn-intro {
+  position: fixed;
+  z-index: 8;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  max-width: 90%;
+  padding: 24px 32px;
+  border-radius: 12px;
+  background: #0b2c28ec;
+  border: 1px solid #f5cc7745;
+  box-shadow: 0 20px 80px #001e2466;
+  pointer-events: none;
+  animation: turn-enter 0.28s ease-out;
+}
+.turn-orb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  box-shadow:
+    inset -8px -8px 14px #0003,
+    inset 7px 7px 15px #fff4;
+  flex-shrink: 0;
+}
+.turn-intro strong,
+.turn-intro span,
+.turn-intro small {
+  display: block;
+}
+.turn-intro strong {
+  font:
+    700 40px "Barlow Condensed",
+    sans-serif;
+  overflow-wrap: anywhere;
+  line-height: 1.1;
+}
+.turn-intro small {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #f5cc77;
+  margin-bottom: 7px;
+}
+.turn-intro span {
+  font-size: 11px;
+  color: #adbfac;
+  margin-top: 6px;
+}
+.hole-map {
+  position: fixed;
+  left: 4%;
+  bottom: 278px;
+  z-index: 5;
+  width: 132px;
+  background: #0c302be8;
+  border: 1px solid #fff3;
+  border-radius: 9px;
+  padding: 12px;
+  backdrop-filter: blur(8px);
+}
+.hole-map .eyebrow {
+  font-size: 7px;
+  letter-spacing: 1px;
+  margin-bottom: 7px;
+}
+.hole-map svg {
+  width: 100%;
+  max-height: 200px;
+}
+.hole-map small {
+  display: block;
+  color: #afc5b5;
+  font-size: 8px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+.view-controls {
+  flex-wrap: wrap;
+  max-width: 40%;
+  gap: 5px;
+}
+.view-controls button[aria-pressed="true"] {
+  border-color: #f5cc77;
+  color: #f5cc77;
+}
+.wordmark span {
+  max-width: 110px;
+}
+@keyframes turn-enter {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 800px) {
+  .in-match .hole-hud {
+    top: 18px;
+  }
+  .in-match .hole-hud h2 {
+    font-size: 23px;
+  }
+  .in-match .leaderboard {
+    top: 16px;
+  }
+  .in-match .hole-hud p {
+    max-width: 225px;
+  }
+  .turn-intro {
+    top: 25%;
+    padding: 18px 20px;
+    gap: 15px;
+    width: max-content;
+  }
+  .turn-intro strong {
+    font-size: 30px;
+  }
+  .turn-orb {
+    width: 36px;
+    height: 36px;
+  }
+  .view-controls {
+    bottom: 292px;
+    max-width: 92%;
+    gap: 5px;
+  }
+  .view-controls button {
+    font-size: 8px;
+    padding: 8px 9px;
+    min-height: 32px;
+  }
+  .hole-map {
+    bottom: 335px;
+    width: 108px;
+    padding: 9px;
+  }
+  .hole-map svg {
+    max-height: 145px;
+  }
+  .turn-toast {
+    bottom: 246px;
+  }
+}

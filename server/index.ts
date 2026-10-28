@@ -284,6 +284,6 @@ setInterval(() => {
 }, 1000 / 60);
 http.listen(Number(process.env.PORT) || 3001, "0.0.0.0", () =>
   console.log(
-    "Mini Golf Battle: http://localhost:" + (process.env.PORT || 3001),
+    "Club del Último Golpe: http://localhost:" + (process.env.PORT || 3001),
   ),
 );

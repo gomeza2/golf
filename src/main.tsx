@@ -6,6 +6,7 @@ import { colors, getCircuit, type CircuitId } from "../shared/courses";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
+import { useTurnPresentation } from "./useTurnPresentation";
 import { AppErrorBoundary } from "./AppErrorBoundary";
 import { CircuitPicker } from "./CircuitPicker";
 import { readLocal, saveLocal, readSession, saveSession } from "./storage";
@@ -46,19 +47,41 @@ function App() {
     [id, setId] = useState(""),
     [angle, setAngle] = useState(0),
     [power, setPower] = useState(0.55),
-    [overview, setOverview] = useState(true),
+    [overview, setOverview] = useState(false),
     [settings, setSettings] = useState(false),
     [volume, setVolume] = useState(Number(readLocal("golf-volume", ".6"))),
     [ready, setReady] = useState(false);
+  const turnKey =
+    screen === "game" && s.phase === "playing"
+      ? `${s.circuit}:${s.hole}:${s.players[s.turn]?.id}`
+      : null;
+  const { focusId, transitioning } = useTurnPresentation(
+    turnKey,
+    s.players[s.turn]?.id,
+  );
+  const handoff = useRef(false);
+  handoff.current = transitioning;
+  useEffect(() => {
+    if (turnKey) setOverview(false);
+  }, [turnKey]);
   const game = useRef<Game | null>(null),
     socket = useRef<Socket | null>(null),
     lastTurn = useRef("");
   useEffect(() => {
     initPhysics()
-      .then(() => setReady(true))
-      .catch(() =>
-        setError("No se pudo cargar el motor de físicas. Recarga la página."),
-      );
+      .then(() => {
+        setReady(true);
+        window.dispatchEvent(new Event("club:physics-ready"));
+      })
+      .catch(() => {
+        setError("No se pudo cargar el motor de físicas. Recarga la página.");
+        window.dispatchEvent(
+          new CustomEvent("club:failed", {
+            detail:
+              "No se pudo preparar la pelota. Recarga para volver a intentarlo.",
+          }),
+        );
+      });
     return () => {
       game.current?.dispose();
       socket.current?.disconnect();
@@ -66,7 +89,7 @@ function App() {
   }, []);
   useEffect(() => {
     const interval = setInterval(() => {
-      if (game.current) {
+      if (game.current && !handoff.current) {
         for (let i = 0; i < 3; i++) game.current.tick();
         setS(structuredClone(game.current.state));
       }
@@ -89,6 +112,7 @@ function App() {
     s.phase === "playing" &&
     !s.moving &&
     !settings &&
+    !transitioning &&
     (mode === "local" || (current?.id === id && status === "Conectado"));
   const shoot = () => {
     if (!canShoot) return;
@@ -135,7 +159,7 @@ function App() {
     setMode("local");
     setS(structuredClone(g.state));
     setScreen("game");
-    setOverview(true);
+    setOverview(false);
     setError("");
   }
   function connect(type: "create" | "join" | "resume") {
@@ -221,6 +245,8 @@ function App() {
     }
   }
   function leave() {
+    if (document.fullscreenElement)
+      void document.exitFullscreen().catch(() => {});
     const previous = socket.current;
     socket.current = null;
     if (previous?.connected)
@@ -237,13 +263,16 @@ function App() {
     setStatus("Sin conexión");
   }
   return (
-    <main>
+    <main
+      className={screen === "game" && s.phase === "playing" ? "in-match" : ""}
+    >
       <div className={"scene " + (screen === "game" ? "" : "hero-scene")}>
         <Scene
           s={screen === "game" ? s : { ...initial, circuit }}
           angle={angle}
           power={power}
-          overview={screen !== "game" || overview}
+          overview={screen !== "game" || s.phase !== "playing" || overview}
+          focusId={focusId}
           onAim={(a) => {
             if (canShoot) setAngle(a);
           }}
@@ -256,14 +285,14 @@ function App() {
             if (screen !== "game") setScreen("home");
           }}
         >
-          MGB<span>MINI GOLF BATTLE</span>
+          UG<span>CLUB DEL ÚLTIMO GOLPE</span>
         </button>
         <div className="header-right">
           <span className="edition">
             {getCircuit(
               screen === "game" ? s.circuit : circuit,
             ).name.toUpperCase()}{" "}
-            / VOL. 02
+            / VOL. 03
           </span>
           <button
             className="icon"
@@ -295,7 +324,7 @@ function App() {
           <p>
             Dos recorridos. Tus amigos. Una sola victoria.
             <br />
-            Encuentra tu línea en el club del atardecer.
+            Cada golpe cuenta en el Club del Último Golpe.
           </p>
           <div className="hero-actions">
             <button
@@ -457,6 +486,7 @@ function App() {
           angle={angle}
           power={power}
           overview={overview}
+          transitioning={transitioning}
           setOverview={setOverview}
           setSettings={setSettings}
           setAngle={setAngle}
@@ -511,7 +541,9 @@ function App() {
             </p>
             <p>
               Teclado: ← → para apuntar, ↑ ↓ para potencia y espacio para
-              lanzar. La cámara se cambia con “Ver campo”.
+              lanzar. La cámara en tercera persona sigue al jugador activo. Usa
+              “Ver campo” para planear desde arriba y “Mapa” para consultar el
+              recorrido sin cambiar la vista.
             </p>
             <p>
               12 golpes por hoyo. 45 segundos por turno: al agotarse se suma un

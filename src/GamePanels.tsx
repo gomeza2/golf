@@ -1,7 +1,9 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { ranking, total, position, canStart, type State } from "../shared/game";
 import { getCourse, getCircuit, colors } from "../shared/courses";
 import { CircuitPicker } from "./CircuitPicker";
+import { HoleMap } from "./HoleMap";
+import { useFullscreen } from "./useFullscreen";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
   s: State;
@@ -12,6 +14,7 @@ type Props = {
   angle: number;
   power: number;
   overview: boolean;
+  transitioning: boolean;
   setOverview: Setter<boolean>;
   setSettings: Setter<boolean>;
   setAngle: Setter<number>;
@@ -30,6 +33,7 @@ export function GamePanels({
   angle,
   power,
   overview,
+  transitioning,
   setOverview,
   setSettings,
   setAngle,
@@ -39,6 +43,8 @@ export function GamePanels({
   action,
   leave,
 }: Props) {
+  const [mapOpen, setMapOpen] = useState(false);
+  const fullscreen = useFullscreen(setError);
   const current = s.players[s.turn],
     circuit = getCircuit(s.circuit),
     courses = circuit.courses;
@@ -168,10 +174,43 @@ export function GamePanels({
               </div>
             ))}
           </aside>
+          {transitioning && (
+            <div className="turn-intro" role="status">
+              <div
+                className="turn-orb"
+                style={{ background: colors[s.turn] }}
+              />
+              <div>
+                <small>
+                  {mode === "online" && current.id !== id
+                    ? "SIGUIENDO A"
+                    : "A LA PISTA"}
+                </small>
+                <strong>{current.name}</strong>
+                <span>
+                  Hoyo {s.hole + 1} · {courses[s.hole].name}
+                </span>
+              </div>
+            </div>
+          )}
+          {mapOpen && <HoleMap s={s} />}
           <div className="view-controls">
             <button onClick={() => setOverview((v) => !v)}>
               {overview ? "Seguir pelota" : "Ver campo"}
             </button>
+            <button
+              aria-pressed={mapOpen}
+              onClick={() => setMapOpen((v) => !v)}
+            >
+              {mapOpen ? "Cerrar mapa" : "Mapa"}
+            </button>
+            {fullscreen.supported && (
+              <button onClick={() => void fullscreen.toggle()}>
+                {fullscreen.fullscreen
+                  ? "Salir de pantalla completa"
+                  : "Pantalla completa"}
+              </button>
+            )}
             <button onClick={() => setSettings(true)}>Controles</button>
             <button onClick={leave}>Salir</button>
           </div>
@@ -179,11 +218,13 @@ export function GamePanels({
             <i style={{ background: colors[s.turn] }} />
             <strong>{current.name}</strong>
             <span>
-              {s.moving
-                ? "Pelota en movimiento"
-                : canShoot
-                  ? "Tu turno de golpear"
-                  : "Preparando su golpe"}
+              {transitioning
+                ? "Cambio de jugador"
+                : s.moving
+                  ? "Pelota en movimiento"
+                  : canShoot
+                    ? "Tu turno de golpear"
+                    : "Preparando su golpe"}
             </span>
             <b>{current.strokes}/12</b>
           </div>

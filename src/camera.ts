@@ -1,0 +1,20 @@
+import type { V3 } from "../shared/courses";
+export function followPose(ball: V3, heading: number, aspect: number) {
+  const compact = aspect < 0.8;
+  const distance = compact ? 12 : 10.5,
+    height = compact ? 8.6 : 7.5;
+  const dx = Math.sin(heading),
+    dz = -Math.cos(heading);
+  return {
+    position: {
+      x: ball.x - dx * distance,
+      y: ball.y + height,
+      z: ball.z - dz * distance,
+    },
+    target: { x: ball.x + dx * 1.8, y: ball.y + 0.4, z: ball.z + dz * 1.8 },
+  };
+}
+export function turnAngle(from: number, to: number, amount: number) {
+  const delta = Math.atan2(Math.sin(to - from), Math.cos(to - from));
+  return from + delta * Math.min(1, Math.max(0, amount));
+}
