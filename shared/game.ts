@@ -1,3 +1,5 @@
+import { TURN_SECONDS } from "./rules";
+import { holeOutcome, type HoleOutcome } from "./scoring";
 import RAPIER from "@dimforge/rapier3d-compat";
 import {
   getCircuit,
@@ -48,6 +50,13 @@ export type State = {
   event?: {
     seq: number;
     kind: "bounce" | "water" | "cup";
+    outcome?: HoleOutcome & {
+      playerId: string;
+      playerName: string;
+      hole: number;
+      strokes: number;
+      par: number;
+    };
     pos: V3;
     time: number;
   };
@@ -72,7 +81,7 @@ export class Game {
     turn: 0,
     moving: false,
     time: 0,
-    deadline: 45,
+    deadline: TURN_SECONDS,
     message: "",
     host: "",
     code: "",
@@ -228,7 +237,7 @@ export class Game {
       phase: "playing",
       turn: this.turnOrder.find((i) => !this.state.players[i].withdrawn) ?? 0,
       moving: false,
-      deadline: this.state.time + 45,
+      deadline: this.state.time + TURN_SECONDS,
       message: "Nuevo hoyo. ¡Busca tu línea!",
     });
     this.place();
@@ -237,7 +246,7 @@ export class Game {
     const p = this.state.players[this.state.turn];
     this.ball.setTranslation(p.pos, true);
     this.ball.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    this.state.deadline = this.state.time + 45;
+    this.state.deadline = this.state.time + TURN_SECONDS;
   }
   shoot(id: string, angle: number, power: number) {
     const s = this.state,
@@ -343,7 +352,14 @@ export class Game {
         p.done = true;
         if (p.strokes === 1) p.aces++;
         s.message = `¡${p.name} embocó en ${p.strokes}!`;
-        this.emitEvent("cup", pos);
+        this.emitEvent("cup", pos, {
+          ...holeOutcome(p.strokes, c.par),
+          playerId: p.id,
+          playerName: p.name,
+          hole: s.hole,
+          strokes: p.strokes,
+          par: c.par,
+        });
         this.endTurn();
       }
       return;
@@ -414,10 +430,15 @@ export class Game {
       this.endTurn();
     }
   }
-  emitEvent(kind: "bounce" | "water" | "cup", pos: V3) {
+  emitEvent(
+    kind: "bounce" | "water" | "cup",
+    pos: V3,
+    outcome?: NonNullable<State["event"]>["outcome"],
+  ) {
     this.state.event = {
       seq: ++this.eventSeq,
       kind,
+      outcome,
       pos: { ...pos },
       time: this.state.time,
     };

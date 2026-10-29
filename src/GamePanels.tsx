@@ -13,6 +13,8 @@ import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
 import { goalLabels, type RoundReport } from "./personalRecords";
 import type { CameraLook } from "./camera";
+import { ScoreFeedback } from "./ScoreFeedback";
+import { holeOutcome, relativeLabel } from "../shared/scoring";
 import { PracticeSummary } from "./Training";
 import type { PracticeReport } from "./practiceRecords";
 import { useFullscreen } from "./useFullscreen";
@@ -102,6 +104,14 @@ export function GamePanels({
     : courses
         .slice(0, s.players[0]?.scores.length || 0)
         .reduce((n, c) => n + c.par, 0);
+  const soloOutcome =
+    s.players.length === 1 && s.players[0].scores.length
+      ? holeOutcome(
+          s.players[0].scores[s.players[0].scores.length - 1],
+          courses[s.hole].par,
+          s.players[0].capped.includes(s.hole),
+        )
+      : null;
   const isHost = mode === "local" || s.host === id;
   const sorted = ranking(s.players),
     winners = sorted.filter(
@@ -204,6 +214,7 @@ export function GamePanels({
       )}
       {s.phase === "playing" && (
         <>
+          <ScoreFeedback event={s.event} time={s.time} />
           <div className="hole-hud">
             <div className="eyebrow">
               {s.practice ? "ENTRENAMIENTO · " : ""}
@@ -361,7 +372,11 @@ export function GamePanels({
           >
             <div className="shot-top">
               <span>{s.message}</span>
-              <b>
+              <b
+                className={
+                  !s.moving && s.deadline - s.time <= 8 ? "timer-urgent" : ""
+                }
+              >
                 {s.moving
                   ? "EN JUEGO"
                   : `${Math.max(0, Math.ceil(s.deadline - s.time))} s`}
@@ -428,13 +443,13 @@ export function GamePanels({
                 />
               </label>
               <label>
-                POTENCIA <output>{Math.round(power * 100)}%</output>
+                POTENCIA <output>{Math.round(power * 1000) / 10}%</output>
                 <input
                   aria-label="Potencia"
                   type="range"
                   min=".03"
                   max="1"
-                  step=".01"
+                  step="any"
                   value={power}
                   disabled={!canShoot || chargeActive}
                   onChange={(e) => setPower(Number(e.target.value))}
@@ -558,15 +573,15 @@ export function GamePanels({
                 : "HOYO COMPLETADO"}
           </div>
           <h2>
-            {s.practice
-              ? courses[s.hole].name
+            {soloOutcome && (s.practice || s.phase === "scores")
+              ? soloOutcome.label
               : s.phase === "finished"
                 ? winnerLabel
                 : "Cada golpe cuenta."}
           </h2>
           <p>
             {s.practice
-              ? `Hoyo ${s.hole + 1} · Par ${courses[s.hole].par}. Completa el hoyo con menos golpes.`
+              ? `${courses[s.hole].name} · Hoyo ${s.hole + 1} · Par ${courses[s.hole].par}. Completa el hoyo con menos golpes.`
               : "Menor puntuación gana. Desempate por hoyos en uno; si persiste, victoria compartida."}
           </p>
           <div className="table-wrap">
@@ -591,6 +606,23 @@ export function GamePanels({
                       </span>
                       {p.name}
                       {p.withdrawn ? " · retirado" : ""}
+                      {p.scores.length > 0 && !p.withdrawn && (
+                        <small
+                          className={`hole-outcome outcome-${holeOutcome(p.scores[p.scores.length - 1], courses[s.hole].par, p.capped.includes(s.hole)).kind}`}
+                        >
+                          {
+                            holeOutcome(
+                              p.scores[p.scores.length - 1],
+                              courses[s.hole].par,
+                              p.capped.includes(s.hole),
+                            ).label
+                          }{" "}
+                          ·{" "}
+                          {relativeLabel(
+                            p.scores[p.scores.length - 1] - courses[s.hole].par,
+                          )}
+                        </small>
+                      )}
                     </td>
                     {scoreColumns.map((c) => (
                       <td key={c.hole}>

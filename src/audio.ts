@@ -36,3 +36,43 @@ export function tone(
     /* Audio is optional on browsers without Web Audio. */
   }
 }
+export function celebrateOutcome(
+  kind: import("../shared/scoring").OutcomeKind,
+  volume: number,
+) {
+  if (!volume) return;
+  try {
+    context ??= new AudioContext();
+    void context.resume();
+    const notes =
+      kind === "ace"
+        ? [523, 659, 784, 1047]
+        : ["eagle", "albatross"].includes(kind)
+          ? [523, 784, 1047]
+          : kind === "birdie"
+            ? [523, 659, 880]
+            : kind === "par"
+              ? [523, 659]
+              : [392, 330];
+    notes.forEach((frequency, i) => {
+      const start = context!.currentTime + i * 0.085,
+        osc = context!.createOscillator(),
+        gain = context!.createGain();
+      osc.connect(gain);
+      gain.connect(context!.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(volume * 0.1, start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.19);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
+      osc.start(start);
+      osc.stop(start + 0.2);
+    });
+  } catch {
+    /* Sound is optional; scoring is independent of audio availability. */
+  }
+}

@@ -106,33 +106,59 @@ export function AimLine({
     guide.points[1].x - from.x,
     guide.points[1].z - from.z,
   );
-  const color = power > 0.8 ? "#ffba73" : "#ffe4a2";
+  const color = power > 0.8 ? "#ffae73" : "#fff0b2";
+  const head = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.19, 0);
+    shape.lineTo(0.19, 0);
+    shape.lineTo(0, 0.36);
+    shape.closePath();
+    return new THREE.ShapeGeometry(shape);
+  }, []);
+  useEffect(() => () => head.dispose(), [head]);
   return (
     <group
       position={[from.x, from.y + 0.015, from.z]}
       rotation={[0, -angle, 0]}
     >
       <mesh position={[0, -0.012, -length / 2]} renderOrder={6}>
-        <boxGeometry args={[0.1, 0.018, length]} />
+        <boxGeometry args={[0.13, 0.018, length]} />
         <meshBasicMaterial color="#284b40" depthTest={false} />
       </mesh>
       <mesh position={[0, 0, -length / 2]} renderOrder={7}>
-        <boxGeometry args={[0.045, 0.025, length]} />
+        <boxGeometry args={[0.065, 0.025, length]} />
         <meshBasicMaterial color={color} depthTest={false} />
       </mesh>
       {[0.25, 0.5, 0.75].map((t) => (
         <mesh key={t} position={[0, 0.01, -length * t]} renderOrder={8}>
-          <boxGeometry args={[0.16, 0.025, 0.035]} />
+          <boxGeometry args={[0.21, 0.025, 0.04]} />
           <meshBasicMaterial color={color} depthTest={false} />
         </mesh>
       ))}
       <mesh
-        position={[0, 0.02, -length + 0.14]}
+        geometry={head}
+        position={[0, 0.018, -length + 0.36]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={[1.4, 1, 1]}
+        renderOrder={8}
+      >
+        <meshBasicMaterial
+          color="#284b40"
+          depthTest={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh
+        geometry={head}
+        position={[0, 0.024, -length + 0.36]}
         rotation={[-Math.PI / 2, 0, 0]}
         renderOrder={9}
       >
-        <coneGeometry args={[0.13, 0.28, 3]} />
-        <meshBasicMaterial color={color} depthTest={false} />
+        <meshBasicMaterial
+          color={color}
+          depthTest={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
     </group>
   );

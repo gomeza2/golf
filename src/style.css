@@ -1949,3 +1949,86 @@ button > span {
 .control-mode-row {
   flex-wrap: wrap;
 }
+.score-feedback {
+  position: absolute;
+  left: 22px;
+  top: auto;
+  bottom: 24px;
+  max-width: 220px;
+  padding: 12px 16px;
+  border: 1px solid #f3d68c88;
+  border-radius: 8px;
+  background: #173c31f2;
+  pointer-events: none;
+  z-index: 9;
+  box-shadow: 0 10px 30px #001b2444;
+  animation: score-arrive 0.2s ease-out;
+}
+.score-feedback small,
+.score-feedback span {
+  display: block;
+  font-size: 10px;
+  color: #d7e2cf;
+}
+.score-feedback strong {
+  display: block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 30px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  margin: 4px 0;
+  color: #f7d27c;
+}
+.score-feedback.outcome-ace {
+  background: #365846f5;
+  border-color: #ffe3a3;
+}
+.hole-outcome {
+  display: block;
+  font-size: 10px;
+  color: #d1d9c7;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+.outcome-birdie,
+.outcome-eagle,
+.outcome-ace,
+.outcome-albatross {
+  color: #f6d381;
+}
+.outcome-bogey,
+.outcome-double-bogey,
+.outcome-over {
+  color: #d2b6a4;
+}
+.timer-urgent {
+  color: #ffb58d !important;
+  border-bottom: 2px solid #ffb58d;
+}
+@keyframes score-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 800px) {
+  .score-feedback {
+    left: 12px;
+    top: auto;
+    bottom: 155px;
+    max-width: 180px;
+    padding: 9px 12px;
+  }
+  .score-feedback strong {
+    font-size: 26px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .score-feedback {
+    animation: none;
+  }
+}

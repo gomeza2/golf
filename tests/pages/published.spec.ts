@@ -26,7 +26,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   }
   const response = await page.goto(baseURL!);
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle(/Club del Último Golpe/);
+  await expect(page).toHaveTitle(/Hoyo en Uno/);
   await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
   await expect(
     page.getByRole("button", { name: /Vuelta completa/ }),
@@ -116,7 +116,7 @@ test("the loading bar waits for real bytes and only disappears after physics and
     await expect(
       page.getByRole("button", { name: /Jugar en este/ }),
     ).toBeEnabled();
-    await expect(page).toHaveTitle(/Club del Último Golpe/);
+    await expect(page).toHaveTitle(/Hoyo en Uno/);
   } finally {
     release();
   }

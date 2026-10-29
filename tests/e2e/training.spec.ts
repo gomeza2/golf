@@ -1,3 +1,4 @@
+import { powerSpeed } from "../../shared/power";
 import { test, expect, type Page } from "@playwright/test";
 import { tourShots } from "../fixtures/tour";
 import { getCourse, uniqueCourses } from "../../shared/courses";
@@ -55,7 +56,7 @@ test("a real practice finish earns a separate mark, can be retried and persists 
       high = 0.8;
     for (let n = 0; n < 16; n++) {
       const p = (low + high) / 2,
-        v = 14 * p,
+        v = powerSpeed(p),
         range =
           v / 0.38 - (0.96 / (0.38 * 0.38)) * Math.log(1 + (0.38 * v) / 0.96);
       if (range < distance) low = p;
