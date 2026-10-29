@@ -1830,3 +1830,122 @@ button > span {
     gap: 6px;
   }
 }
+.training-picker {
+  grid-column: 1/-1;
+  order: 9;
+  margin-top: 18px;
+  border-top: 1px solid #c9d6b833;
+  padding-top: 14px;
+}
+.training-picker summary {
+  cursor: pointer;
+  color: #f3cf84;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 0;
+}
+.training-picker p,
+.training-picker > span {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #bdcebe;
+}
+.training-picker .field {
+  font-size: 11px;
+  margin: 12px 0;
+}
+.training-picker select {
+  width: 100%;
+  padding: 10px;
+  background: #173d32;
+  color: #f6efd9;
+  border: 1px solid #829a7c;
+  border-radius: 6px;
+  font: inherit;
+}
+.training-picker > .secondary {
+  width: 100%;
+  margin-top: 12px;
+}
+.training-best {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+  color: #f3d18d;
+  font-size: 12px;
+}
+.training-best small {
+  font-size: 10px;
+  color: #b6c7b8;
+}
+.practice-summary {
+  padding: 18px;
+  margin: 16px 0;
+  border: 1px solid #9cae8588;
+  border-radius: 8px;
+  background: #254a3c;
+}
+.practice-summary > strong {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 27px;
+}
+.practice-summary small {
+  display: block;
+  color: #c5d3c0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.medal {
+  float: right;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 5px double #d8c7a0;
+  background: #3b594b;
+}
+.medal-oro {
+  background: #e8bd5a;
+  border-color: #fff0ad;
+}
+.medal-plata {
+  background: #b2c1c8;
+  border-color: #edf2ed;
+}
+.medal-bronce {
+  background: #b97d4e;
+  border-color: #e7b58a;
+}
+.relative-par {
+  display: block;
+  white-space: nowrap;
+  font-size: 9px;
+  color: #bfcfbf;
+  margin-top: 5px;
+}
+.pause-shot {
+  font-size: 10px;
+  min-height: 30px;
+  padding: 6px;
+}
+.pause-panel {
+  width: min(480px, 94%);
+}
+.pause-panel > .primary,
+.pause-panel > .secondary {
+  width: 100%;
+  margin-bottom: 10px;
+}
+.pause-panel > small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #b2c4b5;
+  margin-top: 14px;
+}
+.pause-panel {
+  max-height: 90svh;
+  overflow: auto;
+}
+.control-mode-row {
+  flex-wrap: wrap;
+}

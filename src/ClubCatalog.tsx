@@ -6,6 +6,8 @@ import {
   type CircuitId,
 } from "../shared/courses";
 import { recordKey, goalLabels, type PersonalHistory } from "./personalRecords";
+import { TrainingPicker } from "./Training";
+import type { PracticeHistory } from "./practiceRecords";
 import { ShotModePicker } from "./ShotModePicker";
 import type { ControlMode } from "./shotControls";
 export function SelectedRound({
@@ -35,6 +37,8 @@ export function SelectedRound({
 export function ClubCatalog({
   circuit,
   personalHistory,
+  practiceHistory,
+  onPractice,
   setCircuit,
   controlMode,
   setControlMode,
@@ -45,6 +49,8 @@ export function ClubCatalog({
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
+  practiceHistory: PracticeHistory;
+  onPractice: (hole: number) => void;
   setCircuit: (id: CircuitId) => void;
   controlMode: ControlMode;
   setControlMode: (mode: ControlMode) => void;
@@ -226,6 +232,13 @@ export function ClubCatalog({
               </p>
             )}
           </div>
+          <TrainingPicker
+            circuit={circuit}
+            control={controlMode}
+            history={practiceHistory}
+            ready={ready}
+            onStart={onPractice}
+          />
           <button className="primary" disabled={!ready} onClick={onLocal}>
             {ready ? "Jugar en este dispositivo" : "Cargando físicas…"} →
           </button>

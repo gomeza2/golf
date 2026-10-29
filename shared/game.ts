@@ -33,6 +33,7 @@ export type Player = {
   capped: number[];
 };
 export type State = {
+  practice?: boolean;
   phase: "lobby" | "playing" | "scores" | "finished";
   players: Player[];
   hole: number;
@@ -64,6 +65,7 @@ export const total = (p: Player) =>
 export class Game {
   state: State = {
     phase: "lobby",
+    practice: false,
     players: [],
     hole: 0,
     circuit: "sunset",
@@ -108,6 +110,7 @@ export class Game {
     return p;
   }
   start() {
+    this.state.practice = false;
     this.state.players = this.state.players.filter((p) => !p.withdrawn);
     if (!this.state.players.length) throw Error("Faltan jugadores");
     this.state.hole = 0;
@@ -119,6 +122,20 @@ export class Game {
       p.capped = [];
     }
     this.load();
+  }
+  startPractice(hole: number) {
+    if (
+      !Number.isInteger(hole) ||
+      hole < 0 ||
+      hole >= getCircuit(this.state.circuit).courses.length
+    )
+      throw Error("Hoyo de entrenamiento inválido");
+    if (this.state.players.filter((p) => !p.withdrawn).length !== 1)
+      throw Error("El entrenamiento es individual");
+    this.start();
+    this.state.practice = true;
+    this.state.hole = hole;
+    if (hole !== 0) this.load();
   }
   load() {
     this.world?.free();
@@ -422,7 +439,7 @@ export class Game {
         p.strokes = 0;
       }
       s.phase =
-        s.hole === getCircuit(s.circuit).courses.length - 1
+        s.practice || s.hole === getCircuit(s.circuit).courses.length - 1
           ? "finished"
           : "scores";
       return;
@@ -503,6 +520,7 @@ export class Game {
     );
     this.state.hole = 0;
     this.state.phase = "lobby";
+    this.state.practice = false;
     this.state.moving = false;
     for (const p of this.state.players) {
       p.ready = false;
