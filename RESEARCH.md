@@ -25,3 +25,11 @@ La versión 0.2.0 sustituye la escala anterior por una referencia obtenida con e
 Se midieron 21 velocidades y sus distancias de parada. `shared/power.ts` interpola la velocidad necesaria para una distancia de referencia proporcional al porcentaje entre 20 y 100 %. Debajo del 20 % se aplica una transición suave para permitir toques pequeños. Las pruebas vuelven a medir los tiros reales: 50 %, 60 % y 70 % tienen incrementos próximos entre sí. No se dibuja una trayectoria calculada ni se promete esa distancia sobre arena, rampas o con colisiones. Si cambia la fricción o amortiguación, hay que recalibrar y verificar esta referencia.
 
 El máximo pasa de 15,2 a 15,8 de velocidad (+3,9 %). Los turnos de 30 segundos y los resultados relativos al par son decisiones propias de ritmo y presentación; la investigación anterior no publica fórmulas internas de Golf Battle y no se atribuyen a ese juego estos valores.
+
+## Club del As y calibrado v7
+
+El aumento de 15,8 a 16,2 (+2,5 %) se midió en la misma pista de control: el máximo recorre 25,90873 m. Se conserva el tramo fino bajo 20 % y la progresión por distancia de referencia. Las velocidades de las rutas de regresión anteriores se mantienen al trasladarlas a los nuevos porcentajes.
+
+Los tres trazados nuevos se verificaron con tiros del motor desde sus salidas, sin recolocar la pelota ni asignar puntuaciones: puente diagonal, rebote en banda y compuerta con arena. Las pruebas separan as posible de recorrido recuperable: comprueban una ronda completa sin penalizaciones, un fallo real al agua seguido de recuperación por la ruta alternativa y perturbaciones de ángulo/potencia que no se embocan automáticamente. Las soluciones exactas solo se usan en pruebas; el juego conserva la guía corta sin predicción del punto final.
+
+El total de 21 hoyos no convierte la vuelta de 18 en una de 21: Club del As es una selección independiente de tres hoyos. Sigue pendiente evaluar la dificultad con más jugadores humanos y en móviles físicos; las soluciones físicas demuestran posibilidad, no una medida universal de dificultad.

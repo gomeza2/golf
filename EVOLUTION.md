@@ -4,7 +4,7 @@ Esta versión sigue el plan solicitado. Cada bloque depende de las comprobacione
 
 | Fase             | Trabajo concreto                                                                                                                                                      | Verificación / estado                                                                             |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 1. Tiro          | Un solo golpe; lanzamiento vertical 0; velocidad máxima 15,8; guía de 1,2–2,4 m, sin soluciones ni predicción                                                         | Pruebas de velocidad y guía + compilación completadas                                             |
+| 1. Tiro          | Un solo golpe; lanzamiento vertical 0; velocidad máxima 16,2; guía de 1,2–2,4 m, sin soluciones ni predicción                                                         | Pruebas de velocidad y guía + compilación completadas                                             |
 | 2. Física        | Corrección de aristas internas del green; césped absorbe impactos; bandas 0,52; resistencia tangencial sobre pendientes; límite de energía transferida por obstáculos | 10 comprobaciones iniciales de caída, banda, parada, suelo, puente, agua y arena pasaron          |
 | 3. Controles     | Clásico, Retroceso y Precisión comparten la misma función de golpe normal                                                                                             | Casos de navegador de carga, liberación y cancelación                                             |
 | 4. Configuración | Preferencia antes de iniciar; esquema fijado en la ronda; online usa Clásico; un jugador predeterminado                                                               | Casos de bloqueo, preferencias y online                                                           |
@@ -23,8 +23,8 @@ Los datos personales se guardan solo para partidas locales de un jugador, en un 
 ## Comprobaciones de esta entrega
 
 - Compilación TypeScript, cliente Vite y servidor Node completada; también con base `/golf/` y modo estático.
-- 73 pruebas de reglas y física: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
-- 22 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
+- 82 pruebas de reglas y física: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
+- 24 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
 - 4 casos de producción: carga bajo `/golf/`, archivos y WebGL, golpe y cambio de turno reales, descarga interrumpida y script bloqueado con recuperación visible.
 - Capturas revisadas en escritorio y móvil emulado. Faltan sesiones prolongadas en teléfonos físicos y mediciones de salas concurrentes.
 
@@ -54,3 +54,12 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Fases 9 y 11: nueva identidad Hoyo en Uno · Golf Club en carga, cabecera, errores y título; versión visible tomada de package.json y registro en CHANGELOG. El sonido respeta el volumen y los avisos breves respetan movimiento reducido.
 - Fase 12: 73 pruebas de reglas/física y 22 casos de navegador, más cuatro de producción. Se mide físicamente el cambio 50→60→70 %, la expiración de los 30 segundos y un Eagle real de dos golpes en la torre. Se conservan pausa, entrenamiento, turnos, salas y controles anteriores.
 - Datos: protocolo y reglas v6; marcas completas y prácticas separadas de las claves anteriores sin eliminarlas. Pendientes de fase 13 conservados: recuperación de rondas locales en curso al recargar, sesiones humanas prolongadas y hosting público del servidor online.
+
+## Versión 0.3.0 — pistas con riesgo y recompensa
+
+- Fases 5–6: 21 hoyos únicos en total. Se conservan los recorridos de 9/18 y se añade Club del As, con tres trazados nuevos: puente diagonal/agua con ruta alternativa, carambola por banda y compuerta/arena.
+- Fases 1–3: máximo 16,2 (+2,5 % respecto a 0.2.0) y medición de 25,91 m en la pista plana de referencia. Se mantiene la escala gradual, el lanzamiento vertical cero, la guía corta y la misma física en los tres controles.
+- Fases 7–10: los tres hoyos nuevos tienen un as real comprobado; el segundo golpea la banda y el tercero requiere la apertura de la compuerta. Ronda completa comprobada sin penalizaciones y recuperación mediante la pasarela tras un fallo al agua. Los mapas representan correctamente los puentes girados.
+- Fase 12: 82 pruebas de reglas/física y 24 de navegador, además de las cuatro de producción. Dos ases se verifican también a través de la interfaz real, uno en móvil. Las variaciones cercanas de ángulo/potencia no reciben una captura automática. Las rutas anteriores de 18/9 siguen siendo válidas con los nuevos porcentajes.
+- Reglas/protocolo y marcas v7. La versión visible procede de package.json (0.3.0); historial en CHANGELOG. La dificultad se apoya en trazado, fuerza y tiempo, con rutas de recuperación, sin modificar puntuaciones para simular victorias.
+- Fase 13 pendiente: sesiones prolongadas con jugadores humanos y teléfonos físicos, recuperación persistente de rondas locales y hosting público del servidor online.

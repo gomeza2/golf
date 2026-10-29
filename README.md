@@ -6,7 +6,7 @@ Versión jugable de minigolf 3D competitivo, en español. React + TypeScript + T
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.
 
-Pages sirve el juego local completo para 1–8 personas y las siete opciones de recorrido. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
+Pages sirve el juego local completo para 1–8 personas y las ocho opciones de recorrido. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
@@ -86,6 +86,9 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 | Desafío Maestro    | La terraza             | 60 m, subida y green elevado                            | 6   |
 | Desafío Maestro    | Dos canales            | 66 m, puente izquierdo y puente derecho unidos por isla | 7   |
 | Desafío Maestro    | El último aliento      | 72 m, colocación, arena y obstáculo giratorio           | 7   |
+| Club del As        | La aguja               | 30 m, puente diagonal estrecho y pasarela alternativa   | 3   |
+| Club del As        | La firma de la banda   | Carambola derecha para el as y aproximación izquierda   | 3   |
+| Club del As        | La ventana del faro    | Compuerta deslizante, arena y tiro de precisión         | 3   |
 
 - Un golpe por turno; cada pelota conserva su posición. Las pelotas rivales son fantasmas para evitar bloqueos.
 - Menos golpes acumulados gana. Desempate por mayor número de hoyos en uno; si persiste, victoria compartida.
@@ -97,7 +100,7 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 - Fuera de límites: vuelve al punto anterior al golpe con un golpe adicional. La simulación limita cada movimiento a 18 segundos como protección contra bloqueos.
 - El motor comparte pasos fijos de 60 Hz y acumula intervalos variables, tanto en cliente como en servidor. Limita la recuperación tras pausas largas a 250 ms para evitar bloqueos. Una pelota esperando sobre una rampa conserva su posición hasta el golpe; la resistencia solo se aplica cuando hay suelo debajo.
 - La elasticidad se separa por material: **césped y rampas 0; bandas 0,52; copa 0,08; pelota 0**, con combinación máxima. El suelo absorbe el aterrizaje; las bandas reflejan con pérdida de energía. No se usa elasticidad de pared en el suelo. Se comprueba con caídas, rebotes medidos y tiros cortos que paran en menos de tres segundos.
-- El golpe normal tiene **velocidad máxima 15,8**, velocidad vertical inicial **0** y una guía de **1,2–2,4 m**. No se dibujan arcos, posiciones finales ni rebotes previstos. Las rampas y colisiones pueden elevar naturalmente la pelota; un límite de velocidad total 18 evita transferencias desmedidas de obstáculos móviles.
+- El golpe normal tiene **velocidad máxima 16,2**, velocidad vertical inicial **0** y una guía de **1,2–2,4 m**. No se dibujan arcos, posiciones finales ni rebotes previstos. Las rampas y colisiones pueden elevar naturalmente la pelota; un límite de velocidad total 18 evita transferencias desmedidas de obstáculos móviles.
 - La fricción, resistencia, gravedad, CCD y restitución se calculan en Rapier. El cliente interpola posiciones para suavizar los estados de red.
 - Vista del campo o seguimiento suave en tercera persona de la pelota activa. Cámara adaptada al ancho de pantalla. No se lanza al mover la cámara: el golpe tiene un botón separado.
 - Ajustes: volumen persistente, silencio e instrucciones de ratón, teclado y tacto. Sonidos sintetizados con Web Audio.
@@ -112,9 +115,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 73 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros.
+`npm test`: 82 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros.
 
-`npm run test:e2e`: 22 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 24 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Las capturas se guardan en `work/`.
 
 `PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública solo se ejecuta la partida real; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
@@ -131,7 +134,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo (6), número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo (7), número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 
@@ -208,7 +211,7 @@ El contenedor usa Node 22, usuario sin privilegios y `/health`. La receta del co
 
 ## Récords y objetivos de un jugador
 
-Se guardan por recorrido, control y versión de reglas (`club-personal-normal-v6`), separados de versiones anteriores. Solo califican rondas completas de un jugador con puntuaciones válidas, sin retiro ni hoyos terminados por límite. El asterisco en la tabla identifica los límites; embocar realmente en el golpe 12 sigue siendo válido. Las penalizaciones normales cuentan en la puntuación.
+Se guardan por recorrido, control y versión de reglas (`club-personal-normal-v7`), separados de versiones anteriores. Solo califican rondas completas de un jugador con puntuaciones válidas, sin retiro ni hoyos terminados por límite. El asterisco en la tabla identifica los límites; embocar realmente en el golpe 12 sigue siendo válido. Las penalizaciones normales cuentan en la puntuación.
 
 Se conservan la mejor marca, rondas válidas y objetivos conseguidos: terminar, igualar/bajar del par, terminar sin penalizaciones, dominar Precisión y completar las vueltas de 9 o 18. Los objetivos provienen del resultado real, no de acciones ficticias. Una marca peor no reemplaza la mejor. Los datos corruptos/antiguos se ignoran. Si el navegador bloquea el almacenamiento, la pantalla indica que la marca solo dura esta sesión.
 
@@ -224,13 +227,13 @@ La salida del siguiente hoyo corresponde a la menor puntuación del anterior. El
 
 El green utiliza `TriMeshFlags.FIX_INTERNAL_EDGES`: evita contactos falsos en las aristas compartidas del suelo plano. Se conserva el rebote físico de las bandas y la elevación natural de rampas; el lanzamiento siempre parte con velocidad vertical cero.
 
-### Pistas y cámara — reglas v6
+### Pistas y cámara — reglas v7
 
 Pulsa **Mirar** para explorar: arrastra con ratón o tacto, o usa los botones de giro, altura y acercamiento. El tiro queda bloqueado durante la inspección; **Volver a apuntar** restaura la cámara y conserva dirección y potencia. El seguimiento normal de la pelota continúa durante el juego.
 
 La copa tiene aro e interior gris, caída visible y mástil centrado con colisión. La flecha gana grosor, contraste y marcas cortas sin predecir posiciones finales. Se suavizan las esquinas de los obstáculos, se cierran rendijas laterales accidentales y se corrige la unión de la rampa de entrenamiento. Los tres primeros hoyos reciben trazados revisados; todos los campos comparten las mejoras de presentación, copa y bordes.
 
-La potencia se calibra con distancias reales de rodamiento del motor sobre césped plano. Entre 20 y 100 % se busca una distancia de referencia aproximadamente proporcional al porcentaje, no una velocidad proporcional: 50 % recorre unos 12,5 m, 60 % unos 15 m y 100 % unos 25 m en la pista de medición sin obstáculos. Por debajo del 20 % una transición suave permite golpes cortos. La velocidad máxima es 15,8 (+3,9 % respecto a v5), siempre con lanzamiento vertical cero. Arena, pendientes, paredes y agua modifican el resultado real. La guía sigue corta y no muestra el punto final. Servidor y cliente usan protocolo 6; los récords anteriores permanecen separados en sus claves v5.
+La potencia se calibra con distancias reales de rodamiento del motor sobre césped plano. Entre 20 y 100 % se busca una distancia de referencia aproximadamente proporcional al porcentaje, no una velocidad proporcional: 50 % recorre unos 13 m, 60 % unos 15,5 m y 100 % unos 26 m en la pista de medición sin obstáculos. Por debajo del 20 % una transición suave permite golpes cortos. La velocidad máxima es 16,2 (+2,5 % respecto a v6), siempre con lanzamiento vertical cero. Arena, pendientes, paredes y agua modifican el resultado real. La guía sigue corta y no muestra el punto final. Servidor y cliente usan protocolo 7; los récords anteriores permanecen separados en sus claves v5.
 
 Consulta [RESEARCH.md](RESEARCH.md) para las fuentes primarias, decisiones y límites de la investigación.
 
@@ -238,7 +241,7 @@ Consulta [RESEARCH.md](RESEARCH.md) para las fuentes primarias, decisiones y lí
 
 En el catálogo abre **Entrenamiento · elige un hoyo**. Selecciona el recorrido y el control antes de comenzar; **Vuelta completa** permite elegir cualquiera de los 18 hoyos. Usa **Practicar este hoyo** para jugar desde su salida real con el primer nombre local configurado. Al terminar puedes **Repetir hoyo** o **Entrenar siguiente hoyo**, conservando el mismo control y las mismas reglas físicas.
 
-Las medallas dependen de los golpes reales: **Oro** por debajo del par, **Plata** al par, **Bronce** hasta dos golpes por encima. Los intentos incompletos, retirados o terminados por límite no registran marca. La mejor marca por hoyo/control y el número de intentos válidos se conservan en `club-practice-v6`; el mismo hoyo comparte marca entre sus apariciones en varios recorridos. Las prácticas nunca modifican los récords de rondas completas.
+Las medallas dependen de los golpes reales: **Oro** por debajo del par, **Plata** al par, **Bronce** hasta dos golpes por encima. Los intentos incompletos, retirados o terminados por límite no registran marca. La mejor marca por hoyo/control y el número de intentos válidos se conservan en `club-practice-v7`; el mismo hoyo comparte marca entre sus apariciones en varios recorridos. Las prácticas nunca modifican los récords de rondas completas.
 
 **Pausar**, en el panel de tiro, detiene pelota y reloj en cualquier partida local. **Continuar partida** o Escape retoman la simulación sin recuperar tiempo acumulado. La pausa gestiona el foco y la navegación con Tab. Abrir ajustes, explorar con **Mirar** o pasar a una pestaña en segundo plano también detiene la simulación local. Al cerrar ajustes se retoma la partida, o se vuelve a la pausa si los abriste desde ella.
 
@@ -253,3 +256,15 @@ El nombre del juego es **Hoyo en Uno · Golf Club**. La cabecera muestra la vers
 Los turnos duran **30 segundos**; la pausa y la inspección local conservan ese tiempo. En online el servidor mantiene el reloj. Birdie (−1), Eagle (−2), albatros, par, bogey (+1), doble bogey y hoyo en uno se calculan a partir de golpes y par reales. El hoyo en uno tiene prioridad sobre el nombre relativo al par. Los resultados aparecen al embocar, con sonidos diferenciados y un aviso breve en partidas con más jugadores; no añaden ni restan golpes artificialmente. Los límites y retiros no generan celebraciones de embocado.
 
 La escala calibrada se comparte entre Clásico, Retroceso y Precisión. El selector muestra hasta una décima de porcentaje para no ocultar los ajustes finos. `shared/rules.ts` centraliza el tiempo de turno y la versión de reglas; las claves de récords completos y prácticas usan v6 sin borrar v5.
+
+### Versión 0.3.0 — Club del As
+
+El catálogo suma **21 hoyos distintos**: se mantienen las vueltas de **9 y 18**, y se incorpora **Club del As**, una ronda de tres hoyos nuevos, par 9. Selecciónalo en el catálogo para jugar solo, por turnos locales o en una sala conectada al servidor actualizado. También puedes entrenar cada hoyo por separado con cualquiera de los tres controles.
+
+- **La aguja:** puente diagonal de 1,4 m para un golpe de precisión sobre el agua; pasarela de 2,2 m a la izquierda para dividir el recorrido y recuperarse.
+- **La firma de la banda:** la línea directa está bloqueada. El hoyo en uno exige una carambola en la banda derecha; existe una ruta de aproximación por la izquierda.
+- **La ventana del faro:** compuerta móvil y una franja de arena. El as requiere elegir el momento y la fuerza; se puede preparar un tiro desde los laterales.
+
+Los tres hoyos tienen un hoyo en uno verificado desde su salida con física real. Las pruebas incluyen una vuelta completa sin penalizaciones, recuperación después de caer al agua, un rebote real en la banda y variaciones de ángulo/potencia que fallan. Las soluciones exactas quedan en fixtures de pruebas y no se muestran como ayuda de apuntado.
+
+El máximo pasa de 15,8 a **16,2** de velocidad (+2,5 %); la referencia de rodamiento máximo medida pasa de 25,06 a 25,91 m. Se recalibran los porcentajes para conservar la progresión gradual. Cliente, servidor y marcas usan reglas/protocolo **7**, manteniendo almacenadas las claves anteriores. Las preferencias de nombre, volumen y control se conservan.

@@ -7,6 +7,7 @@ import {
   type PracticeHistory,
   type PracticeReport,
 } from "./practiceRecords";
+const strokesLabel = (n: number) => `${n} ${n === 1 ? "golpe" : "golpes"}`;
 export function TrainingPicker({
   circuit,
   control,
@@ -54,7 +55,7 @@ export function TrainingPicker({
         {best ? (
           <>
             <strong>
-              {practiceMedal(best.best, course.par)} · {best.best} golpes
+              {practiceMedal(best.best, course.par)} · {strokesLabel(best.best)}
             </strong>
             <small>
               {best.attempts}{" "}
@@ -91,13 +92,13 @@ export function PracticeSummary({ report }: { report: PracticeReport | null }) {
             aria-hidden="true"
           />
           <strong>
-            {report.medal} · {report.score} golpes
+            {report.medal} · {strokesLabel(report.score)}
           </strong>
           <p>
             {report.improved
               ? "Nueva marca de entrenamiento."
               : "Hoyo completado."}{" "}
-            Mejor con este control: {report.best} golpes.
+            Mejor con este control: {strokesLabel(report.best)}.
           </p>
           {!report.persisted && (
             <small>

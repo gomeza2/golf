@@ -143,9 +143,9 @@ it("practice storage survives reload and rejects obsolete, corrupt and out-of-ra
   expect(persistPracticeRecords(h)).toBe(true);
   expect(readPracticeRecords()).toEqual(h);
   value = JSON.stringify({
-    version: 6,
+    version: 7,
     records: {
-      "18:classic": h["0:classic"],
+      "999:classic": h["0:classic"],
       "0:classic": { ...h["0:classic"], best: 0 },
       "0:invalid": h["0:classic"],
     },

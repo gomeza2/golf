@@ -36,8 +36,8 @@ it("real grass travel is approximately proportional from 20 to 100 percent, with
     };
     const max = distance(1),
       observed = new Map<number, number>();
-    expect(max).toBeGreaterThan(24);
-    expect(max).toBeLessThan(26);
+    expect(max).toBeGreaterThan(25.6);
+    expect(max).toBeLessThan(26.2);
     for (const p of [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]) {
       const d = distance(p);
       observed.set(p, d);
