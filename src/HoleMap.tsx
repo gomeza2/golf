@@ -41,8 +41,9 @@ export function HoleMap({ s }: { s: State }) {
           geometry(course).surfaces.map((b, i) => (
             <rect
               key={`deck${i}`}
-              x={b.pos[0] - b.size[0] / 2}
-              y={b.pos[2] - (b.size[2] * Math.cos(b.rotation || 0)) / 2}
+              x={-b.size[0] / 2}
+              y={-(b.size[2] * Math.cos(b.rotation || 0)) / 2}
+              transform={`translate(${b.pos[0]} ${b.pos[2]}) rotate(${(-(b.yaw || 0) * 180) / Math.PI})`}
               width={b.size[0]}
               height={b.size[2] * Math.cos(b.rotation || 0)}
               fill={b.rotation ? "#98bc78" : "#45896a"}

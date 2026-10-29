@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.3.0
+
+- Club del As: tres hoyos nuevos con puente diagonal/agua, carambola y compuerta/arena; 21 hoyos en total y vueltas de 9/18 conservadas.
+- Hoyo en uno real verificado en cada reto, ruta completa sin penalizaciones y recuperación después de un fallo al agua.
+- Máximo 16,2 (+2,5 %) con la referencia de porcentajes recalibrada; elevación inicial cero.
+- Mapas de puentes girados coherentes con su geometría y colisión.
+- Marcas/protocolo v7, sin borrar claves previas ni preferencias.
+- 82 pruebas de reglas/física, 24 de navegador y cuatro de producción.
+
 ## 0.2.0
 
 - Nueva identidad y versión visible obtenida de package.json.

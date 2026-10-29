@@ -71,7 +71,8 @@ export function ClubCatalog({
           </h1>
         </div>
         <p>
-          {uniqueCourses.length} hoyos distintos. Una vuelta completa.
+          {uniqueCourses.length} hoyos distintos. Vueltas de 9 y 18 + Club del
+          As.
           <br />
           Elige el recorrido, tu forma de golpear y con quién jugar.
         </p>
@@ -136,8 +137,9 @@ export function ClubCatalog({
                       geometry(first).surfaces.map((b, j) => (
                         <rect
                           key={`d${j}`}
-                          x={b.pos[0] - b.size[0] / 2}
-                          y={b.pos[2] - b.size[2] / 2}
+                          x={-b.size[0] / 2}
+                          y={-b.size[2] / 2}
+                          transform={`translate(${b.pos[0]} ${b.pos[2]}) rotate(${(-(b.yaw || 0) * 180) / Math.PI})`}
                           width={b.size[0]}
                           height={b.size[2]}
                           fill={c.ground}
@@ -170,13 +172,15 @@ export function ClubCatalog({
                     />
                   </svg>
                   <span>
-                    {c.id === "tour"
-                      ? "18 HOYOS SEGUIDOS"
-                      : longest >= 48
-                        ? "DESAFÍO"
-                        : i === 0
-                          ? "INICIACIÓN"
-                          : "COMPETITIVO"}
+                    {c.id === "aces"
+                      ? "RIESGO / RECOMPENSA"
+                      : c.id === "tour"
+                        ? "18 HOYOS SEGUIDOS"
+                        : longest >= 48
+                          ? "DESAFÍO"
+                          : i === 0
+                            ? "INICIACIÓN"
+                            : "COMPETITIVO"}
                   </span>
                 </div>
                 <div className="course-copy">

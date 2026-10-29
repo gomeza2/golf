@@ -67,7 +67,7 @@ it("no axis-aligned cross-bank leaves a ball-sized accidental side slit in any o
   }
 });
 it("the calibrated power scale remains horizontal, monotonic and bounded", () => {
-  expect(-shotVelocity(0, 1).z).toBeCloseTo(15.8);
+  expect(-shotVelocity(0, 1).z).toBeCloseTo(16.2);
   for (let i = 0; i <= 100; i++) {
     const p = i / 100,
       v = shotVelocity(0.3, p);

@@ -9,8 +9,8 @@ it("completes one continuous 18-hole match with real shots, no repositioning and
     g.selectCircuit("tour");
     g.add("a", "A");
     g.start();
-    expect(uniqueCourses).toHaveLength(18);
-    expect(new Set(uniqueCourses)).toHaveProperty("size", 18);
+    expect(uniqueCourses).toHaveLength(21);
+    expect(new Set(uniqueCourses)).toHaveProperty("size", 21);
     expect(getCircuit("tour").courses).toHaveLength(18);
     for (let hole = 0; hole < tourShots.length; hole++) {
       expect(g.state.hole).toBe(hole);

@@ -22,8 +22,9 @@ export const grassCalibration: readonly (readonly [number, number])[] = [
   [14, 21.29796],
   [15, 23.37672],
   [15.8, 25.06046],
+  [16.2, 25.90873],
 ];
-export const MAX_SHOT_SPEED = 15.8;
+export const MAX_SHOT_SPEED = 16.2;
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 function distanceFraction(power: number) {
   const p = clamp(power),

@@ -1,2 +1,2 @@
-export const RULES_VERSION = 6;
+export const RULES_VERSION = 7;
 export const TURN_SECONDS = 30;

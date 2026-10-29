@@ -120,7 +120,14 @@ export const colors = [
 ];
 
 export type CircuitId =
-  "sunset" | "moonlight" | "park" | "riviera" | "masters" | "tour" | "nine";
+  | "sunset"
+  | "moonlight"
+  | "park"
+  | "riviera"
+  | "masters"
+  | "tour"
+  | "nine"
+  | "aces";
 export const nightCourses: Course[] = [
   {
     name: "Las diagonales",
@@ -429,6 +436,60 @@ mastersCourses[4].dirt = [{ x: 6, z: 10, width: 5, length: 5, y: 0 }];
 parkCourses[2].blocks.push(
   ...curvedBank(-4, -9, 2.2, -Math.PI / 2, Math.PI / 2, 8),
 );
+// Three risk/reward greens: an exact bridge line, a bank and a timed gate.
+export const aceCourses: Course[] = [
+  {
+    name: "La aguja",
+    par: 3,
+    subtitle:
+      "Puente diagonal para el as; pasarela ancha a la izquierda para jugar seguro.",
+    dimensions: { width: 18, length: 30 },
+    start: { x: -4, y: 0.24, z: 12 },
+    cup: { x: 4, y: 0, z: -12 },
+    greenBounds: { minX: -9, maxX: 9, minZ: -15, maxZ: -3 },
+    terrain: [
+      deck(0, 9, 18, 12),
+      { ...deck(0, 0, 1.4, 6.5), yaw: -Math.atan2(2, 6) },
+      deck(-7.7, 0, 2.2, 6),
+    ],
+    water: [{ x: 0, z: 0, width: 18, length: 6, y: -0.3 }],
+    sand: [{ x: -4, z: -8, width: 3, length: 3, y: 0 }],
+    blocks: [wall(-3.8, 0, 6.1, 0.6), wall(3.8, 0, 6.1, 0.6)],
+  },
+  {
+    name: "La firma de la banda",
+    par: 3,
+    subtitle:
+      "La banda derecha abre el hoyo en uno. Por la izquierda hay una aproximación segura.",
+    dimensions: { width: 14, length: 24 },
+    start: { x: -4, y: 0.24, z: 8 },
+    cup: { x: 3, y: 0, z: -7 },
+    sand: [{ x: -5, z: -3, width: 2.5, length: 3, y: 0 }],
+    blocks: [wall(-1, 1, 5, 0.65)],
+  },
+  {
+    name: "La ventana del faro",
+    par: 3,
+    subtitle:
+      "Lee la compuerta y atraviesa la arena con fuerza justa; puedes preparar el tiro desde un lateral.",
+    dimensions: { width: 16, length: 28 },
+    start: { x: 0, y: 0.24, z: 11 },
+    cup: { x: 0, y: 0, z: -11 },
+    sand: [{ x: 0, z: -5, width: 5, length: 0.9, y: 0 }],
+    dirt: [{ x: -5, z: 4, width: 3, length: 3, y: 0 }],
+    blocks: [
+      wall(-5.3, 0, 4.4, 0.6),
+      wall(5.3, 0, 4.4, 0.6),
+      {
+        pos: [0, 0.5, 0],
+        size: [3.8, 1, 0.45],
+        moving: true,
+        motion: "slide",
+        color: "#ffba73",
+      },
+    ],
+  },
+];
 // Close only accidental near-wall slits; intended routes remain at least 0.9 m wide.
 export function sealSideSlits(course: Course) {
   const half = courseSize(course).width / 2;
@@ -443,13 +504,14 @@ export function sealSideSlits(course: Course) {
     b.size[0] = right - left;
   }
 }
-export const uniqueCourses = [
+export const championshipCourses = [
   ...courses,
   ...nightCourses,
   ...parkCourses,
   ...rivieraCourses,
   ...mastersCourses,
 ];
+export const uniqueCourses = [...championshipCourses, ...aceCourses];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
   Math.abs(p.z - zone.z) < zone.length / 2 + margin;
@@ -515,7 +577,7 @@ export const circuits = [
     name: "Vuelta completa",
     description:
       "Los 18 hoyos en una sola partida, desde el jardín hasta el último desafío.",
-    courses: uniqueCourses,
+    courses: championshipCourses,
     ground: "#3e8469",
     edge: "#e5cda6",
     background: "#173c3c",
@@ -531,6 +593,17 @@ export const circuits = [
     edge: "#dfc99f",
     background: "#193d36",
     accent: "#e5cf87",
+  },
+  {
+    id: "aces" as const,
+    name: "Club del As",
+    description:
+      "Tres retos de precisión: puente diagonal, carambola y compuerta. Hoyo en uno posible; rutas seguras para recuperarte.",
+    courses: aceCourses,
+    ground: "#3b8a7a",
+    edge: "#e0d0aa",
+    background: "#183c43",
+    accent: "#ffcf83",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
