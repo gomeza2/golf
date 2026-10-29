@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules";
 import {
   getCourse,
   getCircuit,
@@ -7,7 +8,7 @@ import {
 } from "../shared/courses";
 import type { State } from "../shared/game";
 import { isControlMode, type ControlMode } from "./shotControls";
-export const PRACTICE_KEY = "club-practice-v5";
+export const PRACTICE_KEY = `club-practice-v${RULES_VERSION}`;
 export type PracticeBest = { best: number; attempts: number; date: string };
 export type PracticeHistory = Record<string, PracticeBest>;
 export type PracticeReport = {
@@ -36,7 +37,7 @@ export function readPracticeRecords(): PracticeHistory {
     const raw = JSON.parse(localStorage.getItem(PRACTICE_KEY) || "null");
     if (
       !raw ||
-      raw.version !== 5 ||
+      raw.version !== RULES_VERSION ||
       !raw.records ||
       typeof raw.records !== "object"
     )
@@ -120,7 +121,10 @@ export function recordPractice(
 }
 export function persistPracticeRecords(records: PracticeHistory) {
   try {
-    localStorage.setItem(PRACTICE_KEY, JSON.stringify({ version: 5, records }));
+    localStorage.setItem(
+      PRACTICE_KEY,
+      JSON.stringify({ version: RULES_VERSION, records }),
+    );
     return true;
   } catch {
     return false;

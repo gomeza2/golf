@@ -66,11 +66,8 @@ it("no axis-aligned cross-bank leaves a ball-sized accidental side slit in any o
     }
   }
 });
-it("only the upper power range gains speed and every shot remains horizontal and bounded", () => {
-  for (const p of [0.03, 0.25, 0.5, 0.8])
-    expect(-shotVelocity(0, p).z).toBeCloseTo(14 * p);
-  expect(-shotVelocity(0, 1).z).toBeCloseTo(15.2);
-  expect(-shotVelocity(0, 1).z / 14).toBeCloseTo(1.085714, 5);
+it("the calibrated power scale remains horizontal, monotonic and bounded", () => {
+  expect(-shotVelocity(0, 1).z).toBeCloseTo(15.8);
   for (let i = 0; i <= 100; i++) {
     const p = i / 100,
       v = shotVelocity(0.3, p);

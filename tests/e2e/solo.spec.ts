@@ -1,3 +1,4 @@
+import { powerSpeed } from "../../shared/power";
 import { test, expect } from "@playwright/test";
 import { tourShots } from "../fixtures/tour";
 import { getCourse } from "../../shared/courses";
@@ -75,7 +76,7 @@ test("solo round keeps normal control locked, records a real finish and persists
         high = 1;
       for (let n = 0; n < 16; n++) {
         const p = (low + high) / 2,
-          v = 14 * p,
+          v = powerSpeed(p),
           range =
             v / 0.38 - (0.96 / (0.38 * 0.38)) * Math.log(1 + (0.38 * v) / 0.96);
         if (range < distance) low = p;

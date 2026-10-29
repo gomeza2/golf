@@ -19,7 +19,7 @@ export class AppErrorBoundary extends Component<
     if (this.state.failed)
       return (
         <main className="startup-error" role="alert">
-          <div className="eyebrow">CLUB DEL ÚLTIMO GOLPE</div>
+          <div className="eyebrow">HOYO EN UNO · GOLF CLUB</div>
           <h1>No pudimos abrir el campo.</h1>
           <p>
             Recarga la página. Si el problema continúa, prueba con un navegador

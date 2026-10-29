@@ -1,3 +1,4 @@
+import { RULES_VERSION } from "../shared/rules";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
@@ -19,7 +20,7 @@ const http = createServer(async (req, res) => {
     res.end(
       JSON.stringify({
         ok: true,
-        protocol: 5,
+        protocol: RULES_VERSION,
         rooms: rooms.size,
         maxPlayers: capacity,
       }),
@@ -165,7 +166,7 @@ io.on("connection", (socket) => {
             id: pid,
             token: d.token,
             code: candidate.game.state.code,
-            protocol: 5,
+            protocol: RULES_VERSION,
           });
           io.to(candidate.game.state.code).emit("state", snapshot(candidate));
         } catch (error) {
@@ -310,6 +311,6 @@ setInterval(() => {
 }, 1000 / 60);
 http.listen(Number(process.env.PORT) || 3001, "0.0.0.0", () =>
   console.log(
-    "Club del Último Golpe: http://localhost:" + (process.env.PORT || 3001),
+    "Hoyo en Uno · Golf Club: http://localhost:" + (process.env.PORT || 3001),
   ),
 );

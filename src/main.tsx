@@ -1,3 +1,5 @@
+import { TURN_SECONDS, RULES_VERSION } from "../shared/rules";
+import { APP_VERSION, GAME_NAME } from "./release";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { io, type Socket } from "socket.io-client";
@@ -27,7 +29,7 @@ import {
 import { PauseDialog } from "./PauseDialog";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
-import { tone } from "./audio";
+import { tone, celebrateOutcome } from "./audio";
 import { useTurnPresentation } from "./useTurnPresentation";
 import { AppErrorBoundary } from "./AppErrorBoundary";
 import { ClubCatalog, SelectedRound } from "./ClubCatalog";
@@ -46,7 +48,7 @@ const initial: State = {
   turn: 0,
   moving: false,
   time: 0,
-  deadline: 45,
+  deadline: TURN_SECONDS,
   message: "",
   host: "",
   code: "",
@@ -217,14 +219,18 @@ function App() {
   useEffect(() => {
     if (s.event && s.event.seq !== lastEvent.current) {
       lastEvent.current = s.event.seq;
-      tone(
-        s.event.kind === "water"
-          ? "splash"
-          : s.event.kind === "bounce"
-            ? "bounce"
-            : "cup",
-        volume,
-      );
+      if (s.time - s.event.time > 4 || s.time < s.event.time) return;
+      if (s.event.kind === "cup" && s.event.outcome)
+        celebrateOutcome(s.event.outcome.kind, volume);
+      else
+        tone(
+          s.event.kind === "water"
+            ? "splash"
+            : s.event.kind === "bounce"
+              ? "bounce"
+              : "cup",
+          volume,
+        );
     }
   }, [s.event?.seq]);
   useEffect(() => {
@@ -420,7 +426,7 @@ function App() {
     });
     sock.on("session", (session) => {
       if (socket.current !== sock) return;
-      if (session.protocol !== 5) {
+      if (session.protocol !== RULES_VERSION) {
         setError(
           "El servidor necesita actualizarse para admitir el golpe normal equilibrado",
         );
@@ -549,18 +555,19 @@ function App() {
       <header>
         <button
           className="wordmark"
+          aria-label={GAME_NAME}
           onClick={() => {
             if (screen !== "game") setScreen("home");
           }}
         >
-          UG<span>CLUB DEL ÚLTIMO GOLPE</span>
+          H1<span>HOYO EN UNO · GOLF CLUB</span>
         </button>
         <div className="header-right">
           <span className="edition">
             {getCircuit(
               screen === "game" ? s.circuit : circuit,
             ).name.toUpperCase()}{" "}
-            / VOL. 03
+            / v{APP_VERSION}
           </span>
           <button
             className="icon"
@@ -863,10 +870,10 @@ function App() {
             <p>
               En local, Pausa, Mirar, los ajustes y cambiar de pestaña detienen
               el reloj y la pelota. En online el servidor mantiene el tiempo. 12
-              golpes por hoyo. 45 segundos por turno: al agotarse se suma un
-              golpe y pasa el turno. Agua o fuera de campo: un golpe adicional y
-              regreso al último punto. La arena frena más la pelota. Las demás
-              pelotas son fantasmas y no bloquean tu trayectoria.
+              golpes por hoyo. {TURN_SECONDS} segundos por turno: al agotarse se
+              suma un golpe y pasa el turno. Agua o fuera de campo: un golpe
+              adicional y regreso al último punto. La arena frena más la pelota.
+              Las demás pelotas son fantasmas y no bloquean tu trayectoria.
             </p>
             <button className="primary" onClick={() => setSettings(false)}>
               Entendido
