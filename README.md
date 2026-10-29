@@ -112,9 +112,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 59 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros.
+`npm test`: 68 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros.
 
-`npm run test:e2e`: 17 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 20 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Las capturas se guardan en `work/`.
 
 `PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública solo se ejecuta la partida real; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
@@ -233,3 +233,15 @@ La copa tiene aro e interior gris, caída visible y mástil centrado con colisi�
 El suplemento de potencia solo actúa por encima del 80 %: `velocidad = 14p + 1,2 × max(0, (p−0,8)/0,2)²`. El 100 % es un 8,6 % más rápido; se mantienen los golpes finos y el lanzamiento vertical cero. El servidor y el cliente usan protocolo 5 y los récords separan esta versión de las reglas anteriores.
 
 Consulta [RESEARCH.md](RESEARCH.md) para las fuentes primarias, decisiones y límites de la investigación.
+
+### Entrenamiento individual y pausa local
+
+En el catálogo abre **Entrenamiento · elige un hoyo**. Selecciona el recorrido y el control antes de comenzar; **Vuelta completa** permite elegir cualquiera de los 18 hoyos. Usa **Practicar este hoyo** para jugar desde su salida real con el primer nombre local configurado. Al terminar puedes **Repetir hoyo** o **Entrenar siguiente hoyo**, conservando el mismo control y las mismas reglas físicas.
+
+Las medallas dependen de los golpes reales: **Oro** por debajo del par, **Plata** al par, **Bronce** hasta dos golpes por encima. Los intentos incompletos, retirados o terminados por límite no registran marca. La mejor marca por hoyo/control y el número de intentos válidos se conservan en `club-practice-v5`; el mismo hoyo comparte marca entre sus apariciones en varios recorridos. Las prácticas nunca modifican los récords de rondas completas.
+
+**Pausar**, en el panel de tiro, detiene pelota y reloj en cualquier partida local. **Continuar partida** o Escape retoman la simulación sin recuperar tiempo acumulado. La pausa gestiona el foco y la navegación con Tab. Abrir ajustes, explorar con **Mirar** o pasar a una pestaña en segundo plano también detiene la simulación local. Al cerrar ajustes se retoma la partida, o se vuelve a la pausa si los abriste desde ella.
+
+En online el servidor mantiene su reloj: no se envían comandos de pausa ni de entrenamiento, y esos comandos no están admitidos por el servidor. La inspección online muestra el tiempo restante. Los resultados muestran también el acumulado respecto al par de los hoyos ya completados.
+
+La pausa dura mientras la página siga abierta: no recupera una partida en curso después de recargar. Se conservan las marcas completadas que el navegador permitió guardar. La recuperación persistente de partidas locales es trabajo pendiente; no se presenta como implementada.

@@ -18,6 +18,13 @@ import {
   type RoundReport,
 } from "./personalRecords";
 import { defaultLook, changeLook, type CameraLook } from "./camera";
+import {
+  readPracticeRecords,
+  recordPractice,
+  persistPracticeRecords,
+  type PracticeReport,
+} from "./practiceRecords";
+import { PauseDialog } from "./PauseDialog";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone } from "./audio";
@@ -87,6 +94,10 @@ function App() {
     }),
     [personalHistory, setPersonalHistory] = useState(readPersonalRecords),
     [roundReport, setRoundReport] = useState<RoundReport | null>(null),
+    [practiceHistory, setPracticeHistory] = useState(readPracticeRecords),
+    [practiceReport, setPracticeReport] = useState<PracticeReport | null>(null),
+    [paused, setPaused] = useState(false),
+    [hidden, setHidden] = useState(document.hidden),
     [roundId, setRoundId] = useState(0),
     [roundControl, setRoundControl] = useState<ControlMode>("classic"),
     [overview, setOverview] = useState(false),
@@ -108,6 +119,17 @@ function App() {
   );
   const handoff = useRef(false);
   handoff.current = transitioning;
+  const hold = useRef(false);
+  const clockReset = useRef(false);
+  hold.current = mode === "local" && (paused || settings || lookMode || hidden);
+  useEffect(() => {
+    const update = () => {
+      clockReset.current = true;
+      setHidden(document.hidden);
+    };
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
   useEffect(() => {
     if (turnKey) setOverview(false);
   }, [turnKey]);
@@ -139,7 +161,11 @@ function App() {
     let frame = 0,
       lastPaint = 0;
     const loop = (now: number) => {
-      if (game.current && !handoff.current) {
+      if (clockReset.current) {
+        stepper.reset(now);
+        clockReset.current = false;
+      }
+      if (game.current && !handoff.current && !hold.current) {
         stepper.advance(now, () => game.current?.tick());
         if (now - lastPaint >= 50) {
           setS(structuredClone(game.current.state));
@@ -171,6 +197,15 @@ function App() {
     )
       return;
     savedRound.current = roundId;
+    if (s.practice) {
+      const result = recordPractice(practiceHistory, s, roundControl);
+      if (result) {
+        const persisted = persistPracticeRecords(result.history);
+        setPracticeHistory(result.history);
+        setPracticeReport({ ...result.report, persisted });
+      }
+      return;
+    }
     const result = recordCompletedRound(personalHistory, s, roundControl);
     if (result) {
       const persisted = persistPersonalRecords(result.history);
@@ -214,6 +249,8 @@ function App() {
     s.phase === "playing" &&
     !s.moving &&
     !settings &&
+    !paused &&
+    !(mode === "local" && hidden) &&
     !lookMode &&
     !transitioning &&
     (mode === "local" || (current?.id === id && status === "Conectado"));
@@ -300,6 +337,7 @@ function App() {
   function localStart() {
     socket.current?.disconnect();
     game.current?.dispose();
+    lastEvent.current = 0;
     const g = new Game();
     g.selectCircuit(circuit);
     names.forEach((n, i) => g.add(String(i), n));
@@ -308,6 +346,33 @@ function App() {
     setRoundControl(controlMode);
     setRoundId((v) => v + 1);
     setRoundReport(null);
+    setPracticeReport(null);
+    setPaused(false);
+    game.current = g;
+    setMode("local");
+    setS(structuredClone(g.state));
+    setScreen("game");
+    setOverview(false);
+    setError("");
+  }
+  function practiceStart(hole: number) {
+    saveLocal("golf-local-names", JSON.stringify(names));
+    socket.current?.disconnect();
+    game.current?.dispose();
+    lastEvent.current = 0;
+    const g = new Game();
+    g.selectCircuit(circuit);
+    g.add("0", names[0]);
+    g.startPractice(hole);
+    setRoundControl(controlMode);
+    setRoundId((v) => v + 1);
+    setRoundReport(null);
+    setPracticeReport(null);
+    setPaused(false);
+    setLookMode(false);
+    setSettings(false);
+    setCameraLook(defaultLook);
+    setAngle(0);
     game.current = g;
     setMode("local");
     setS(structuredClone(g.state));
@@ -410,7 +475,22 @@ function App() {
         setScreen("local");
         return;
       }
-      if (type === "next") game.current.next();
+      if (
+        game.current.state.practice &&
+        ["practice-retry", "practice-next", "replay"].includes(type)
+      ) {
+        controls.cancel();
+        const hole =
+          game.current.state.hole + (type === "practice-next" ? 1 : 0);
+        game.current.startPractice(hole);
+        setRoundId((v) => v + 1);
+        setPracticeReport(null);
+        setPaused(false);
+        setLookMode(false);
+        setCameraLook(defaultLook);
+        setAngle(0);
+        setOverview(false);
+      } else if (type === "next") game.current.next();
       else {
         game.current.start();
         setRoundId((v) => v + 1);
@@ -433,6 +513,9 @@ function App() {
     game.current?.dispose();
     game.current = null;
     setS(initial);
+    setPaused(false);
+    setLookMode(false);
+    setSettings(false);
     setScreen("home");
     setError("");
     setStatus("Sin conexión");
@@ -499,6 +582,8 @@ function App() {
       {screen === "home" && (
         <ClubCatalog
           personalHistory={personalHistory}
+          practiceHistory={practiceHistory}
+          onPractice={practiceStart}
           circuit={circuit}
           setCircuit={setCircuit}
           controlMode={controlMode}
@@ -679,6 +764,8 @@ function App() {
       {screen === "game" && (
         <GamePanels
           roundReport={roundReport}
+          practiceReport={practiceReport}
+          onPause={() => setPaused(true)}
           lookMode={lookMode}
           toggleLook={toggleLook}
           onLook={adjustCamera}
@@ -707,6 +794,14 @@ function App() {
           shoot={shoot}
           action={action}
           leave={leave}
+        />
+      )}
+      {paused && mode === "local" && screen === "game" && !settings && (
+        <PauseDialog
+          onResume={() => setPaused(false)}
+          onSettings={() => setSettings(true)}
+          onRestart={s.practice ? () => action("practice-retry") : undefined}
+          onLeave={leave}
         />
       )}
       {settings && (
@@ -766,7 +861,9 @@ function App() {
               vista.
             </p>
             <p>
-              12 golpes por hoyo. 45 segundos por turno: al agotarse se suma un
+              En local, Pausa, Mirar, los ajustes y cambiar de pestaña detienen
+              el reloj y la pelota. En online el servidor mantiene el tiempo. 12
+              golpes por hoyo. 45 segundos por turno: al agotarse se suma un
               golpe y pasa el turno. Agua o fuera de campo: un golpe adicional y
               regreso al último punto. La arena frena más la pelota. Las demás
               pelotas son fantasmas y no bloquean tu trayectoria.

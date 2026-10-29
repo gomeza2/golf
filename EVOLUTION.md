@@ -23,8 +23,8 @@ Los datos personales se guardan solo para partidas locales de un jugador, en un 
 ## Comprobaciones de esta entrega
 
 - Compilación TypeScript, cliente Vite y servidor Node completada; también con base `/golf/` y modo estático.
-- 59 pruebas de reglas y física: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
-- 17 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
+- 68 pruebas de reglas y física: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
+- 20 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
 - 4 casos de producción: carga bajo `/golf/`, archivos y WebGL, golpe y cambio de turno reales, descarga interrumpida y script bloqueado con recuperación visible.
 - Capturas revisadas en escritorio y móvil emulado. Faltan sesiones prolongadas en teléfonos físicos y mediciones de salas concurrentes.
 
@@ -37,3 +37,12 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Fases 7 y 11: modo Mirar con giro/inclinación/zoom limitados, arrastre táctil o ratón y botones. Se bloquea el tiro durante la exploración y se conserva el apuntado al volver.
 - Fases 8 y 12: rutas completas recalibradas; 59 pruebas de reglas/física/cámara, 17 de navegador y 4 de producción. Se incluyen cuadrículas de soporte de suelo en los seis primeros hoyos, ausencia de rendijas de menos de 0,9 m en bandas transversales alineadas y comprobación del mástil centrado.
 - Fase 13: referencias y decisiones en [RESEARCH.md](RESEARCH.md). Continúan pendientes las sesiones humanas prolongadas y la publicación de un servidor online persistente.
+
+## Entrega de entrenamiento y pausa
+
+- Fases 8 y 10: entrenamiento individual de cualquier hoyo del recorrido elegido, con salida real, golpe normal, límite de golpes y embocado físico. Repetición y paso al siguiente hoyo sin cambiar el control.
+- Fase 10: medallas Oro/Plata/Bronce por resultado respecto al par, mejor marca e intentos válidos por hoyo/control. Las apariciones del mismo hoyo comparten marca. Datos independientes de las rondas completas; los intentos administrativos por límite y los retiros no generan récord ni medalla.
+- Fases 7–9 y 11: pausa local que congela reloj y simulación, incluso durante un golpe. Mirar, ajustes y segundo plano también suspenden la simulación local. Escape y Tab permiten manejar la pausa con teclado. El online conserva el reloj del servidor y rechaza los comandos de pausa/práctica.
+- Fases 8 y 9: resultados relativos al par de los hoyos completados, columna correcta del hoyo entrenado y selector integrado en el catálogo, sin duplicar los recorridos.
+- Fase 12: 68 pruebas de reglas/física/guardado y 20 de navegador; se comprueban los 18 puntos de salida, una práctica embocada realmente, persistencia, rechazo de marcas inválidas, elección del hoyo 18 en móvil y congelación del reloj y la pelota. La prueba de segundo plano simula el evento de visibilidad del navegador. Se mantienen las cuatro comprobaciones de producción.
+- Pendientes: guardado y recuperación de una ronda local en curso tras recargar, más sesiones humanas prolongadas, torneos persistentes y hosting público del servidor online. La pausa actual conserva una sesión abierta y no se presenta como recuperación después de cerrar la página.

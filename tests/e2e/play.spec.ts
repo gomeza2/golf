@@ -108,8 +108,18 @@ test("two real online clients join, validate turn ownership and recover a sessio
     b.emit("action", { type: "ready" });
     await pending;
     pending = waitState(b, (s) => s.phase === "playing");
-    a.emit("action", { type: "start" });
-    await pending;
+    a.emit("action", { type: "start", practice: true, hole: 17 });
+    const playing = await pending;
+    expect(playing.practice).toBe(false);
+    expect(playing.hole).toBe(0);
+    for (const type of ["pause", "practice"]) {
+      const notice = waitEvent(a, "notice");
+      a.emit("action", { type, hole: 17 });
+      expect(await notice).toContain("desconocida");
+    }
+    const ticking = await waitState(b, (s) => s.time > playing.time + 0.15);
+    expect(ticking.practice).toBe(false);
+    expect(ticking.players[0].strokes).toBe(0);
     pending = waitEvent(b, "notice");
     b.emit("action", { type: "shoot", angle: 0, power: 0.5 });
     expect(await pending).toContain("rechazado");

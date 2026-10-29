@@ -13,9 +13,13 @@ import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
 import { goalLabels, type RoundReport } from "./personalRecords";
 import type { CameraLook } from "./camera";
+import { PracticeSummary } from "./Training";
+import type { PracticeReport } from "./practiceRecords";
 import { useFullscreen } from "./useFullscreen";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
+  practiceReport: PracticeReport | null;
+  onPause: () => void;
   lookMode: boolean;
   toggleLook: () => void;
   onLook: (delta: Partial<CameraLook>) => void;
@@ -47,6 +51,8 @@ type Props = {
   leave: () => void;
 };
 export function GamePanels({
+  practiceReport,
+  onPause,
   lookMode,
   toggleLook,
   onLook,
@@ -88,6 +94,14 @@ export function GamePanels({
   const current = s.players[s.turn],
     circuit = getCircuit(s.circuit),
     courses = circuit.courses;
+  const scoreColumns = s.practice
+    ? [{ hole: s.hole, score: 0 }]
+    : courses.map((_, i) => ({ hole: i, score: i }));
+  const parPlayed = s.practice
+    ? courses[s.hole].par
+    : courses
+        .slice(0, s.players[0]?.scores.length || 0)
+        .reduce((n, c) => n + c.par, 0);
   const isHost = mode === "local" || s.host === id;
   const sorted = ranking(s.players),
     winners = sorted.filter(
@@ -191,9 +205,13 @@ export function GamePanels({
       {s.phase === "playing" && (
         <>
           <div className="hole-hud">
-            <div className="eyebrow">{circuit.name.toUpperCase()}</div>
+            <div className="eyebrow">
+              {s.practice ? "ENTRENAMIENTO · " : ""}
+              {circuit.name.toUpperCase()}
+            </div>
             <h2>
-              <span>0{s.hole + 1}</span> {courses[s.hole].name}
+              <span>{String(s.hole + 1).padStart(2, "0")}</span>{" "}
+              {courses[s.hole].name}
             </h2>
             <p>
               PAR {courses[s.hole].par} <span>·</span>{" "}
@@ -290,7 +308,9 @@ export function GamePanels({
           {lookMode && (
             <section className="camera-dock" aria-label="Explorar cámara">
               <small>
-                ARRASTRA EL CAMPO PARA MIRAR · EL TIRO ESTÁ BLOQUEADO
+                {mode === "local"
+                  ? "PAUSA LOCAL · ARRASTRA PARA MIRAR"
+                  : `MIRAR NO PAUSA EL RELOJ · ${Math.max(0, Math.ceil(s.deadline - s.time))} s`}
               </small>
               <div>
                 <button
@@ -355,6 +375,11 @@ export function GamePanels({
               >
                 {expanded ? "Menos ajustes" : "Más ajustes"}
               </button>
+              {mode === "local" && (
+                <button className="text-button pause-shot" onClick={onPause}>
+                  Pausar
+                </button>
+              )}
               <span className="locked-control">
                 {controlModes.find((mode) => mode.id === controlMode)?.name} ·
                 FIJO
@@ -526,22 +551,31 @@ export function GamePanels({
       {(s.phase === "scores" || s.phase === "finished") && (
         <section className="panel results">
           <div className="eyebrow">
-            {s.phase === "finished"
-              ? "RECORRIDO COMPLETADO"
-              : "HOYO COMPLETADO"}
+            {s.practice
+              ? "ENTRENAMIENTO INDIVIDUAL"
+              : s.phase === "finished"
+                ? "RECORRIDO COMPLETADO"
+                : "HOYO COMPLETADO"}
           </div>
-          <h2>{s.phase === "finished" ? winnerLabel : "Cada golpe cuenta."}</h2>
+          <h2>
+            {s.practice
+              ? courses[s.hole].name
+              : s.phase === "finished"
+                ? winnerLabel
+                : "Cada golpe cuenta."}
+          </h2>
           <p>
-            Menor puntuación gana. Desempate por hoyos en uno; si persiste,
-            victoria compartida.
+            {s.practice
+              ? `Hoyo ${s.hole + 1} · Par ${courses[s.hole].par}. Completa el hoyo con menos golpes.`
+              : "Menor puntuación gana. Desempate por hoyos en uno; si persiste, victoria compartida."}
           </p>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>POS / JUGADOR</th>
-                  {courses.map((_, i) => (
-                    <th key={i}>H{i + 1}</th>
+                  {scoreColumns.map((c) => (
+                    <th key={c.hole}>H{c.hole + 1}</th>
                   ))}
                   <th>TOTAL</th>
                   <th>ACES</th>
@@ -558,14 +592,20 @@ export function GamePanels({
                       {p.name}
                       {p.withdrawn ? " · retirado" : ""}
                     </td>
-                    {courses.map((_, j) => (
-                      <td key={j}>
-                        {p.scores[j] ?? "—"}
-                        {p.capped.includes(j) ? "*" : ""}
+                    {scoreColumns.map((c) => (
+                      <td key={c.hole}>
+                        {p.scores[c.score] ?? "—"}
+                        {p.capped.includes(c.hole) ? "*" : ""}
                       </td>
                     ))}
                     <td>
                       <b>{total(p)}</b>
+                      <small className="relative-par">
+                        {total(p) === parPlayed
+                          ? "PAR"
+                          : `${total(p) > parPlayed ? "+" : ""}${total(p) - parPlayed}`}{" "}
+                        · par {parPlayed}
+                      </small>
                     </td>
                     <td>{p.aces}</td>
                     <td>{p.penalties}</td>
@@ -601,7 +641,25 @@ export function GamePanels({
               )}
             </div>
           )}
-          {isHost ? (
+          {s.practice && <PracticeSummary report={practiceReport} />}
+          {s.practice ? (
+            <>
+              <button
+                className="primary"
+                onClick={() => action("practice-retry")}
+              >
+                Repetir hoyo →
+              </button>
+              {s.hole < courses.length - 1 && (
+                <button
+                  className="secondary"
+                  onClick={() => action("practice-next")}
+                >
+                  Entrenar siguiente hoyo →
+                </button>
+              )}
+            </>
+          ) : isHost ? (
             <button
               className="primary"
               disabled={
@@ -618,7 +676,7 @@ export function GamePanels({
           ) : (
             <p>Esperando al anfitrión…</p>
           )}
-          {s.phase === "finished" && isHost && (
+          {s.phase === "finished" && isHost && !s.practice && (
             <button className="secondary" onClick={() => action("lobby")}>
               Elegir otro recorrido
             </button>

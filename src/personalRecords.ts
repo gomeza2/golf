@@ -79,6 +79,7 @@ export function recordCompletedRound(
 ): { history: PersonalHistory; report: RoundReport } | null {
   if (
     state.phase !== "finished" ||
+    state.practice ||
     state.players.length !== 1 ||
     !isControlMode(control)
   )
