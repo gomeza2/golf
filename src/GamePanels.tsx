@@ -211,7 +211,11 @@ export function GamePanels({
               </div>
             ))}
           </div>
-          <button className="secondary" onClick={() => action("ready")}>
+          <button
+            className="secondary"
+            disabled={status !== "Conectado"}
+            onClick={() => action("ready")}
+          >
             {s.players.find((p) => p.id === id)?.ready
               ? "Cancelar preparado"
               : "Estoy listo"}
