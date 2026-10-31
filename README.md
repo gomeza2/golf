@@ -177,6 +177,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 - `src/camera.ts`, `src/useTurnPresentation.ts`, `src/useFullscreen.ts`, `src/HoleMap.tsx`: cámara, cambios de jugador, pantalla completa y minimapa.
 - `.github/workflows/pages.yml`, `scripts/serve-pages.mjs`, `tests/pages/`: publicación y comprobación del juego compilado en su ruta pública.
 - `src/CircuitPicker.tsx`: selección de recorrido compartida por los menús y el lobby.
+- `src/localRound.ts`, `src/useLocalRecovery.ts`, `src/SavedRound.tsx`: snapshot físico, validación, guardado periódico y recuperación de la partida local.
 - `src/storage.ts`: preferencias y sesiones tolerantes a datos corruptos o almacenamiento bloqueado.
 - `src/audio.ts`, `src/style.css`: audio y presentación adaptable.
 - `server/index.ts`: salas, invitaciones, sesiones, validación de mensajes y servidor HTTP.
@@ -184,7 +185,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye siete opciones de recorrido (18 hoyos distintos, con vuelta completa), selección local/online y revancha. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
+Incluye ocho opciones de recorrido (21 hoyos distintos, con vueltas de 9/18), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
 
 El rendimiento está limitado a un solo hoyo visible, DPR máximo 1.6, geometría sencilla, sombras de 1024 y una pelota física activa. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 
@@ -213,11 +214,11 @@ El contenedor usa Node 22, usuario sin privilegios y `/health`. La receta del co
 
 ## Avance por fases
 
-- Base y partidas locales: implementadas, con 18 hoyos, clasificación y revancha.
+- Base y partidas locales: implementadas, con 21 hoyos, clasificación, revancha y guardado con recuperación tras recargar.
 - Multijugador: salas privadas autoritativas, 2–8 clientes, reconexión, latencia, invitación con servidor y controles de versión. **Pendiente: disponer de hosting persistente y comprobarlo por Internet.**
 - Experiencia visual y controles: cámara de seguimiento, carga real, césped procedural, agua animada, impactos, guía corta de dirección, Clásico, Retroceso y Precisión.
 - Variedad: rampas, puentes, canales, islas, arena, barreras móviles y elecciones entre ruta segura y salto.
-- Pulido: pruebas automáticas de los 18 hoyos y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
+- Pulido: pruebas automáticas de los 21 hoyos, recuperación y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
 
 ## Récords y objetivos de un jugador
 
@@ -257,7 +258,7 @@ Las medallas dependen de los golpes reales: **Oro** por debajo del par, **Plata*
 
 En online el servidor mantiene su reloj: no se envían comandos de pausa ni de entrenamiento, y esos comandos no están admitidos por el servidor. La inspección online muestra el tiempo restante. Los resultados muestran también el acumulado respecto al par de los hoyos ya completados.
 
-La pausa dura mientras la página siga abierta: no recupera una partida en curso después de recargar. Se conservan las marcas completadas que el navegador permitió guardar. La recuperación persistente de partidas locales es trabajo pendiente; no se presenta como implementada.
+La versión 0.4.0 añade recuperación después de recargar o cerrar la página: desde el catálogo pulsa **Reanudar partida**. Se conserva la simulación completa y se abre en pausa. Consulta **Guardar y recuperar una partida local** para los límites del almacenamiento y del único guardado en curso.
 
 ### Versión 0.2.0 — ritmo, potencia y resultados de golf
 
