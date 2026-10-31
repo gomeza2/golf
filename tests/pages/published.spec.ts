@@ -33,6 +33,19 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   ).toBeVisible();
   await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
   await page.screenshot({ path: "work/pages-catalogue-desktop.png" });
+  await page.getByRole("button", { name: "Ajustes", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Calidad visual", exact: true })
+    .selectOption("low");
+  await expect
+    .poll(() =>
+      page
+        .locator("canvas")
+        .evaluate((c: HTMLCanvasElement) => c.width / c.clientWidth),
+    )
+    .toBeCloseTo(0.8, 2);
+  await page.screenshot({ path: "work/pages-graphics-settings.png" });
+  await page.getByRole("button", { name: "Entendido", exact: true }).click();
   if (!process.env.VITE_SERVER_URL)
     await expect(
       page.getByRole("button", { name: /Jugar online/ }),
@@ -78,6 +91,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await expect(
     page.getByRole("region", { name: "Partida local guardada" }),
   ).toContainText("Riviera Salvaje");
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
   await page.screenshot({ path: "work/pages-recovery-mobile.png" });
   await page
     .getByRole("button", { name: "Reanudar partida", exact: true })
@@ -87,6 +101,10 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   ).toBeVisible();
   await expect(page.locator(".turn-toast strong")).toHaveText("Golfista 2");
   await expect(page.locator(".turn-toast b")).toHaveText("0/12");
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-render-mode",
+    "low",
+  );
   const clock = await page.locator(".shot-top b").innerText();
   await page.waitForTimeout(1000);
   expect(await page.locator(".shot-top b").innerText()).toBe(clock);
@@ -97,7 +115,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   expect(errors).toEqual([]);
   expect(failures).toEqual([]);
   console.log(
-    "PAGES VERIFIED: HTTP 200, all assets loaded, WebGL scene rendered, physical shot completed, next local turn recovered after reload: " +
+    "PAGES VERIFIED: HTTP 200, visual quality changes the real drawing buffer, physical shot completed, next local turn and quality recovered after reload: " +
       baseURL,
   );
 });

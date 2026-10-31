@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.5.0
+
+- Calidad visual Automática, Ahorro y Alta, seleccionable en ajustes y persistente durante y entre partidas.
+- Resolución interna y sombras adaptables mediante observación de fotogramas reales, ventanas de estabilidad y espera entre niveles.
+- Suspensión del dibujo en pestañas ocultas y reinicio de la observación al volver. La simulación local y el reloj online conservan sus reglas anteriores.
+- Geometría fija reutilizada entre actualizaciones; sombras encuadradas para pistas largas y mayor definición en Alta.
+- Se conservan los 21 hoyos, ocho recorridos, controles, física, guardado 0.4.0 y marcas/protocolo v7. Sin dependencias nuevas.
+- 99 pruebas de reglas/física/guardado/calidad, 32 de navegador y cuatro de producción. La prueba pública también cambia el buffer real y recupera la calidad tras recargar.
+
 ## 0.4.0
 
 - Guardado automático de una ronda o práctica local, con reanudación en pausa después de recargar o cerrar la página.

@@ -30,6 +30,8 @@ import { PauseDialog } from "./PauseDialog";
 import { restoreLocalRound } from "./localRound";
 import { useLocalRecovery } from "./useLocalRecovery";
 import { SavedRound } from "./SavedRound";
+import { GraphicsSettings } from "./GraphicsSettings";
+import { isGraphicsMode, type GraphicsMode } from "./graphics";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone, celebrateOutcome } from "./audio";
@@ -110,6 +112,10 @@ function App() {
     [cameraLook, setCameraLook] = useState<CameraLook>(defaultLook),
     [settings, setSettings] = useState(false),
     [volume, setVolume] = useState(Number(readLocal("golf-volume", ".6"))),
+    [graphicsMode, setGraphicsMode] = useState<GraphicsMode>(() => {
+      const saved = readLocal("golf-graphics-mode");
+      return isGraphicsMode(saved) ? saved : "auto";
+    }),
     [ready, setReady] = useState(false);
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
@@ -194,6 +200,10 @@ function App() {
   useEffect(() => {
     saveLocal("golf-volume", String(volume));
   }, [volume]);
+  useEffect(
+    () => saveLocal("golf-graphics-mode", graphicsMode),
+    [graphicsMode],
+  );
   useEffect(() => {
     const key = `${s.hole}:${s.turn}:${s.phase}`;
     if (lastTurn.current && key !== lastTurn.current) {
@@ -583,6 +593,7 @@ function App() {
     >
       <div className={"scene " + (screen === "game" ? "" : "hero-scene")}>
         <Scene
+          graphicsMode={graphicsMode}
           s={screen === "game" ? s : { ...initial, circuit }}
           angle={angle}
           cameraAngle={controls.cameraAngle}
@@ -894,6 +905,7 @@ function App() {
             </button>
             <div className="eyebrow">A TU MANERA</div>
             <h2>Ajustes del club</h2>
+            <GraphicsSettings mode={graphicsMode} onChange={setGraphicsMode} />
             <label className="field">
               Sonido · {Math.round(volume * 100)}%
               <input

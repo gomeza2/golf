@@ -2073,3 +2073,26 @@ button > span {
 .match-builder:has(> .saved-round) > .secondary {
   grid-row: 5;
 }
+.graphics-settings {
+  padding: 12px 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #ffffff26;
+}
+.graphics-settings select {
+  min-height: 44px;
+  width: 100%;
+  padding: 10px;
+  background: #183d35;
+  color: #fff2d1;
+  border: 1px solid #b8c7ac66;
+  border-radius: 7px;
+  font: inherit;
+}
+.graphics-settings p {
+  margin: 8px 0;
+  font-size: 13px;
+}
+.graphics-settings small {
+  color: #c6d1bc;
+  font-size: 11px;
+}

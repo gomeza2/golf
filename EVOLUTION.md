@@ -23,8 +23,8 @@ Los datos personales se guardan solo para partidas locales de un jugador, en un 
 ## Comprobaciones de esta entrega
 
 - Compilación TypeScript, cliente Vite y servidor Node completada; también con base `/golf/` y modo estático.
-- 92 pruebas de reglas, física y recuperación: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
-- 29 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
+- 99 pruebas de reglas, física, recuperación y calidad: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
+- 32 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
 - 4 casos de producción: carga bajo `/golf/`, archivos y WebGL, golpe y cambio de turno reales, descarga interrumpida y script bloqueado con recuperación visible.
 - Capturas revisadas en escritorio y móvil emulado. Faltan sesiones prolongadas en teléfonos físicos y mediciones de salas concurrentes.
 
@@ -73,3 +73,12 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Verificación: diez pruebas nuevas del guardado (92 en total), cinco casos nuevos de navegador (29 en total) y las cuatro comprobaciones de producción. Comparación fotograma a fotograma de una simulación recuperada, una ronda física completa, agua, copa, datos dañados, control fijo, móvil y conservación de marcas sin duplicados.
 - Coste observado en este entorno de desarrollo: aproximadamente 60–62 KB por guardado en las pistas 1, 10 y 18, con cadencia máxima periódica de una vez por segundo más transiciones y eventos de salida. Es una comprobación de tamaño/coste en desarrollo, no un benchmark de teléfonos físicos.
 - Limitaciones: un solo guardado por navegador/origen (compartido entre pestañas), sin PWA y con posible pérdida del último intervalo si se fuerza el cierre antes de ejecutar los eventos de salida. Continúan pendientes el alojamiento público online y las sesiones prolongadas en teléfonos físicos.
+
+## Versión 0.5.0 — calidad y fluidez
+
+- Fases 7 y 11: perfiles Automática/Ahorro/Alta en ajustes, con preferencia persistente. Se puede modificar durante una ronda sin alterar el control de tiro, la partida ni la física.
+- Fase 11: resolución y sombras escalonadas con observación de fotogramas reales. La automática espera al arranque, exige lentitud sostenida para bajar y una estabilidad más larga para subir; hay espera entre cambios. Los intervalos de segundo plano se descartan.
+- Fase 11: se detiene el bucle de dibujo en pestañas ocultas. Se reutilizan geometría y listas estáticas por hoyo. El encuadre de sombras se adapta al tamaño del campo; Alta permite DPR 2 y sombras 2048.
+- Fase 12: siete pruebas nuevas del presupuesto visual (99 en total), tres casos nuevos de navegador (32 en total) y cuatro de producción. Se comprueban buffers reales de móvil, persistencia, conservación de reloj/pelota/golpes al cambiar calidad y detención/reanudación de llamadas reales a WebGL. La prueba pública incluye Ahorro y recuperación de la preferencia.
+- Reglas y protocolo v7 conservados: los guardados de 0.4.0 y las marcas siguen siendo compatibles. No se modifican geometrías físicas, potencia, golpes ni puntuaciones.
+- Límites: reducir píxeles y sombras no equivale a una medida de mejora de FPS en teléfonos físicos. Continúan pendientes esas sesiones prolongadas y el alojamiento público del servidor online.
