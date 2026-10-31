@@ -77,7 +77,7 @@ test("a real points duel awards completed aces, survives reload and keeps scores
   await page.getByRole("button", { name: "Controles", exact: true }).click();
   await expect(page.locator(".match-format-picker")).toHaveCount(0);
 });
-test("points require two players, removing a rival restores strokes and online remains classic", async ({
+test("local points require two players, removing a rival restores strokes and online offers both formats", async ({
   page,
 }) => {
   await page.goto("/");
@@ -100,7 +100,10 @@ test("points require two players, removing a rival restores strokes and online r
   await page.getByRole("button", { name: /Volver al club/ }).click();
   await page.getByRole("button", { name: /Jugar online/ }).click();
   await expect(page.locator(".setup")).toContainText(
-    "El Duelo por puntos es local",
+    "Online utiliza control Clásico",
   );
-  await expect(page.locator(".match-format-picker")).toHaveCount(0);
+  await expect(page.locator(".match-format-picker")).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: /Duelo por puntos/ }),
+  ).toBeEnabled();
 });

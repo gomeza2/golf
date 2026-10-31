@@ -1,9 +1,10 @@
-import { TURN_SECONDS, RULES_VERSION } from "../shared/rules";
+import { TURN_SECONDS, NETWORK_PROTOCOL } from "../shared/rules";
 import { APP_VERSION, GAME_NAME } from "./release";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { io, type Socket } from "socket.io-client";
 import { normalizeServerUrl } from "./serverUrl";
+import { PUBLIC_SERVER_URL } from "./onlineServer";
 import { FixedStepper } from "../shared/timing";
 import { wrapAngle } from "../shared/shot";
 import { Game, initPhysics, type State } from "../shared/game";
@@ -32,6 +33,7 @@ import { useLocalRecovery } from "./useLocalRecovery";
 import { SavedRound } from "./SavedRound";
 import { GraphicsSettings } from "./GraphicsSettings";
 import { MatchFormatPicker } from "./MatchFormatPicker";
+import { ConnectionSettings } from "./ConnectionSettings";
 import type { MatchFormat } from "../shared/scoring";
 import { isGraphicsMode, type GraphicsMode } from "./graphics";
 import { Scene } from "./Scene";
@@ -60,6 +62,9 @@ const initial: State = {
   host: "",
   code: "",
 };
+const defaultServerUrl =
+  import.meta.env.VITE_SERVER_URL ||
+  (import.meta.env.VITE_STATIC_HOST === "true" ? PUBLIC_SERVER_URL : "");
 function App() {
   const [s, setS] = useState<State>(initial),
     [screen, setScreen] = useState<"home" | "local" | "online" | "game">(
@@ -67,7 +72,8 @@ function App() {
     ),
     [serverUrl, setServerUrl] = useState(
       new URLSearchParams(location.search).get("server") ||
-        readLocal("golf-server-url", import.meta.env.VITE_SERVER_URL || ""),
+        readLocal("golf-server-url") ||
+        defaultServerUrl,
     ),
     [mode, setMode] = useState<"local" | "online">("local"),
     [circuit, setCircuit] = useState<CircuitId>("sunset"),
@@ -89,12 +95,14 @@ function App() {
     }),
     [name, setName] = useState(readLocal("golf-name")),
     [matchFormat, setMatchFormat] = useState<MatchFormat>("strokes"),
+    [onlineFormat, setOnlineFormat] = useState<MatchFormat>("strokes"),
     [code, setCode] = useState(
       new URLSearchParams(location.search).get("room") || "",
     ),
     [error, setError] = useState(""),
     [latency, setLatency] = useState<number | null>(null),
     [status, setStatus] = useState("Sin conexión"),
+    [disconnectGrace, setDisconnectGrace] = useState(90),
     [id, setId] = useState(""),
     [angle, setAngle] = useState(0),
     [power, setPower] = useState(0.55),
@@ -487,20 +495,37 @@ function App() {
         "action",
         saved && type === "resume"
           ? { type: "resume", ...saved }
-          : { type, name, code: code.trim().toUpperCase(), circuit },
+          : {
+              type,
+              name,
+              code: code.trim().toUpperCase(),
+              circuit,
+              ...(type === "create" ? { format: onlineFormat } : {}),
+            },
       );
     });
     sock.on("session", (session) => {
       if (socket.current !== sock) return;
-      if (session.protocol !== RULES_VERSION) {
+      if (session.protocol !== NETWORK_PROTOCOL) {
         setError(
-          "El servidor necesita actualizarse para admitir el golpe normal equilibrado",
+          `El servidor y el juego necesitan la misma versión online (protocolo ${NETWORK_PROTOCOL}). Actualiza el servidor y recarga el juego.`,
         );
         setStatus("Servidor de otra versión");
-        sock.disconnect();
+        saveSession(null);
+        sock
+          .timeout(1500)
+          .emit("action", { type: "leave" }, () => sock.disconnect());
+        setTimeout(() => sock.disconnect(), 1600);
         return;
       }
       setStatus("Conectado");
+      setDisconnectGrace(
+        Number.isInteger(session.disconnectGraceSeconds) &&
+          session.disconnectGraceSeconds >= 1 &&
+          session.disconnectGraceSeconds <= 300
+          ? session.disconnectGraceSeconds
+          : 90,
+      );
       setId(session.id);
       setCode(session.code);
       saveSession(session);
@@ -538,7 +563,11 @@ function App() {
       }
       socket.current.emit("action", {
         type,
-        ...(type === "remove" ? { id: value } : { circuit: value }),
+        ...(type === "remove"
+          ? { id: value }
+          : type === "format"
+            ? { format: value }
+            : { circuit: value }),
       });
     } else if (game.current) {
       if (type === "lobby") {
@@ -793,23 +822,15 @@ function App() {
             tu competencia.
           </h2>
           <p className="muted">
-            Online se juega a menos golpes y con control Clásico. El Duelo por
-            puntos es local. Tu preferencia de control se conserva.
+            Online utiliza control Clásico. El anfitrión elige Menos golpes o
+            Duelo por puntos. Tu preferencia de control local se conserva.
           </p>
-          <label className="field">
-            Servidor online
-            <input
-              aria-label="Servidor online"
-              value={serverUrl}
-              onChange={(e) => setServerUrl(e.target.value)}
-              placeholder="https://tu-servidor.example.com"
-              type="url"
-            />
-            <small>
-              Necesitas un servidor del club activo. En desarrollo puedes
-              dejarlo vacío para usar el servidor local.
-            </small>
-          </label>
+          <ConnectionSettings
+            value={serverUrl}
+            onChange={setServerUrl}
+            defaultUrl={defaultServerUrl}
+            required={!onlineAvailable}
+          />
           <label className="field">
             Tu nombre
             <input
@@ -820,7 +841,12 @@ function App() {
             />
           </label>
           <SelectedRound circuit={circuit} onChange={() => setScreen("home")} />
-
+          <MatchFormatPicker
+            value={onlineFormat}
+            players={1}
+            allowWaiting
+            onChange={setOnlineFormat}
+          />
           <button
             className="primary"
             disabled={!name.trim() || !ready || !onlineAvailable}
@@ -868,6 +894,7 @@ function App() {
           s={s}
           mode={mode}
           status={status}
+          disconnectGrace={disconnectGrace}
           serverUrl={serverUrl}
           latency={latency}
           id={id}
@@ -918,6 +945,13 @@ function App() {
             </button>
             <div className="eyebrow">A TU MANERA</div>
             <h2>Ajustes del club</h2>
+            {screen === "game" && mode === "online" && (
+              <p>
+                Una desconexión conserva tu plaza durante {disconnectGrace}{" "}
+                segundos. El reloj sigue corriendo. Si no vuelves a tiempo, se
+                registra el retiro para que tus amigos puedan continuar.
+              </p>
+            )}
             {screen === "game" && s.format === "stableford" && (
               <p>
                 Duelo por puntos: bogey 1, par 2, birdie 3, eagle 4. Doble bogey

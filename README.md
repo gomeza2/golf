@@ -1,6 +1,6 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.6.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.7.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
 ## Jugar desde GitHub Pages
 
@@ -59,7 +59,7 @@ Abre **http://localhost:5173**. Vite reenvía `/socket.io` al servidor en el pue
 
 La partida local no usa el servidor: sigue funcionando si este se apaga. Necesita haber cargado la aplicación; esta versión no incluye instalación PWA ni caché para una primera visita sin red.
 
-### Duelo por puntos · Stableford local
+### Duelo por puntos · Stableford
 
 En **Jugar en este dispositivo**, añade de 2 a 8 jugadores y elige **Duelo por puntos** antes de comenzar. El formato queda fijo durante la ronda y la revancha. Para cambiarlo vuelve a la preparación. **Menos golpes** sigue siendo la opción predeterminada y el modo individual; el entrenamiento también utiliza golpes.
 
@@ -69,18 +69,18 @@ En **Jugar en este dispositivo**, añade de 2 a 8 jugadores y elige **Duelo por 
 - Los honores se conservan como en golf: sale primero quien hizo menos golpes en el hoyo anterior, aunque varios jugadores hayan quedado en cero puntos. Los empates mantienen el orden anterior.
 - La tarjeta muestra puntos, golpes reales y el par de cada hoyo. Los avisos de embocada añaden los puntos ganados. La revancha conserva el formato.
 - El guardado local conserva el duelo, los puntos confirmados, los nombres y el turno. Los guardados clásicos anteriores siguen siendo compatibles. Las rondas por puntos no se mezclan con récords individuales de golpes ni con medallas de entrenamiento.
-- **Este formato es local.** El online sigue usando menos golpes y control Clásico: el servidor no acepta cambiarlo mediante campos enviados por el cliente. Los protocolos y marcas de reglas v7 se conservan porque no cambian los golpes ni las físicas.
+- **También disponible online:** el anfitrión elige el formato al crear la sala o mientras está en el lobby. Los invitados ven la misma selección; cambiarla cancela los preparados de todos. El servidor valida rol, formato y fase. Una vez empezada la ronda se conserva hasta la revancha. Online utiliza control Clásico en ambos formatos. Las marcas y los guardados locales conservan reglas v7; la red utiliza protocolo 8.
 
 ### Online real
 
-1. Abre **Jugar online**, escribe tu nombre, elige el recorrido y crea una sala.
+1. Abre **Jugar online**, escribe tu nombre, elige el recorrido y Menos golpes/Duelo por puntos y crea una sala. La dirección del servidor queda en **Conexión avanzada**; desde el propio enlace del servidor se utiliza automáticamente.
 2. Copia la invitación pulsando el código o comparte sus seis caracteres. Si usas un servidor externo, el enlace también lo identifica. La sala muestra la latencia medida por confirmaciones reales del servidor.
 3. Desde otro navegador/dispositivo abre el enlace, pulsa **Jugar online**, introduce un nombre y entra con el código prellenado.
 4. Todos pulsan **Estoy listo**. El anfitrión inicia cuando hay al menos dos jugadores conectados y preparados.
 5. El servidor calcula cada trayectoria y puntuación, y envía estados 20 veces por segundo. Los navegadores solo envían dirección, potencia y tipo de golpe: los golpes fuera de turno, simultáneos, malformados o fuera de rango se rechazan.
 6. El anfitrión avanza entre hoyos o inicia la revancha. Al terminar puede volver a la sala para cambiar de recorrido sin cambiar el código. Si se desconecta, el rol pasa a otro participante conectado; si todos perdieron la conexión, el primero que recupera una sesión toma el rol.
 
-El anfitrión puede cambiar de recorrido en el lobby: todos deben marcarse preparados otra vez. Puede quitar invitados desconectados para liberar plazas. Al iniciar se excluyen los desconectados; sus sesiones ya no pueden incorporarse a esa partida. **Salir de la sala** libera inmediatamente la plaza y revoca la sesión. **Salir** durante el juego cuenta como retiro: 12 golpes en el hoyo no terminado y en los siguientes, sin más turnos para esa persona. Los retirados aparecen al final de la clasificación. Un corte de red temporal conserva la sesión y las reglas de tiempo, permitiendo recuperarla.
+El anfitrión puede cambiar de recorrido o formato en el lobby: todos deben marcarse preparados otra vez. Repetir la selección del mismo formato no cancela los preparados. Puede quitar invitados desconectados para liberar plazas. Al iniciar se excluyen los desconectados; sus sesiones ya no pueden incorporarse a esa partida. **Salir de la sala** libera inmediatamente la plaza y revoca la sesión. **Salir** durante el juego cuenta como retiro: 12 golpes en el hoyo no terminado y en los siguientes, sin más turnos para esa persona. Los retirados aparecen al final de la clasificación. Un corte de red temporal conserva la sesión durante 90 segundos por defecto, manteniendo el reloj de la partida. Si vence ese plazo, el servidor registra el retiro y revoca la recuperación para que el resto pueda continuar. La configuración `DISCONNECT_GRACE_SECONDS` permite elegir de 1 a 300 segundos; un valor inválido vuelve a 90. Esta política no expulsa de un lobby ni cambia los resultados de partidas ya terminadas.
 
 Para probar en una misma máquina usa dos ventanas de incógnito o perfiles distintos. La sesión se conserva en `sessionStorage`, separada por pestaña. Tras un corte de red, Socket.IO intenta reconectar diez veces; **Recuperar mi sesión** en el menú online permite volver a intentarlo después de recargar. Los tokens de recuperación se entregan solo a su propietario y no aparecen en los estados públicos. No compartas tokens.
 
@@ -149,9 +149,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 112 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
+`npm test`: 122 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
 
-`npm run test:e2e`: 34 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets rechaza el intento de cambiar el online a puntos. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 37 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Tres casos de amigos comprueban dos navegadores/sockets online, reglas del lobby y retiro tras vencer la reconexión; diez pruebas nuevas cubren elección de formato, plazos, podio y reconocimientos. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets comprueba que el cliente no puede cambiar el formato mediante un campo en el comando de inicio. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
 
 `PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública se juega un duelo por puntos real, se cambia la calidad y se recuperan turno y formato tras recargar; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
@@ -168,18 +168,19 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo (7), número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (8), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 
 ### Variables
 
-| Variable          | Uso                                       | Predeterminado          |
-| ----------------- | ----------------------------------------- | ----------------------- |
-| `PORT`            | Puerto del servidor                       | `3001`                  |
-| `CLIENT_ORIGIN`   | Orígenes de navegador admitidos           | `http://localhost:5173` |
-| `VITE_SERVER_URL` | Dirección Socket.IO; vacío = mismo origen | vacío                   |
-| `MAX_PLAYERS`     | Capacidad online, limitada a 2–8          | `8`                     |
+| Variable                   | Uso                                        | Predeterminado          |
+| -------------------------- | ------------------------------------------ | ----------------------- |
+| `PORT`                     | Puerto del servidor                        | `3001`                  |
+| `CLIENT_ORIGIN`            | Orígenes de navegador admitidos            | `http://localhost:5173` |
+| `VITE_SERVER_URL`          | Dirección Socket.IO; vacío = mismo origen  | vacío                   |
+| `DISCONNECT_GRACE_SECONDS` | Segundos para volver tras un corte (1–300) | `90`                    |
+| `MAX_PLAYERS`              | Capacidad online, limitada a 2–8           | `8`                     |
 
 Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del servidor las pierde. Las salas vacías caducan después de 15 minutos. No hay cuentas ni récords online persistentes. Los récords personales del modo solo se guardan en el navegador. Un límite de 200 salas y de mensajes por conexión protege esta primera versión, pero no reemplaza un proxy con límites de conexiones en un despliegue abierto. Usa una única réplica; varias instancias requieren direccionamiento estable por sala, almacenamiento/descubrimiento de salas y pruebas de carga antes de escalar. La CI publica el cliente de Pages; el backend requiere un servicio persistente externo.
 
@@ -193,7 +194,10 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 - `src/serverUrl.ts`: validación de orígenes y conexiones externas.
 - `Dockerfile`, `render.yaml`: despliegue del servidor y del cliente juntos.
 - `shared/game.ts`: reglas, clasificación, turnos y simulación Rapier común a local/servidor.
-- `shared/competition.ts`, `src/MatchFormatPicker.tsx`: puntuación Stableford, empates y selección previa del duelo local.
+- `shared/competition.ts`, `src/MatchFormatPicker.tsx`: puntuación Stableford, empates y selección previa del duelo local/online.
+- `shared/highlights.ts`, `src/FinalPodium.tsx`: podio y reconocimientos basados en resultados completos.
+- `server/disconnections.ts`: plazo de reconexión y retiro de sesiones caducadas.
+- `src/ConnectionSettings.tsx`, `src/onlineServer.ts`, `playwright.online.config.ts`: conexión avanzada y comprobación de la dirección real.
 - `src/Scene.tsx`: representación 3D, cámara, materiales, obstáculos y pelotas interpoladas.
 - `src/graphics.ts`, `src/RenderQuality.tsx`, `src/GraphicsSettings.tsx`: presupuesto visual automático, perfiles, suspensión en segundo plano y preferencia gráfica.
 - `src/main.tsx`: flujos de inicio, conexión online, sesión local y controles.
@@ -211,7 +215,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye ocho opciones de recorrido (21 hoyos distintos, con vueltas de 9/18), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade una competición local con reglas Stableford y las mismas físicas. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
+Incluye ocho opciones de recorrido (21 hoyos distintos, con vueltas de 9/18), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade competición local y online con reglas Stableford y las mismas físicas. El final multijugador muestra un podio y reconocimientos calculados a partir de los hoyos completados: ases, hoyos bajo par y vueltas sin penalizaciones ni límites. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
 
 El motor mantiene un solo hoyo visible y una pelota física activa. La calidad automática adapta resolución y sombras; Ahorro las desactiva y Alta permite DPR 2 con sombras de 2048. La geometría fija de cada pista se reutiliza entre actualizaciones y el renderizado se detiene en segundo plano. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 
@@ -221,13 +225,27 @@ La compilación avisa de los chunks grandes de Three.js y Rapier: el motor de f�
 
 El servidor está implementado y las salas se prueban con clientes reales. **Este repositorio no incluye una cuenta de hosting ni un servidor público ya contratado/configurado.** Pages no ejecuta Node.
 
-### Render (configuración preparada)
+### Render · ponerlo online con una cuenta propia
 
-1. Crea un Blueprint en Render conectado a `gomeza2/golf`: detectará `render.yaml`.
-2. Configura `CLIENT_ORIGIN=https://gomeza2.github.io,https://NOMBRE-REAL.onrender.com` usando la URL real asignada al servicio. El propio origen del servidor también está permitido automáticamente.
-3. Render instala, compila, arranca Node y comprueba `/health`. El plan gratuito puede dormir: el primer acceso tardará en reactivarlo; para partidas continuas usa un servicio que permanezca activo.
-4. En Pages, abre **Conectar un servidor**, pega la URL HTTPS de Render y crea la sala. Comparte el enlace generado, que incluye el servidor. Alternativamente configura `VITE_SERVER_URL` en GitHub y vuelve a publicar.
-5. Comprueba una sala desde dos dispositivos/redes distintas antes de considerar validado el acceso público.
+Solo el propietario necesita una cuenta de Render. Los jugadores entran con su nombre y el código/enlace, sin registrarse.
+
+1. [Crea una cuenta en Render](https://dashboard.render.com/register) usando GitHub y permite acceso a `gomeza2/golf`.
+2. [Instala el servidor desde este repositorio](https://render.com/deploy?repo=https://github.com/gomeza2/golf). Render leerá `render.yaml`: servicio Node **hoyo-en-uno-golf-club**, construcción y arranque automáticos, plan **Free**, capacidad 8 y reconexión de 90 segundos. Revisa que figure Free antes de confirmar; la disponibilidad y condiciones finales son las que muestre Render.
+3. Espera a que termine el despliegue y figure **Live**. Abre la URL HTTPS asignada, por ejemplo `https://NOMBRE-ASIGNADO.onrender.com`. Esa dirección sirve **el juego y el servidor juntos**: no necesitas rellenar la dirección avanzada para jugar desde ella.
+4. Crea una sala, copia la invitación y entra desde otro navegador o dispositivo. Prueba ambos formatos y una reconexión. `https://NOMBRE-ASIGNADO.onrender.com/health` debe responder con protocolo 8 y la versión actual.
+5. Para activar además el acceso online predeterminado desde GitHub Pages, conserva la URL real en `src/onlineServer.ts`, o configura `VITE_SERVER_URL` en GitHub y publica. Esa URL es pública, no una contraseña. El código ya acepta `https://gomeza2.github.io` y el origen propio del servidor.
+
+El plan Free puede dormir por inactividad y tardar en despertar. Las salas están en memoria: un reinicio/despliegue las pierde. No se afirma que haya un servidor público activo hasta verificar la URL real con dos clientes.
+
+#### Comprobar la URL real
+
+```sh
+PUBLIC_ONLINE_URL=https://NOMBRE-ASIGNADO.onrender.com npm run test:online
+```
+
+Este comando espera a que `/health` responda con el protocolo correcto y ejecuta dos pruebas con sockets y navegadores contra ese servidor, sin arrancar un servidor de prueba. Comprueba dos embocadas físicas, puntuaciones compartidas, permisos, cambios de reglas y recuperación. Si solo se usa `http://localhost:3001`, se verifica la instalación propia, sin declarar acceso por Internet.
+
+Al configurar `PUBLIC_SERVER_URL` en `src/onlineServer.ts`, la publicación de Pages ejecuta esa comprobación antes de desplegar. En Render espera el commit de la publicación (`RENDER_GIT_COMMIT`); en otros hostings puede informarse mediante `APP_COMMIT`. Sin URL configurada indica explícitamente que se omite la comprobación pública; el servidor local se sigue probando en `test:e2e`. Desarrollo y la aplicación servida por Node conservan conexión al mismo origen. `VITE_SERVER_URL` permite sobrescribir el destino cuando haga falta.
 
 ### Contenedor o VPS
 
@@ -270,7 +288,7 @@ Pulsa **Mirar** para explorar: arrastra con ratón o tacto, o usa los botones de
 
 La copa tiene aro e interior gris, caída visible y mástil centrado con colisión. La flecha gana grosor, contraste y marcas cortas sin predecir posiciones finales. Se suavizan las esquinas de los obstáculos, se cierran rendijas laterales accidentales y se corrige la unión de la rampa de entrenamiento. Los tres primeros hoyos reciben trazados revisados; todos los campos comparten las mejoras de presentación, copa y bordes.
 
-La potencia se calibra con distancias reales de rodamiento del motor sobre césped plano. Entre 20 y 100 % se busca una distancia de referencia aproximadamente proporcional al porcentaje, no una velocidad proporcional: 50 % recorre unos 13 m, 60 % unos 15,5 m y 100 % unos 26 m en la pista de medición sin obstáculos. Por debajo del 20 % una transición suave permite golpes cortos. La velocidad máxima es 16,2 (+2,5 % respecto a v6), siempre con lanzamiento vertical cero. Arena, pendientes, paredes y agua modifican el resultado real. La guía sigue corta y no muestra el punto final. Servidor y cliente usan protocolo 7; los récords anteriores permanecen separados en sus claves v5.
+La potencia se calibra con distancias reales de rodamiento del motor sobre césped plano. Entre 20 y 100 % se busca una distancia de referencia aproximadamente proporcional al porcentaje, no una velocidad proporcional: 50 % recorre unos 13 m, 60 % unos 15,5 m y 100 % unos 26 m en la pista de medición sin obstáculos. Por debajo del 20 % una transición suave permite golpes cortos. La velocidad máxima es 16,2 (+2,5 % respecto a v6), siempre con lanzamiento vertical cero. Arena, pendientes, paredes y agua modifican el resultado real. La guía sigue corta y no muestra el punto final. Servidor y cliente usan protocolo de red 8; las reglas físicas y marcas siguen en v7; los récords anteriores permanecen separados en sus claves v5.
 
 Consulta [RESEARCH.md](RESEARCH.md) para las fuentes primarias, decisiones y límites de la investigación.
 

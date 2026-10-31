@@ -1,6 +1,6 @@
 {
   "name": "hoyo-en-uno-golf-club",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,7 @@
     "start": "node --env-file-if-exists=.env dist-server/index.js",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:online": "playwright test --config=playwright.online.config.ts",
     "test:pages": "playwright test --config=playwright.pages.config.ts"
   },
   "dependencies": {

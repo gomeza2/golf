@@ -25,6 +25,8 @@ import { holeOutcome, relativeLabel } from "../shared/scoring";
 import { PracticeSummary } from "./Training";
 import type { PracticeReport } from "./practiceRecords";
 import { useFullscreen } from "./useFullscreen";
+import { MatchFormatPicker } from "./MatchFormatPicker";
+import { FinalPodium } from "./FinalPodium";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
   practiceReport: PracticeReport | null;
@@ -36,6 +38,7 @@ type Props = {
   roundReport: RoundReport | null;
   mode: "local" | "online";
   status: string;
+  disconnectGrace: number;
   serverUrl: string;
   latency: number | null;
   id: string;
@@ -69,6 +72,7 @@ export function GamePanels({
   roundReport,
   mode,
   status,
+  disconnectGrace,
   serverUrl,
   latency,
   id,
@@ -167,10 +171,21 @@ export function GamePanels({
             onChange={(id) => action("circuit", id)}
             disabled={!isHost || status !== "Conectado"}
           />
+          <MatchFormatPicker
+            value={s.format ?? "strokes"}
+            players={s.players.length}
+            allowWaiting
+            disabled={!isHost || status !== "Conectado"}
+            onChange={(format) => action("format", format)}
+          />
           <p className="muted">
-            Cambiar el recorrido cancela el estado preparado. Al comenzar solo
-            entran los invitados conectados.
+            Cambiar el recorrido o el formato cancela el estado preparado. Al
+            comenzar solo entran los invitados conectados.
           </p>
+          <small className="muted">
+            Una desconexión durante la partida conserva la plaza{" "}
+            {disconnectGrace} segundos; después se registra el retiro.
+          </small>
           <div className="players">
             {s.players.map((p, i) => (
               <div key={p.id}>
@@ -196,7 +211,11 @@ export function GamePanels({
               </div>
             ))}
           </div>
-          <button className="secondary" onClick={() => action("ready")}>
+          <button
+            className="secondary"
+            disabled={status !== "Conectado"}
+            onClick={() => action("ready")}
+          >
             {s.players.find((p) => p.id === id)?.ready
               ? "Cancelar preparado"
               : "Estoy listo"}
@@ -605,6 +624,7 @@ export function GamePanels({
               Albatros: 5. El hoyo en uno puntúa según el par.
             </div>
           )}
+          <FinalPodium state={s} />
           <div className="table-wrap">
             <table>
               <thead>

@@ -28,6 +28,8 @@ jobs:
           VITE_STATIC_HOST: "true"
           VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
       - run: npx playwright install --with-deps chromium
+      - name: Verify a configured public online server before publishing
+        run: node --import tsx scripts/verify-configured-online.ts
       - name: Verify the production build under the Pages path
         run: npm run test:pages
         env:
