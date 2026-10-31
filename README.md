@@ -223,7 +223,7 @@ La compilación avisa de los chunks grandes de Three.js y Rapier: el motor de f�
 
 ## Despliegue del online por Internet
 
-El servidor está implementado y las salas se prueban con clientes reales. **Este repositorio no incluye una cuenta de hosting ni un servidor público ya contratado/configurado.** Pages no ejecuta Node.
+El servidor público configurado es **https://hoyo-en-uno-golf-club.onrender.com**. Sirve el juego y las salas juntos; GitHub Pages se conecta a esa misma dirección. La publicación de Pages comprueba el servidor con dos clientes reales antes de activar una actualización. Pages por sí solo no ejecuta Node.
 
 ### Render · ponerlo online con una cuenta propia
 

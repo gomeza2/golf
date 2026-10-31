@@ -2,6 +2,7 @@
 
 ## 0.7.0
 
+- Dirección pública de Render configurada para entrar online desde Pages sin escribir una URL avanzada. La publicación queda condicionada a la comprobación del servidor público con dos clientes reales.
 - Duelo por puntos también online: selección del anfitrión en el lobby, preparados reiniciados al cambiar reglas y formato conservado durante la partida/revancha. El cliente no puede sobrescribirlo al iniciar.
 - Podio multijugador y reconocimientos de la vuelta basados en resultados reales, con empates compartidos y exclusión de retiros/límites cuando corresponde.
 - Plazo de reconexión de 90 segundos, configurable: al vencer se registra retiro y se revoca la sesión. Un corte breve conserva la plaza; la partida continúa para los demás.
