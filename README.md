@@ -1,6 +1,6 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.4.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.5.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
 ## Jugar desde GitHub Pages
 
@@ -19,6 +19,18 @@ El juego se llama **Hoyo en Uno · Golf Club**. La URL del repositorio se conser
 - Durante la partida se utiliza todo el viewport, con cámara en tercera persona detrás de la pelota activa. Sigue su posición completa y mantiene la dirección del golpe durante el movimiento para evitar giros bruscos en los rebotes.
 - Al pasar el turno, la cámara conserva brevemente el final del golpe y se desplaza al siguiente jugador. Se muestra su nombre y se bloquea el golpe durante esa transición. En local también se pausa el reloj durante la presentación; online el servidor mantiene su tiempo autoritativo.
 - **Ver campo** conserva la vista general. **Mapa** despliega una vista cenital con paredes, obstáculos móviles y pelotas reales. **Pantalla completa** utiliza la API del navegador si está disponible; al salir de la partida se abandona también ese modo.
+
+### Calidad visual y fluidez
+
+En **Ajustes → Calidad visual** elige:
+
+- **Automática** (predeterminada): observa intervalos reales entre fotogramas. Espera dos segundos al arrancar; baja un nivel después de dos ventanas lentas de dos segundos (menos de 40 FPS). Para subir exige cuatro ventanas estables por encima de 56 FPS. Entre cambios espera seis segundos para evitar oscilaciones. No usa el reloj ni la puntuación de la partida.
+- **Ahorro**: resolución interna de hasta 0,8 veces el tamaño CSS y sin sombras dinámicas. La interfaz conserva su nitidez y tamaño.
+- **Alta**: resolución de hasta 2 veces el tamaño CSS, limitada por la densidad real de la pantalla, y sombras de 2048. Puede exigir más batería y potencia gráfica.
+
+La opción automática usa tres niveles: resolución 0,8 / 1,2 / 1,6 y sombras desactivadas / 512 / 1024. El nivel inferior dibuja un cuarto de los píxeles del superior en pantallas de densidad suficiente; eso mide el tamaño del buffer, **no una mejora garantizada de FPS**. Las sombras se encuadran según el tamaño de la pista para cubrir también los hoyos largos.
+
+La preferencia se conserva en `golf-graphics-mode`. Puede cambiarse durante la partida desde ajustes; el control de tiro sigue bloqueado como antes. Cambiar calidad conserva la simulación, el guardado y los récords de reglas v7. En segundo plano se suspende el bucle de dibujo; al volver se reinicia la observación del rendimiento para no interpretar la ausencia de fotogramas como lentitud. En online el servidor mantiene el partido y su reloj.
 
 ## Instalar y jugar
 
@@ -125,9 +137,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 92 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
+`npm test`: 99 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
 
-`npm run test:e2e`: 29 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 32 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
 
 `PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública solo se ejecuta la partida real; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
@@ -170,6 +182,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 - `Dockerfile`, `render.yaml`: despliegue del servidor y del cliente juntos.
 - `shared/game.ts`: reglas, clasificación, turnos y simulación Rapier común a local/servidor.
 - `src/Scene.tsx`: representación 3D, cámara, materiales, obstáculos y pelotas interpoladas.
+- `src/graphics.ts`, `src/RenderQuality.tsx`, `src/GraphicsSettings.tsx`: presupuesto visual automático, perfiles, suspensión en segundo plano y preferencia gráfica.
 - `src/main.tsx`: flujos de inicio, conexión online, sesión local y controles.
 - `src/GamePanels.tsx`: lobby, HUD de partida y resultados.
 - `src/boot.ts`, `index.html` y el manifiesto generado por Vite: carga inicial por bytes y preparación real.
@@ -187,7 +200,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 Incluye ocho opciones de recorrido (21 hoyos distintos, con vueltas de 9/18), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
 
-El rendimiento está limitado a un solo hoyo visible, DPR máximo 1.6, geometría sencilla, sombras de 1024 y una pelota física activa. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
+El motor mantiene un solo hoyo visible y una pelota física activa. La calidad automática adapta resolución y sombras; Ahorro las desactiva y Alta permite DPR 2 con sombras de 2048. La geometría fija de cada pista se reutiliza entre actualizaciones y el renderizado se detiene en segundo plano. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 
 La compilación avisa de los chunks grandes de Three.js y Rapier: el motor de físicas incluye su WASM. Están separados para caché; el servidor comprime los assets con gzip (aproximadamente 1.2 MB de JavaScript comprimido en total). Conviene mantener compresión y caché al desplegar.
 

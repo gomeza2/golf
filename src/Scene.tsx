@@ -26,6 +26,14 @@ import type { ControlMode } from "./shotControls";
 import type { useShotControls } from "./useShotControls";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { followPose, turnAngle, type CameraLook } from "./camera";
+import {
+  renderProfile,
+  updateShadow,
+  type GraphicsMode,
+  type QualityTier,
+  type RenderProfile,
+} from "./graphics";
+import { RenderQuality } from "./RenderQuality";
 function Box({
   b,
   time,
@@ -318,6 +326,7 @@ function World({
   onPower,
   focusId,
   onAim,
+  rendering,
 }: {
   s: State;
   angle: number;
@@ -333,11 +342,12 @@ function World({
   overview: boolean;
   focusId?: string;
   onAim: (a: number) => void;
+  rendering: RenderProfile;
 }) {
   const c = getCourse(s),
-    theme = getCircuit(s.circuit),
-    shape = geometry(c),
-    dimensions = courseSize(c);
+    theme = getCircuit(s.circuit);
+  const shape = useMemo(() => geometry(c), [c]);
+  const dimensions = useMemo(() => courseSize(c), [c]);
   const grass = useGrassTexture();
   const drag = useRef<{
     x: number;
@@ -367,14 +377,18 @@ function World({
     return () => window.removeEventListener("blur", reset);
   }, []);
   const p = s.players[s.turn]?.pos || c.start;
-  const blocks = shape.walls
-    .map((b): Block => ({ ...b, color: theme.edge }))
-    .concat(
-      c.blocks.map((b) => ({
-        ...b,
-        color: b.color || (b.moving ? theme.accent : theme.edge),
-      })),
-    );
+  const blocks = useMemo(
+    () =>
+      shape.walls
+        .map((b): Block => ({ ...b, color: theme.edge }))
+        .concat(
+          c.blocks.map((b) => ({
+            ...b,
+            color: b.color || (b.moving ? theme.accent : theme.edge),
+          })),
+        ),
+    [shape, c, theme],
+  );
   return (
     <>
       <color attach="background" args={[theme.background]} />
@@ -389,15 +403,28 @@ function World({
       <ambientLight intensity={1.15} />
       <hemisphereLight args={["#e9fff5", "#6b7050", 1.3]} />
       <directionalLight
+        onUpdate={updateShadow}
         position={[-12, 25, 8]}
         intensity={s.circuit === "moonlight" ? 2 : 3}
         color={s.circuit === "moonlight" ? "#a6d8ff" : "#ffe2b2"}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        castShadow={rendering.shadowSize > 0}
+        shadow-mapSize={[
+          Math.max(1, rendering.shadowSize),
+          Math.max(1, rendering.shadowSize),
+        ]}
+        shadow-camera-left={
+          -Math.max(dimensions.width, dimensions.length) * 0.65 - 4
+        }
+        shadow-camera-right={
+          Math.max(dimensions.width, dimensions.length) * 0.65 + 4
+        }
+        shadow-camera-top={
+          Math.max(dimensions.width, dimensions.length) * 0.65 + 4
+        }
+        shadow-camera-bottom={
+          -Math.max(dimensions.width, dimensions.length) * 0.65 - 4
+        }
+        shadow-normalBias={0.025}
       />
       <Camera
         s={s}
@@ -594,8 +621,21 @@ function World({
     </>
   );
 }
-export function Scene(props: Parameters<typeof World>[0]) {
+export function Scene({
+  graphicsMode,
+  ...props
+}: Omit<Parameters<typeof World>[0], "rendering"> & {
+  graphicsMode: GraphicsMode;
+}) {
   const [failed, setFailed] = useState(false);
+  const [visible, setVisible] = useState(!document.hidden);
+  const [tier, setTier] = useState<QualityTier>(2);
+  const profile = renderProfile(graphicsMode, tier, window.devicePixelRatio);
+  useEffect(() => {
+    const update = () => setVisible(!document.hidden);
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
   if (failed)
     return (
       <div className="webgl-error">
@@ -605,8 +645,9 @@ export function Scene(props: Parameters<typeof World>[0]) {
     );
   return (
     <Canvas
-      shadows
-      dpr={[1, 1.6]}
+      shadows={profile.shadowSize > 0 ? "soft" : false}
+      dpr={profile.ratio}
+      frameloop={visible ? "always" : "never"}
       camera={{ position: [19, 28, 26], fov: 43, near: 0.1, far: 1000 }}
       onCreated={({ gl }) =>
         gl.domElement.addEventListener("webglcontextlost", () =>
@@ -616,7 +657,13 @@ export function Scene(props: Parameters<typeof World>[0]) {
       fallback={<NoGraphics />}
     >
       <Suspense fallback={null}>
-        <World {...props} />
+        <RenderQuality
+          mode={graphicsMode}
+          tier={tier}
+          visible={visible}
+          onTier={setTier}
+        />
+        <World {...props} rendering={profile} />
       </Suspense>
     </Canvas>
   );
