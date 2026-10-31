@@ -53,7 +53,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Añadir jugador/ }).click();
+  await page.getByRole("button", { name: /Duelo por puntos/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.locator(".hole-hud")).toContainText("DUELO POR PUNTOS");
   await expect(
     page.getByRole("heading", { name: /Las dos orillas/ }),
   ).toBeVisible();
@@ -91,6 +93,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await expect(
     page.getByRole("region", { name: "Partida local guardada" }),
   ).toContainText("Riviera Salvaje");
+  await expect(
+    page.getByRole("region", { name: "Partida local guardada" }),
+  ).toContainText("Duelo por puntos");
   await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
   await page.screenshot({ path: "work/pages-recovery-mobile.png" });
   await page
@@ -101,6 +106,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   ).toBeVisible();
   await expect(page.locator(".turn-toast strong")).toHaveText("Golfista 2");
   await expect(page.locator(".turn-toast b")).toHaveText("0/12");
+  await expect(page.locator(".leaderboard")).toContainText(
+    "PUNTOS CONFIRMADOS",
+  );
   await expect(page.locator("canvas")).toHaveAttribute(
     "data-render-mode",
     "low",
@@ -115,7 +123,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   expect(errors).toEqual([]);
   expect(failures).toEqual([]);
   console.log(
-    "PAGES VERIFIED: HTTP 200, visual quality changes the real drawing buffer, physical shot completed, next local turn and quality recovered after reload: " +
+    "PAGES VERIFIED: HTTP 200, real points duel and visual quality, physical shot completed, points format, turn and quality recovered after reload: " +
       baseURL,
   );
 });

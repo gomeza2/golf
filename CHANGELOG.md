@@ -1,5 +1,13 @@
 # Hoyo en Uno · Golf Club
 
+## 0.6.0
+
+- Duelo por puntos local para 2–8 jugadores: puntuación Stableford basada en par y golpes reales, clasificación, desempates y resultados por hoyo.
+- Formato elegido antes de empezar, fijo en la ronda/revancha y conservado al recuperar la partida. Menos golpes sigue siendo el predeterminado; solo y entrenamiento conservan su puntuación.
+- Puntos confirmados al completar el hoyo, avisos de puntos, tarjeta con golpes reales y nueva fila de par por hoyo. Honores por menos golpes del hoyo anterior.
+- Guardados clásicos y marcas v7 conservados; los duelos no generan récords individuales de golpes. Online sigue a menos golpes y rechaza el intento de cambiar de formato.
+- 112 pruebas unitarias, 34 casos de navegador y cuatro de producción. Una vuelta física completa con dos jugadores y recuperación termina 12–6 puntos, sin penalizaciones ni recolocación. La prueba pública también juega y recupera el formato.
+
 ## 0.5.0
 
 - Calidad visual Automática, Ahorro y Alta, seleccionable en ajustes y persistente durante y entre partidas.

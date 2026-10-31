@@ -41,6 +41,7 @@ export function SavedRound({
       <div className="eyebrow">TU VUELTA TE ESPERA</div>
       <strong>{circuit.name}</strong>
       <p>
+        {state.format === "stableford" ? "Duelo por puntos · " : ""}
         {state.practice
           ? "Entrenamiento"
           : `${state.players.length} ${state.players.length === 1 ? "jugador" : "jugadores"}`}{" "}

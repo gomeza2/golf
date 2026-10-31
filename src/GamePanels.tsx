@@ -5,7 +5,14 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { ranking, total, position, canStart, type State } from "../shared/game";
+import { total, canStart, type State } from "../shared/game";
+import {
+  pointsMatch,
+  matchRanking,
+  matchPosition,
+  confirmedPoints,
+  holePoints,
+} from "../shared/competition";
 import { wrapAngle } from "../shared/shot";
 import { getCourse, getCircuit, courseSize, colors } from "../shared/courses";
 import { controlModes, type ControlMode } from "./shotControls";
@@ -113,13 +120,9 @@ export function GamePanels({
         )
       : null;
   const isHost = mode === "local" || s.host === id;
-  const sorted = ranking(s.players),
-    winners = sorted.filter(
-      (p) =>
-        !p.withdrawn &&
-        total(p) === total(sorted[0]) &&
-        p.aces === sorted[0].aces,
-    );
+  const points = pointsMatch(s);
+  const sorted = matchRanking(s),
+    winners = sorted.filter((p) => !p.withdrawn && matchPosition(p, s) === 1);
   const winnerLabel =
     s.players.length === 1 && !s.players[0].withdrawn
       ? "Tu vuelta, tu marca."
@@ -214,10 +217,14 @@ export function GamePanels({
       )}
       {s.phase === "playing" && (
         <>
-          <ScoreFeedback event={s.event} time={s.time} />
+          <ScoreFeedback event={s.event} time={s.time} points={points} />
           <div className="hole-hud">
             <div className="eyebrow">
-              {s.practice ? "ENTRENAMIENTO · " : ""}
+              {s.practice
+                ? "ENTRENAMIENTO · "
+                : points
+                  ? "DUELO POR PUNTOS · "
+                  : ""}
               {circuit.name.toUpperCase()}
             </div>
             <h2>
@@ -232,14 +239,14 @@ export function GamePanels({
           </div>
           <aside className="leaderboard">
             <div className="eyebrow">
-              CLASIFICACIÓN{" "}
+              {points ? "PUNTOS CONFIRMADOS" : "CLASIFICACIÓN"}{" "}
               {mode === "online"
                 ? "· " + status + (latency !== null ? ` · ${latency} ms` : "")
                 : ""}
             </div>
-            {ranking(s.players).map((p, i) => (
+            {sorted.map((p) => (
               <div className={p.id === current.id ? "active" : ""} key={p.id}>
-                <span>{position(p, s.players)}</span>
+                <span>{matchPosition(p, s)}</span>
                 <i style={{ background: colors[s.players.indexOf(p)] }} />
                 <strong>
                   {p.name}
@@ -249,7 +256,7 @@ export function GamePanels({
                       ? " · sin red"
                       : ""}
                 </strong>
-                <b>{total(p)}</b>
+                <b>{points ? `${confirmedPoints(p, s)} pt` : total(p)}</b>
               </div>
             ))}
           </aside>
@@ -566,6 +573,7 @@ export function GamePanels({
       {(s.phase === "scores" || s.phase === "finished") && (
         <section className="panel results">
           <div className="eyebrow">
+            {points ? "DUELO POR PUNTOS · " : ""}
             {s.practice
               ? "ENTRENAMIENTO INDIVIDUAL"
               : s.phase === "finished"
@@ -577,13 +585,26 @@ export function GamePanels({
               ? soloOutcome.label
               : s.phase === "finished"
                 ? winnerLabel
-                : "Cada golpe cuenta."}
+                : points
+                  ? "Cada hoyo suma."
+                  : "Cada golpe cuenta."}
           </h2>
           <p>
             {s.practice
               ? `${courses[s.hole].name} · Hoyo ${s.hole + 1} · Par ${courses[s.hole].par}. Completa el hoyo con menos golpes.`
-              : "Menor puntuación gana. Desempate por hoyos en uno; si persiste, victoria compartida."}
+              : points
+                ? "Más puntos gana. Desempate por hoyos en uno; si persiste, victoria compartida. Los golpes reales aparecen debajo de cada puntuación."
+                : "Menor puntuación gana. Desempate por hoyos en uno; si persiste, victoria compartida."}
           </p>
+          {points && (
+            <div
+              className="points-key"
+              aria-label="Reglas del Duelo por puntos"
+            >
+              Doble bogey o peor: 0 · Bogey: 1 · Par: 2 · Birdie: 3 · Eagle: 4 ·
+              Albatros: 5. El hoyo en uno puntúa según el par.
+            </div>
+          )}
           <div className="table-wrap">
             <table>
               <thead>
@@ -592,17 +613,30 @@ export function GamePanels({
                   {scoreColumns.map((c) => (
                     <th key={c.hole}>H{c.hole + 1}</th>
                   ))}
-                  <th>TOTAL</th>
+                  <th>{points ? "PUNTOS" : "TOTAL"}</th>
                   <th>ACES</th>
                   <th>PEN.</th>
                 </tr>
+                <tr className="score-par-row" aria-label="Par del recorrido">
+                  <th scope="row">PAR</th>
+                  {scoreColumns.map((c) => (
+                    <td key={c.hole}>{courses[c.hole].par}</td>
+                  ))}
+                  <td>
+                    {scoreColumns.reduce(
+                      (sum, c) => sum + courses[c.hole].par,
+                      0,
+                    )}
+                  </td>
+                  <td colSpan={2} />
+                </tr>
               </thead>
               <tbody>
-                {ranking(s.players).map((p, i) => (
+                {sorted.map((p) => (
                   <tr key={p.id}>
                     <td>
                       <span style={{ color: colors[s.players.indexOf(p)] }}>
-                        {position(p, s.players)} ·{" "}
+                        {matchPosition(p, s)} ·{" "}
                       </span>
                       {p.name}
                       {p.withdrawn ? " · retirado" : ""}
@@ -625,13 +659,40 @@ export function GamePanels({
                       )}
                     </td>
                     {scoreColumns.map((c) => (
-                      <td key={c.hole}>
-                        {p.scores[c.score] ?? "—"}
-                        {p.capped.includes(c.hole) ? "*" : ""}
+                      <td
+                        key={c.hole}
+                        className={points ? "points-cell" : undefined}
+                      >
+                        {points && p.scores[c.score] !== undefined ? (
+                          <>
+                            <b>
+                              {holePoints(
+                                p.scores[c.score],
+                                courses[c.hole].par,
+                                p.capped.includes(c.hole),
+                              )}
+                            </b>
+                            <small>
+                              {p.scores[c.score]}{" "}
+                              {p.scores[c.score] === 1 ? "golpe" : "golpes"}
+                              {p.capped.includes(c.hole) ? "*" : ""}
+                            </small>
+                          </>
+                        ) : (
+                          <>
+                            {p.scores[c.score] ?? "—"}
+                            {p.capped.includes(c.hole) ? "*" : ""}
+                          </>
+                        )}
                       </td>
                     ))}
                     <td>
-                      <b>{total(p)}</b>
+                      <b>{points ? `${confirmedPoints(p, s)} pt` : total(p)}</b>
+                      {points && (
+                        <small className="points-gross">
+                          {total(p)} {total(p) === 1 ? "golpe" : "golpes"}
+                        </small>
+                      )}
                       <small className="relative-par">
                         {total(p) === parPlayed
                           ? "PAR"
