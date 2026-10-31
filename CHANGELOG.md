@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.4.0
+
+- Guardado automático de una ronda o práctica local, con reanudación en pausa después de recargar o cerrar la página.
+- Snapshot completo de Rapier: se conservan la pelota en movimiento, los contactos, las compuertas, el reloj, los resultados, los nombres, el control y el último punto para penalizaciones.
+- Recuperación integrada en el catálogo; salir al club conserva la partida. Descartar o sustituir solo afecta al guardado en curso.
+- Validación de formato/reglas/integridad y avisos ante datos dañados o almacenamiento bloqueado. Online conserva su recuperación por servidor.
+- Se mantienen los 21 hoyos, ocho recorridos, potencia, físicas y récords v7. No se añadieron dependencias ni se cambió el protocolo.
+- 92 pruebas de reglas/física/guardado y 29 de navegador, además de cuatro de producción.
+
 ## 0.3.0
 
 - Club del As: tres hoyos nuevos con puente diagonal/agua, carambola y compuerta/arena; 21 hoyos en total y vueltas de 9/18 conservadas.
@@ -23,4 +32,4 @@
 
 Base de juego publicada en las entregas anteriores: físicas Rapier, 18 hoyos, salas Socket.IO, controles Clásico/Retroceso/Precisión, copa física con bandera centrada, cámara de inspección, récords, entrenamiento individual y pausa. El antiguo nombre era Club del Último Golpe. El registro detallado por fases está en [EVOLUTION.md](EVOLUTION.md).
 
-Pendientes: alojamiento público del servidor online, recuperación de partidas locales tras cerrar la página y sesiones prolongadas en teléfonos físicos.
+Pendientes: alojamiento público del servidor online y sesiones prolongadas en teléfonos físicos. El guardado no incluye una instalación PWA ni una primera carga sin red.

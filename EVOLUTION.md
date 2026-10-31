@@ -23,8 +23,8 @@ Los datos personales se guardan solo para partidas locales de un jugador, en un 
 ## Comprobaciones de esta entrega
 
 - Compilación TypeScript, cliente Vite y servidor Node completada; también con base `/golf/` y modo estático.
-- 82 pruebas de reglas y física: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
-- 24 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
+- 92 pruebas de reglas, física y recuperación: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
+- 29 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
 - 4 casos de producción: carga bajo `/golf/`, archivos y WebGL, golpe y cambio de turno reales, descarga interrumpida y script bloqueado con recuperación visible.
 - Capturas revisadas en escritorio y móvil emulado. Faltan sesiones prolongadas en teléfonos físicos y mediciones de salas concurrentes.
 
@@ -63,3 +63,13 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Fase 12: 82 pruebas de reglas/física y 24 de navegador, además de las cuatro de producción. Dos ases se verifican también a través de la interfaz real, uno en móvil. Las variaciones cercanas de ángulo/potencia no reciben una captura automática. Las rutas anteriores de 18/9 siguen siendo válidas con los nuevos porcentajes.
 - Reglas/protocolo y marcas v7. La versión visible procede de package.json (0.3.0); historial en CHANGELOG. La dificultad se apoya en trazado, fuerza y tiempo, con rutas de recuperación, sin modificar puntuaciones para simular victorias.
 - Fase 13 pendiente: sesiones prolongadas con jugadores humanos y teléfonos físicos, recuperación persistente de rondas locales y hosting público del servidor online.
+
+## Versión 0.4.0 — continuar una vuelta larga
+
+- Fases 8–9 y 11: guardado automático de una ronda o práctica local. El catálogo muestra el recorrido, jugadores, hoyo y control guardados y permite reanudar en pausa. Salir al club conserva el progreso; comenzar otra partida local sustituye el único guardado en curso.
+- Fases 2, 7–8 y 12: snapshot de Rapier con velocidades, contactos, compuertas y reloj. Recupera el golpe en marcha y la caída física en la copa; conserva el punto anterior para una única penalización al agua. No concede un nuevo golpe ni reinicia la potencia.
+- Fases 4 y 10: se conserva el esquema original de la ronda, aunque cambie la preferencia para la próxima. Las marcas completas y de práctica permanecen separadas; terminar borra la recuperación para no volver a contabilizar una práctica completada.
+- Fases 11–12: checksum de la simulación, validación de reglas/formato/estado, límites de tamaño y avisos de datos dañados o cuota bloqueada. Recuperación exclusivamente local; el servidor no recibe estos archivos. El protocolo y las marcas siguen en reglas v7, al no cambiar la física.
+- Verificación: diez pruebas nuevas del guardado (92 en total), cinco casos nuevos de navegador (29 en total) y las cuatro comprobaciones de producción. Comparación fotograma a fotograma de una simulación recuperada, una ronda física completa, agua, copa, datos dañados, control fijo, móvil y conservación de marcas sin duplicados.
+- Coste observado en este entorno de desarrollo: aproximadamente 60–62 KB por guardado en las pistas 1, 10 y 18, con cadencia máxima periódica de una vez por segundo más transiciones y eventos de salida. Es una comprobación de tamaño/coste en desarrollo, no un benchmark de teléfonos físicos.
+- Limitaciones: un solo guardado por navegador/origen (compartido entre pestañas), sin PWA y con posible pérdida del último intervalo si se fuerza el cierre antes de ejecutar los eventos de salida. Continúan pendientes el alojamiento público online y las sesiones prolongadas en teléfonos físicos.
