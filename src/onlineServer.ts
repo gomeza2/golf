@@ -1,3 +1,3 @@
 // Public address, never a password. Used by the static Pages build only.
-// Keep empty until an actual deployed server has been verified.
-export const PUBLIC_SERVER_URL = "";
+// Pages verifies this deployment with two real clients before publishing.
+export const PUBLIC_SERVER_URL = "https://hoyo-en-uno-golf-club.onrender.com";
