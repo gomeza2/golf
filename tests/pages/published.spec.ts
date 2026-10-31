@@ -74,10 +74,30 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await page.getByRole("button", { name: "Salir", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
   await page.screenshot({ path: "work/pages-catalogue-mobile.png" });
+  await page.reload();
+  await expect(
+    page.getByRole("region", { name: "Partida local guardada" }),
+  ).toContainText("Riviera Salvaje");
+  await page.screenshot({ path: "work/pages-recovery-mobile.png" });
+  await page
+    .getByRole("button", { name: "Reanudar partida", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Partida en pausa" }),
+  ).toBeVisible();
+  await expect(page.locator(".turn-toast strong")).toHaveText("Golfista 2");
+  await expect(page.locator(".turn-toast b")).toHaveText("0/12");
+  const clock = await page.locator(".shot-top b").innerText();
+  await page.waitForTimeout(1000);
+  expect(await page.locator(".shot-top b").innerText()).toBe(clock);
+  await page
+    .getByRole("button", { name: "Continuar partida", exact: true })
+    .click();
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   expect(errors).toEqual([]);
   expect(failures).toEqual([]);
   console.log(
-    "PAGES VERIFIED: HTTP 200, all assets loaded, WebGL scene rendered, physical shot completed, next local turn available: " +
+    "PAGES VERIFIED: HTTP 200, all assets loaded, WebGL scene rendered, physical shot completed, next local turn recovered after reload: " +
       baseURL,
   );
 });
