@@ -147,7 +147,12 @@ test("a chosen control preference survives reload but has no switch during play"
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(page.locator(".locked-control")).toContainText("Retroceso");
   await page.getByRole("button", { name: "Controles", exact: true }).click();
-  await expect(page.getByRole("combobox")).toHaveCount(0);
+  await expect(
+    page.getByRole("combobox", { name: "Control del tiro", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("combobox", { name: "Calidad visual", exact: true }),
+  ).toBeVisible();
   await expect(page.locator(".shot-mode-picker")).toHaveCount(0);
 });
 test("mobile controls leave the field visible, turn stays on the side and chosen names persist", async ({
