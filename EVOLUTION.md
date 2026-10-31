@@ -23,8 +23,8 @@ Los datos personales se guardan solo para partidas locales de un jugador, en un 
 ## Comprobaciones de esta entrega
 
 - Compilación TypeScript, cliente Vite y servidor Node completada; también con base `/golf/` y modo estático.
-- 112 pruebas de reglas, física, recuperación, calidad y competición: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
-- 34 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
+- 122 pruebas de reglas, física, recuperación, calidad y competición: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
+- 37 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
 - 4 casos de producción: carga bajo `/golf/`, archivos y WebGL, golpe y cambio de turno reales, descarga interrumpida y script bloqueado con recuperación visible.
 - Capturas revisadas en escritorio y móvil emulado. Faltan sesiones prolongadas en teléfonos físicos y mediciones de salas concurrentes.
 
@@ -91,3 +91,13 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Fases 8 y 11: el guardado conserva formato, puntuación y turno. Los guardados clásicos anteriores siguen siendo compatibles; el duelo no registra marcas individuales de golpes ni medallas de entrenamiento. Reglas/protocolo v7 mantenidos al conservar la física.
 - Fase 12: trece comprobaciones nuevas (112 en total), dos casos nuevos de navegador (34 en total) y cuatro de producción. Vuelta completa con tiros reales de dos jugadores, recuperación y resultado 12–6 sin penalizaciones/recolocaciones; empates, límites, valores inválidos, honores, aislamiento de récords, embocadas reales en móvil y rechazo del intento de cambiar el online a puntos. La prueba pública juega y recupera un duelo.
 - Pendientes: alojamiento público del servidor online, llevar el formato por puntos a online con su validación y sesiones prolongadas en teléfonos físicos. No se presenta el duelo local como un torneo online persistente.
+
+## Versión 0.7.0 — cerrar la partida con amigos
+
+- Fases 3, 8–10: ambos formatos funcionan en salas reales. El anfitrión selecciona reglas antes de comenzar y cambiar el formato reinicia preparados; el servidor rechaza al invitado y el cambio durante la ronda. La revancha mantiene el formato. El control online sigue Clásico.
+- Fases 7–10: podio multijugador y reconocimientos de ases, hoyos bajo par y vuelta limpia, calculados con los resultados completos. Los empates comparten puesto y reconocimiento; los retiros no reciben premios.
+- Fases 8, 11–12: desconexión con plazo de 90 segundos, configurable. Al vencer, retiro y revocación de token evitan que la partida quede esperando al desconectado. Lobby y resultados ya terminados no son retirados por esta política.
+- Fase 11: servidor Render Free preparado con origen Pages, nombre actual y reconexión configurada. La dirección queda en conexión avanzada para que los amigos solo tengan que poner nombre, crear/unirse y jugar.
+- Fase 12: 122 pruebas unitarias y 37 de navegador, más cuatro de producción. Se prueban puntos físicos entre clientes, ambos navegadores viendo las mismas puntuaciones, permisos y preparados, reconexión, retiro caducado y podio/reconocimientos. El comando test:online también se prueba con el servidor Node compilado; solo una URL externa real permite declarar verificación por Internet.
+- Compatibilidad: protocolo de red 8 separado de reglas v7. Se actualizan cliente/servidor juntos; los guardados y marcas locales no se invalidan. Física, potencia, circuitos y tres controles conservados.
+- Pendiente externo para completar Internet: crear y activar el servicio en una cuenta de hosting y verificar su URL. El propietario fue informado de la opción Free y sus límites; los amigos no necesitan cuenta. La publicación podrá probar automáticamente esa URL antes de activar el online predeterminado de Pages.

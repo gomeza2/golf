@@ -1,4 +1,6 @@
-import { RULES_VERSION } from "../shared/rules";
+import { RULES_VERSION, NETWORK_PROTOCOL } from "../shared/rules";
+import { isMatchFormat } from "../shared/scoring";
+import { reconnectGrace, shouldWithdraw } from "./disconnections";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
@@ -11,16 +13,32 @@ import { Game, initPhysics, canStart } from "../shared/game";
 import { FixedStepper } from "../shared/timing";
 import { isCircuitId } from "../shared/courses";
 await initPhysics();
-const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173").split(
-  ",",
+const version = JSON.parse(
+  await readFile(new URL("../package.json", import.meta.url), "utf8"),
+).version;
+const disconnectGraceSeconds = reconnectGrace(
+  process.env.DISCONNECT_GRACE_SECONDS,
 );
+const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 const http = createServer(async (req, res) => {
   if (req.url === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "no-store",
+    });
     res.end(
       JSON.stringify({
         ok: true,
-        protocol: RULES_VERSION,
+        protocol: NETWORK_PROTOCOL,
+        rules: RULES_VERSION,
+        version,
+        commit: process.env.RENDER_GIT_COMMIT || process.env.APP_COMMIT || null,
+        formats: ["strokes", "stableford"],
+        disconnectGraceSeconds,
         rooms: rooms.size,
         maxPlayers: capacity,
       }),
@@ -85,8 +103,14 @@ type Room = {
   tokens: Map<string, string>;
   sockets: Map<string, string>;
   touched: number;
+  disconnectedAt: Map<string, number>;
 };
 const rooms = new Map<string, Room>();
+function revokePlayer(room: Room, id: string) {
+  room.disconnectedAt.delete(id);
+  for (const [token, owner] of room.tokens)
+    if (owner === id) room.tokens.delete(token);
+}
 const capacity = Math.max(
   2,
   Math.min(8, Math.floor(Number(process.env.MAX_PLAYERS)) || 8),
@@ -114,14 +138,18 @@ io.on("connection", (socket) => {
           } while (rooms.has(code));
           if (d.circuit !== undefined && !isCircuitId(d.circuit))
             throw Error("Recorrido inválido");
+          if (d.format !== undefined && !isMatchFormat(d.format))
+            throw Error("Formato de partida inválido");
           const game = new Game();
           if (isCircuitId(d.circuit)) game.selectCircuit(d.circuit);
+          if (isMatchFormat(d.format)) game.selectFormat(d.format);
           game.state.code = code;
           room = {
             game,
             tokens: new Map(),
             sockets: new Map(),
             touched: Date.now(),
+            disconnectedAt: new Map(),
           };
           rooms.set(code, room);
         } else {
@@ -144,6 +172,7 @@ io.on("connection", (socket) => {
             const old = candidate.sockets.get(pid);
             if (old) io.sockets.sockets.get(old)?.disconnect(true);
             returning.connected = true;
+            candidate.disconnectedAt.delete(pid);
             if (
               !candidate.game.state.players.some(
                 (p) => p.id === candidate.game.state.host && p.connected,
@@ -166,7 +195,8 @@ io.on("connection", (socket) => {
             id: pid,
             token: d.token,
             code: candidate.game.state.code,
-            protocol: RULES_VERSION,
+            protocol: NETWORK_PROTOCOL,
+            disconnectGraceSeconds,
           });
           io.to(candidate.game.state.code).emit("state", snapshot(candidate));
         } catch (error) {
@@ -180,9 +210,7 @@ io.on("connection", (socket) => {
         p = s.players.find((p) => p.id === pid)!;
       room.touched = Date.now();
       const revoke = (playerId: string) => {
-        for (const [token, owner] of room!.tokens) {
-          if (owner === playerId) room!.tokens.delete(token);
-        }
+        revokePlayer(room!, playerId);
       };
       switch (d.type) {
         case "ping":
@@ -220,6 +248,11 @@ io.on("connection", (socket) => {
           if (s.host !== pid || !isCircuitId(d.circuit))
             throw Error("Solo el anfitrión elige un recorrido válido");
           room.game.selectCircuit(d.circuit);
+          break;
+        case "format":
+          if (s.host !== pid || !isMatchFormat(d.format))
+            throw Error("Solo el anfitrión elige un formato válido en la sala");
+          room.game.selectFormat(d.format);
           break;
         case "lobby":
           if (s.host !== pid) throw Error("Solo el anfitrión vuelve a la sala");
@@ -281,6 +314,7 @@ io.on("connection", (socket) => {
       p = s.players.find((p) => p.id === pid);
     if (p) {
       p.connected = false;
+      room.disconnectedAt.set(pid, Date.now());
       if (s.phase === "lobby") p.ready = false;
     }
     room.touched = Date.now();
@@ -300,6 +334,24 @@ setInterval(() => {
       r.game.dispose();
       rooms.delete(code);
       continue;
+    }
+    for (const p of r.game.state.players) {
+      if (
+        shouldWithdraw(
+          p,
+          r.game.state.phase,
+          r.disconnectedAt.get(p.id),
+          Date.now(),
+          disconnectGraceSeconds * 1000,
+        )
+      ) {
+        r.game.withdraw(p.id);
+        revokePlayer(r, p.id);
+        if (r.game.state.host === p.id)
+          r.game.state.host =
+            r.game.state.players.find((p) => p.connected && !p.withdrawn)?.id ||
+            "";
+      }
     }
     active.push(r);
   }

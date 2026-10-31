@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { PUBLIC_SERVER_URL } from "../../src/onlineServer";
 test("the built Pages site loads assets and plays a local match from /golf/", async ({
   page,
   baseURL,
@@ -46,7 +47,7 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
     .toBeCloseTo(0.8, 2);
   await page.screenshot({ path: "work/pages-graphics-settings.png" });
   await page.getByRole("button", { name: "Entendido", exact: true }).click();
-  if (!process.env.VITE_SERVER_URL)
+  if (!process.env.VITE_SERVER_URL && !PUBLIC_SERVER_URL)
     await expect(
       page.getByRole("button", { name: /Jugar online/ }),
     ).toBeDisabled();

@@ -124,7 +124,7 @@ export class Game {
     if (!this.state.host) this.state.host = id;
     return p;
   }
-  start(format: MatchFormat = "strokes") {
+  start(format: MatchFormat = this.state.format ?? "strokes") {
     const players = this.state.players.filter((p) => !p.withdrawn);
     if (!isMatchFormat(format)) throw Error("Formato de partida inválido");
     if (format === "stableford" && players.length < 2)
@@ -152,7 +152,7 @@ export class Game {
       throw Error("Hoyo de entrenamiento inválido");
     if (this.state.players.filter((p) => !p.withdrawn).length !== 1)
       throw Error("El entrenamiento es individual");
-    this.start();
+    this.start("strokes");
     this.state.practice = true;
     this.state.hole = hole;
     if (hole !== 0) this.load();
@@ -507,6 +507,18 @@ export class Game {
       p.ready = false;
       p.pos = { ...getCourse({ ...this.state, hole: 0 }).start };
     }
+  }
+  selectFormat(format: MatchFormat) {
+    if (this.state.phase !== "lobby" || !isMatchFormat(format))
+      throw Error("El formato se elige en la sala antes de comenzar");
+    if ((this.state.format ?? "strokes") === format) {
+      this.state.format = format;
+      return;
+    }
+    this.state.format = format;
+    this.state.players.forEach((p) => {
+      p.ready = false;
+    });
   }
   removeFromLobby(id: string) {
     if (this.state.phase !== "lobby") throw Error("La partida ya comenzó");

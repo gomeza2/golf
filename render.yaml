@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: club-del-ultimo-golpe
+    name: hoyo-en-uno-golf-club
     runtime: node
     plan: free
     buildCommand: npm ci && npm run build
@@ -12,6 +12,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: CLIENT_ORIGIN
-        sync: false
+        value: https://gomeza2.github.io
       - key: MAX_PLAYERS
         value: 8
+      - key: DISCONNECT_GRACE_SECONDS
+        value: 90

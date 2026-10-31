@@ -2165,3 +2165,142 @@ button > span {
   padding-top: 4px;
   padding-bottom: 8px;
 }
+.final-podium {
+  margin: 24px 0;
+  text-align: center;
+}
+.podium-cup svg {
+  width: 56px;
+  height: 56px;
+  fill: #f4d47b30;
+  stroke: #f4d47b;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.podium-places {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  align-items: end;
+}
+.podium-places:has(> :nth-child(2):last-child) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.podium-places:has(> :only-child) {
+  grid-template-columns: minmax(0, 260px);
+  justify-content: center;
+}
+.podium-place {
+  border: 1px solid #aec5af55;
+  background: #22483d;
+  border-radius: 10px;
+  padding: 16px 8px;
+  min-width: 0;
+  animation: podium-enter 0.45s ease both;
+}
+.podium-place.place-1 {
+  border-color: #f4d47b;
+  padding-top: 26px;
+  background: linear-gradient(#4a563b, #25473a);
+}
+.podium-place:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.podium-place:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.podium-ball {
+  width: 24px;
+  height: 24px;
+  display: block;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  background: var(--ball-color);
+  box-shadow: inset -4px -5px 0 #0002;
+}
+.podium-place small,
+.podium-place strong,
+.podium-place b {
+  display: block;
+}
+.podium-place small {
+  font-size: 9px;
+  color: #d5d6b8;
+  letter-spacing: 1px;
+}
+.podium-place strong {
+  font:
+    25px "Barlow Condensed",
+    sans-serif;
+  margin: 7px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.podium-place b {
+  font-size: 13px;
+  color: #f4d47b;
+}
+.round-highlights {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  margin-top: 14px;
+}
+.round-highlights > div {
+  background: #1d3f35;
+  border-radius: 8px;
+  padding: 12px;
+}
+.round-highlights small,
+.round-highlights strong,
+.round-highlights span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.round-highlights small {
+  color: #eed496;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+.round-highlights strong {
+  font-size: 13px;
+  margin: 5px 0;
+}
+.round-highlights span {
+  font-size: 11px;
+  color: #c0cfb8;
+}
+@keyframes podium-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .podium-place {
+    animation: none;
+  }
+}
+.connection-settings {
+  border-top: 1px solid #b7c9af33;
+  border-bottom: 1px solid #b7c9af33;
+  margin: 18px 0;
+  padding: 12px 0;
+}
+.connection-settings summary {
+  cursor: pointer;
+  color: #d1d6bc;
+  font-size: 12px;
+  min-height: 26px;
+}
+.connection-settings .field {
+  margin-top: 12px;
+}

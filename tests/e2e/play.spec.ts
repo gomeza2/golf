@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { io, type Socket } from "socket.io-client";
+import { NETWORK_PROTOCOL } from "../../shared/rules";
 test("local game renders WebGL and executes a physical shot on desktop and mobile", async ({
   page,
 }) => {
@@ -353,7 +354,7 @@ test("only normal shots are accepted and synchronized across real clients", asyn
       name: "Ana",
       circuit: "riviera",
     });
-    expect(sa.protocol).toBe(7);
+    expect(sa.protocol).toBe(NETWORK_PROTOCOL);
     await enter(b, { type: "join", name: "Luis", code: sa.code });
     let pending = waitState(a, (s) => s.players.every((p: any) => p.ready));
     a.emit("action", { type: "ready" });

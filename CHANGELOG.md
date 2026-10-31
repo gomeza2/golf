@@ -1,5 +1,15 @@
 # Hoyo en Uno · Golf Club
 
+## 0.7.0
+
+- Duelo por puntos también online: selección del anfitrión en el lobby, preparados reiniciados al cambiar reglas y formato conservado durante la partida/revancha. El cliente no puede sobrescribirlo al iniciar.
+- Podio multijugador y reconocimientos de la vuelta basados en resultados reales, con empates compartidos y exclusión de retiros/límites cuando corresponde.
+- Plazo de reconexión de 90 segundos, configurable: al vencer se registra retiro y se revoca la sesión. Un corte breve conserva la plaza; la partida continúa para los demás.
+- Conexión avanzada plegada cuando se utiliza el servidor del propio enlace. Configuración Render Free lista, nombre actualizado y origen Pages predeterminado.
+- Protocolo de red 8 separado de reglas físicas v7; guardados y récords locales conservados. `/health` informa versión, formatos, plazo y commit.
+- Comando para verificar la URL real con dos clientes; Pages lo ejecuta al configurar un servidor público. No se presenta un backend público como activo sin comprobar su dirección.
+- 122 pruebas unitarias, 37 casos de navegador y cuatro de producción. Dos pruebas adicionales del comando online se comprobaron contra la instalación Node local; no equivalen a una publicación por Internet.
+
 ## 0.6.0
 
 - Duelo por puntos local para 2–8 jugadores: puntuación Stableford basada en par y golpes reales, clasificación, desempates y resultados por hoyo.
