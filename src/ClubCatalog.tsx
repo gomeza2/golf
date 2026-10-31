@@ -46,6 +46,7 @@ export function ClubCatalog({
   onlineAvailable,
   onLocal,
   onOnline,
+  savedRound,
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
@@ -58,6 +59,7 @@ export function ClubCatalog({
   onlineAvailable: boolean;
   onLocal: () => void;
   onOnline: () => void;
+  savedRound?: React.ReactNode;
 }) {
   return (
     <section className="club-catalog">
@@ -202,6 +204,7 @@ export function ClubCatalog({
           })}
         </div>
         <aside className="match-builder">
+          {savedRound}
           <div className="eyebrow">TU PRÓXIMA PARTIDA</div>
           <SelectedRound
             circuit={circuit}

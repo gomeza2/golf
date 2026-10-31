@@ -2032,3 +2032,44 @@ button > span {
     animation: none;
   }
 }
+.saved-round {
+  grid-column: 1 / -1;
+  padding: 18px;
+  margin-bottom: 16px;
+  border: 1px solid #f4d47b80;
+  border-radius: 12px;
+  background: #173d35;
+  overflow-wrap: anywhere;
+}
+.saved-round > strong {
+  display: block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 26px;
+}
+.saved-round p {
+  font-size: 13px;
+  margin: 8px 0;
+}
+.saved-round > span,
+.saved-round > small {
+  display: block;
+  color: #c4d3bc;
+  font-size: 11px;
+  margin-top: 8px;
+}
+.saved-round > div:last-of-type {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.saved-round .primary {
+  padding: 12px 16px;
+}
+.saved-round button {
+  min-height: 44px;
+}
+.match-builder:has(> .saved-round) > .primary,
+.match-builder:has(> .saved-round) > .secondary {
+  grid-row: 5;
+}

@@ -4,11 +4,13 @@ export function PauseDialog({
   onSettings,
   onRestart,
   onLeave,
+  saveStatus,
 }: {
   onResume: () => void;
   onSettings: () => void;
   onRestart?: () => void;
   onLeave: () => void;
+  saveStatus?: "saved" | "unavailable";
 }) {
   const dialog = useRef<HTMLElement>(null),
     resume = useRef(onResume);
@@ -74,8 +76,9 @@ export function PauseDialog({
           Salir al club
         </button>
         <small>
-          Salir termina esta partida. Las marcas completadas ya guardadas se
-          conservan.
+          {saveStatus === "saved"
+            ? "Guardado automático activo. Puedes salir y reanudar desde el club, incluso después de recargar. Una nueva partida local sustituye el guardado."
+            : "El navegador no permitió guardar. No cierres esta pestaña si quieres conservar la partida."}
         </small>
       </section>
     </div>
