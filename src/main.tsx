@@ -31,6 +31,8 @@ import { restoreLocalRound } from "./localRound";
 import { useLocalRecovery } from "./useLocalRecovery";
 import { SavedRound } from "./SavedRound";
 import { GraphicsSettings } from "./GraphicsSettings";
+import { MatchFormatPicker } from "./MatchFormatPicker";
+import type { MatchFormat } from "../shared/scoring";
 import { isGraphicsMode, type GraphicsMode } from "./graphics";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
@@ -86,6 +88,7 @@ function App() {
       return ["Golfista 1"];
     }),
     [name, setName] = useState(readLocal("golf-name")),
+    [matchFormat, setMatchFormat] = useState<MatchFormat>("strokes"),
     [code, setCode] = useState(
       new URLSearchParams(location.search).get("room") || "",
     ),
@@ -119,6 +122,9 @@ function App() {
     [ready, setReady] = useState(false);
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
+  useEffect(() => {
+    if (names.length < 2) setMatchFormat("strokes");
+  }, [names.length]);
   const activeControl = mode === "online" ? "classic" : roundControl;
   const turnKey =
     screen === "game" && s.phase === "playing"
@@ -369,7 +375,7 @@ function App() {
     const g = new Game();
     g.selectCircuit(circuit);
     names.forEach((n, i) => g.add(String(i), n));
-    g.start();
+    g.start(matchFormat);
     saveLocal("golf-local-names", JSON.stringify(names));
     setRoundControl(controlMode);
     setRoundId((v) => v + 1);
@@ -395,6 +401,7 @@ function App() {
       lastEvent.current = round.simulation.eventSeq;
       setCircuit(round.state.circuit);
       setNames(round.state.players.map((p) => p.name));
+      setMatchFormat(round.state.format ?? "strokes");
       setRoundControl(round.control);
       setRoundId((v) => v + 1);
       setRoundReport(null);
@@ -558,7 +565,7 @@ function App() {
         setOverview(false);
       } else if (type === "next") game.current.next();
       else {
-        game.current.start();
+        game.current.start(game.current.state.format ?? "strokes");
         setRoundId((v) => v + 1);
         setRoundReport(null);
       }
@@ -713,7 +720,7 @@ function App() {
               </>
             )}
           </h2>
-          <p>De 1 a 8 jugadores. Un golpe por turno. Menos golpes gana.</p>
+          <p>De 1 a 8 jugadores. Un golpe por turno. Elige cómo competir.</p>
           {recovery.save.kind === "saved" && (
             <small className="availability">
               Comenzar sustituirá la partida local guardada. Puedes reanudarla
@@ -759,6 +766,11 @@ function App() {
               + Añadir jugador
             </button>
           )}
+          <MatchFormatPicker
+            value={matchFormat}
+            players={names.length}
+            onChange={setMatchFormat}
+          />
           <SelectedRound circuit={circuit} onChange={() => setScreen("home")} />
 
           <button
@@ -781,7 +793,8 @@ function App() {
             tu competencia.
           </h2>
           <p className="muted">
-            El online utiliza Clásico. Tu preferencia local se conserva.
+            Online se juega a menos golpes y con control Clásico. El Duelo por
+            puntos es local. Tu preferencia de control se conserva.
           </p>
           <label className="field">
             Servidor online
@@ -905,6 +918,13 @@ function App() {
             </button>
             <div className="eyebrow">A TU MANERA</div>
             <h2>Ajustes del club</h2>
+            {screen === "game" && s.format === "stableford" && (
+              <p>
+                Duelo por puntos: bogey 1, par 2, birdie 3, eagle 4. Doble bogey
+                o peor suma 0. El formato queda fijo hasta terminar la ronda;
+                los honores del siguiente hoyo se deciden por menos golpes.
+              </p>
+            )}
             <GraphicsSettings mode={graphicsMode} onChange={setGraphicsMode} />
             <label className="field">
               Sonido · {Math.round(volume * 100)}%

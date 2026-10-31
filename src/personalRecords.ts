@@ -81,6 +81,7 @@ export function recordCompletedRound(
   if (
     state.phase !== "finished" ||
     state.practice ||
+    state.format === "stableford" ||
     state.players.length !== 1 ||
     !isControlMode(control)
   )

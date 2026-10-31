@@ -37,3 +37,6 @@ export function holeOutcome(
 }
 export const relativeLabel = (n: number) =>
   n === 0 ? "PAR" : n > 0 ? `+${n}` : String(n);
+export type MatchFormat = "strokes" | "stableford";
+export const isMatchFormat = (value: unknown): value is MatchFormat =>
+  value === "strokes" || value === "stableford";

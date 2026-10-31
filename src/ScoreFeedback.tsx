@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import type { State } from "../shared/game";
 import { relativeLabel } from "../shared/scoring";
+import { holePoints } from "../shared/competition";
 export function ScoreFeedback({
   event,
   time,
+  points = false,
 }: {
   event: State["event"];
   time: number;
+  points?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -38,6 +41,7 @@ export function ScoreFeedback({
       <span>
         {result.strokes} {result.strokes === 1 ? "golpe" : "golpes"} ·{" "}
         {relativeLabel(result.relative)}
+        {points ? ` · +${holePoints(result.strokes, result.par)} pt` : ""}
       </span>
     </aside>
   );

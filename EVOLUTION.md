@@ -23,8 +23,8 @@ Los datos personales se guardan solo para partidas locales de un jugador, en un 
 ## Comprobaciones de esta entrega
 
 - Compilación TypeScript, cliente Vite y servidor Node completada; también con base `/golf/` y modo estático.
-- 99 pruebas de reglas, física, recuperación y calidad: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
-- 32 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
+- 112 pruebas de reglas, física, recuperación, calidad y competición: rondas reales de 18 (90 golpes) y 9 (33 golpes), sin penalizaciones ni recolocación, además de terrenos, copa, controles y récords.
+- 34 casos de navegador: escritorio, tacto, tres controles, bloqueo del esquema, sockets reales, permisos y reconexión. La prueba de una vuelta solo observa la posición real del minimapa para corregir aproximaciones: no exige resultados idénticos frente a obstáculos que siguen moviéndose entre tiros.
 - 4 casos de producción: carga bajo `/golf/`, archivos y WebGL, golpe y cambio de turno reales, descarga interrumpida y script bloqueado con recuperación visible.
 - Capturas revisadas en escritorio y móvil emulado. Faltan sesiones prolongadas en teléfonos físicos y mediciones de salas concurrentes.
 
@@ -82,3 +82,12 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Fase 12: siete pruebas nuevas del presupuesto visual (99 en total), tres casos nuevos de navegador (32 en total) y cuatro de producción. Se comprueban buffers reales de móvil, persistencia, conservación de reloj/pelota/golpes al cambiar calidad y detención/reanudación de llamadas reales a WebGL. La prueba pública incluye Ahorro y recuperación de la preferencia.
 - Reglas y protocolo v7 conservados: los guardados de 0.4.0 y las marcas siguen siendo compatibles. No se modifican geometrías físicas, potencia, golpes ni puntuaciones.
 - Límites: reducir píxeles y sombras no equivale a una medida de mejora de FPS en teléfonos físicos. Continúan pendientes esas sesiones prolongadas y el alojamiento público del servidor online.
+
+## Versión 0.6.0 — competir por puntos
+
+- Fases 8–10: Duelo por puntos local (Stableford) para 2–8 personas. Premia los hoyos bien jugados y permite recuperarse de un hoyo malo. Menos golpes sigue como predeterminado y modalidad individual; se conservan las físicas y el tiro normal.
+- Fases 4 y 9: elección previa en la preparación, bloqueo durante la ronda y conservación en la revancha. Si se quita el segundo jugador se vuelve a golpes. Online sigue clásico y el servidor ignora intentos del cliente de cambiarlo a puntos.
+- Fases 7–8: solo se otorgan puntos al completar un hoyo; el marcador diferencia puntos y golpes. Los honores conservan el orden por golpes del hoyo anterior. Hay empate por ases y victoria compartida si persiste. Avisos de puntos en la embocada y fila de par por hoyo en la tarjeta.
+- Fases 8 y 11: el guardado conserva formato, puntuación y turno. Los guardados clásicos anteriores siguen siendo compatibles; el duelo no registra marcas individuales de golpes ni medallas de entrenamiento. Reglas/protocolo v7 mantenidos al conservar la física.
+- Fase 12: trece comprobaciones nuevas (112 en total), dos casos nuevos de navegador (34 en total) y cuatro de producción. Vuelta completa con tiros reales de dos jugadores, recuperación y resultado 12–6 sin penalizaciones/recolocaciones; empates, límites, valores inválidos, honores, aislamiento de récords, embocadas reales en móvil y rechazo del intento de cambiar el online a puntos. La prueba pública juega y recupera un duelo.
+- Pendientes: alojamiento público del servidor online, llevar el formato por puntos a online con su validación y sesiones prolongadas en teléfonos físicos. No se presenta el duelo local como un torneo online persistente.

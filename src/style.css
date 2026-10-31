@@ -2096,3 +2096,72 @@ button > span {
   color: #c6d1bc;
   font-size: 11px;
 }
+.match-format-picker {
+  border: 1px solid #c6d2b72e;
+  border-radius: 10px;
+  margin: 20px 0;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.match-format-picker legend {
+  color: #d8cfae;
+  font-size: 11px;
+  padding: 0 6px;
+}
+.match-format-picker button {
+  background: #22483f;
+  border: 1px solid #c6d2b738;
+  border-radius: 8px;
+  text-align: left;
+  padding: 12px;
+  min-height: 72px;
+}
+.match-format-picker button[aria-pressed="true"] {
+  border-color: #f4d47b;
+  background: #3f5340;
+}
+.match-format-picker strong {
+  display: block;
+  font:
+    24px "Barlow Condensed",
+    sans-serif;
+}
+.match-format-picker span {
+  display: block;
+  font-size: 11px;
+  color: #c4d0ba;
+  margin-top: 5px;
+}
+.match-format-picker p {
+  grid-column: 1/-1;
+  font-size: 12px;
+  color: #d8d9c2;
+  margin: 4px 0;
+}
+.points-key {
+  padding: 12px;
+  background: #25483b;
+  color: #f1d788;
+  border-radius: 8px;
+  font-size: 12px;
+  margin: 16px 0;
+}
+.points-cell small,
+.points-gross {
+  display: block;
+  font-size: 10px;
+  font-weight: normal;
+  color: #cad4bf;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+.score-par-row th,
+.score-par-row td {
+  color: #bfd0b6;
+  font-size: 11px;
+  font-weight: normal;
+  padding-top: 4px;
+  padding-bottom: 8px;
+}

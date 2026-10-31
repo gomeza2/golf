@@ -1,5 +1,10 @@
 import { TURN_SECONDS } from "./rules";
-import { holeOutcome, type HoleOutcome } from "./scoring";
+import {
+  holeOutcome,
+  isMatchFormat,
+  type HoleOutcome,
+  type MatchFormat,
+} from "./scoring";
 import RAPIER from "@dimforge/rapier3d-compat";
 import {
   getCircuit,
@@ -35,6 +40,7 @@ export type Player = {
   capped: number[];
 };
 export type State = {
+  format?: MatchFormat;
   practice?: boolean;
   phase: "lobby" | "playing" | "scores" | "finished";
   players: Player[];
@@ -118,10 +124,15 @@ export class Game {
     if (!this.state.host) this.state.host = id;
     return p;
   }
-  start() {
+  start(format: MatchFormat = "strokes") {
+    const players = this.state.players.filter((p) => !p.withdrawn);
+    if (!isMatchFormat(format)) throw Error("Formato de partida inválido");
+    if (format === "stableford" && players.length < 2)
+      throw Error("El duelo por puntos necesita al menos dos jugadores");
+    if (!players.length) throw Error("Faltan jugadores");
+    this.state.format = format;
     this.state.practice = false;
-    this.state.players = this.state.players.filter((p) => !p.withdrawn);
-    if (!this.state.players.length) throw Error("Faltan jugadores");
+    this.state.players = players;
     this.state.hole = 0;
     this.turnOrder = this.state.players.map((_, i) => i);
     for (const p of this.state.players) {

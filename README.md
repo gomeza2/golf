@@ -1,6 +1,6 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.5.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.6.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
 ## Jugar desde GitHub Pages
 
@@ -58,6 +58,18 @@ Abre **http://localhost:5173**. Vite reenvía `/socket.io` al servidor en el pue
 5. Al completar cada hoyo consulta la tabla y pulsa **Siguiente hoyo**; al terminar, juega una revancha o pulsa **Elegir otro recorrido**.
 
 La partida local no usa el servidor: sigue funcionando si este se apaga. Necesita haber cargado la aplicación; esta versión no incluye instalación PWA ni caché para una primera visita sin red.
+
+### Duelo por puntos · Stableford local
+
+En **Jugar en este dispositivo**, añade de 2 a 8 jugadores y elige **Duelo por puntos** antes de comenzar. El formato queda fijo durante la ronda y la revancha. Para cambiarlo vuelve a la preparación. **Menos golpes** sigue siendo la opción predeterminada y el modo individual; el entrenamiento también utiliza golpes.
+
+- Cada hoyo completado otorga `máximo(0, 2 + par − golpes)`: bogey 1, par 2, birdie 3, eagle 4 y albatros 5. Doble bogey o peor suma 0. Un hoyo en uno puntúa según el par, sin un premio añadido: en par 3 suma 4; en par 5, 6.
+- Gana quien acumule **más puntos**. Los empates se resuelven por más hoyos en uno; si persisten, la victoria se comparte. Un hoyo malo puede quedar en cero y el siguiente permite remontar.
+- Los golpes, el agua, el tiempo y el límite de 12 se siguen contabilizando. El límite concede cero puntos. No se conceden puntos provisionales a pelotas en movimiento: la clasificación muestra solo hoyos completados, incluido el jugador que ya embocó mientras sus rivales siguen en el hoyo.
+- Los honores se conservan como en golf: sale primero quien hizo menos golpes en el hoyo anterior, aunque varios jugadores hayan quedado en cero puntos. Los empates mantienen el orden anterior.
+- La tarjeta muestra puntos, golpes reales y el par de cada hoyo. Los avisos de embocada añaden los puntos ganados. La revancha conserva el formato.
+- El guardado local conserva el duelo, los puntos confirmados, los nombres y el turno. Los guardados clásicos anteriores siguen siendo compatibles. Las rondas por puntos no se mezclan con récords individuales de golpes ni con medallas de entrenamiento.
+- **Este formato es local.** El online sigue usando menos golpes y control Clásico: el servidor no acepta cambiarlo mediante campos enviados por el cliente. Los protocolos y marcas de reglas v7 se conservan porque no cambian los golpes ni las físicas.
 
 ### Online real
 
@@ -137,11 +149,11 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 99 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
+`npm test`: 112 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
 
-`npm run test:e2e`: 32 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 34 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets rechaza el intento de cambiar el online a puntos. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
 
-`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública solo se ejecuta la partida real; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
+`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus cuatro pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública se juega un duelo por puntos real, se cambia la calidad y se recuperan turno y formato tras recargar; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
 `npm run build`: comprobación TypeScript, cliente en `dist/` y servidor en `dist-server/`. La CI ejecuta los tres comandos. WebGL con renderizado por software permite automatizar estas comprobaciones; no sustituye pruebas de rendimiento en teléfonos físicos.
 
@@ -181,6 +193,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 - `src/serverUrl.ts`: validación de orígenes y conexiones externas.
 - `Dockerfile`, `render.yaml`: despliegue del servidor y del cliente juntos.
 - `shared/game.ts`: reglas, clasificación, turnos y simulación Rapier común a local/servidor.
+- `shared/competition.ts`, `src/MatchFormatPicker.tsx`: puntuación Stableford, empates y selección previa del duelo local.
 - `src/Scene.tsx`: representación 3D, cámara, materiales, obstáculos y pelotas interpoladas.
 - `src/graphics.ts`, `src/RenderQuality.tsx`, `src/GraphicsSettings.tsx`: presupuesto visual automático, perfiles, suspensión en segundo plano y preferencia gráfica.
 - `src/main.tsx`: flujos de inicio, conexión online, sesión local y controles.
@@ -198,7 +211,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye ocho opciones de recorrido (21 hoyos distintos, con vueltas de 9/18), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
+Incluye ocho opciones de recorrido (21 hoyos distintos, con vueltas de 9/18), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade una competición local con reglas Stableford y las mismas físicas. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
 
 El motor mantiene un solo hoyo visible y una pelota física activa. La calidad automática adapta resolución y sombras; Ahorro las desactiva y Alta permite DPR 2 con sombras de 2048. La geometría fija de cada pista se reutiliza entre actualizaciones y el renderizado se detiene en segundo plano. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 

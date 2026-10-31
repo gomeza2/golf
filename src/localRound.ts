@@ -9,6 +9,7 @@ import {
   isCircuitId,
 } from "../shared/courses";
 import { isControlMode, type ControlMode } from "./shotControls";
+import { isMatchFormat } from "../shared/scoring";
 
 export const LOCAL_ROUND_KEY = "club-local-round";
 const MAX_BYTES = 2_000_000;
@@ -123,6 +124,7 @@ export function validateLocalRound(value: unknown): value is LocalRound {
       !finite(r.aim.angle, -Math.PI * 2, Math.PI * 2) ||
       !finite(r.aim.power, 0.03, 1) ||
       !s ||
+      (s.format !== undefined && !isMatchFormat(s.format)) ||
       !isCircuitId(s.circuit) ||
       !["playing", "scores"].includes(s.phase) ||
       typeof s.practice !== "boolean" ||
@@ -132,6 +134,7 @@ export function validateLocalRound(value: unknown): value is LocalRound {
       s.players.length < 1 ||
       s.players.length > 8 ||
       (s.practice && s.players.length !== 1) ||
+      (s.format === "stableford" && (s.practice || s.players.length < 2)) ||
       !integer(s.turn, 0, s.players.length - 1) ||
       typeof s.moving !== "boolean" ||
       !finite(s.time, 0) ||
