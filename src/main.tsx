@@ -27,6 +27,9 @@ import {
   type PracticeReport,
 } from "./practiceRecords";
 import { PauseDialog } from "./PauseDialog";
+import { restoreLocalRound } from "./localRound";
+import { useLocalRecovery } from "./useLocalRecovery";
+import { SavedRound } from "./SavedRound";
 import { Scene } from "./Scene";
 import { GamePanels } from "./GamePanels";
 import { tone, celebrateOutcome } from "./audio";
@@ -138,6 +141,15 @@ function App() {
   const game = useRef<Game | null>(null),
     socket = useRef<Socket | null>(null),
     lastTurn = useRef("");
+  const recovery = useLocalRecovery({
+    game,
+    mode,
+    screen,
+    state: s,
+    control: roundControl,
+    angle,
+    power,
+  });
   useEffect(() => {
     initPhysics()
       .then(() => {
@@ -361,6 +373,42 @@ function App() {
     setOverview(false);
     setError("");
   }
+  function resumeLocal() {
+    if (!ready || recovery.save.kind !== "saved") return;
+    try {
+      const round = recovery.save.round;
+      const restored = restoreLocalRound(round);
+      socket.current?.disconnect();
+      game.current?.dispose();
+      game.current = restored;
+      controls.cancel();
+      lastEvent.current = round.simulation.eventSeq;
+      setCircuit(round.state.circuit);
+      setNames(round.state.players.map((p) => p.name));
+      setRoundControl(round.control);
+      setRoundId((v) => v + 1);
+      setRoundReport(null);
+      setPracticeReport(null);
+      setMode("local");
+      setPaused(true);
+      hold.current = true;
+      clockReset.current = true;
+      setSettings(false);
+      setLookMode(false);
+      setCameraLook(defaultLook);
+      setAngle(round.aim.angle);
+      setPower(round.aim.power);
+      lastTurn.current = `${round.state.hole}:${round.state.turn}:${round.state.phase}`;
+      setS(structuredClone(restored.state));
+      setScreen("game");
+      setOverview(false);
+      setError("");
+    } catch (e) {
+      setError(
+        `${(e as Error).message} Puedes descartar el guardado y empezar otra partida.`,
+      );
+    }
+  }
   function practiceStart(hole: number) {
     saveLocal("golf-local-names", JSON.stringify(names));
     socket.current?.disconnect();
@@ -393,6 +441,7 @@ function App() {
       );
       return;
     }
+    recovery.checkpoint();
     game.current?.dispose();
     game.current = null;
     socket.current?.disconnect();
@@ -476,6 +525,7 @@ function App() {
       });
     } else if (game.current) {
       if (type === "lobby") {
+        recovery.checkpoint();
         game.current.dispose();
         game.current = null;
         setScreen("local");
@@ -506,6 +556,7 @@ function App() {
     }
   }
   function leave() {
+    recovery.checkpoint();
     if (document.fullscreenElement)
       void document.exitFullscreen().catch(() => {});
     const previous = socket.current;
@@ -599,6 +650,14 @@ function App() {
           onlineAvailable={onlineAvailable}
           onLocal={() => setScreen("local")}
           onOnline={() => setScreen("online")}
+          savedRound={
+            <SavedRound
+              save={recovery.save}
+              ready={ready}
+              onResume={resumeLocal}
+              onDiscard={recovery.discard}
+            />
+          }
         />
       )}
       {controls.active && controls.pointer && (
@@ -644,6 +703,12 @@ function App() {
             )}
           </h2>
           <p>De 1 a 8 jugadores. Un golpe por turno. Menos golpes gana.</p>
+          {recovery.save.kind === "saved" && (
+            <small className="availability">
+              Comenzar sustituirá la partida local guardada. Puedes reanudarla
+              desde el club.
+            </small>
+          )}
           <div className="name-list">
             {names.map((n, i) => (
               <label key={i}>
@@ -805,6 +870,7 @@ function App() {
       )}
       {paused && mode === "local" && screen === "game" && !settings && (
         <PauseDialog
+          saveStatus={recovery.save.kind === "saved" ? "saved" : "unavailable"}
           onResume={() => setPaused(false)}
           onSettings={() => setSettings(true)}
           onRestart={s.practice ? () => action("practice-retry") : undefined}
