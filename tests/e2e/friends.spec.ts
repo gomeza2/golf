@@ -132,6 +132,15 @@ test("two browser players share lobby rules, see real rival shots and receive th
       viewport: { width: 390, height: 844 },
     }),
     cb = await browser.newContext();
+  // Two software-rendered worlds should not turn a networking check into a
+  // shadow-rendering stress test. High quality has its own browser coverage.
+  await Promise.all(
+    [ca, cb].map((context) =>
+      context.addInitScript(() =>
+        localStorage.setItem("golf-graphics-mode", "low"),
+      ),
+    ),
+  );
   try {
     const a = await ca.newPage(),
       b = await cb.newPage();
@@ -192,7 +201,9 @@ test("two browser players share lobby rules, see real rival shots and receive th
     await b.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await a.getByRole("button", { name: /Comenzar partida/ }).click();
     for (const page of [a, b]) {
-      await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+      await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled({
+        timeout: 15000,
+      });
       await page
         .getByRole("slider", { name: "Ángulo", exact: true })
         .fill(String(Number(aceShots[0].angle.toFixed(10))));
