@@ -12,6 +12,7 @@ async function local(page: Page, mode: "Retroceso" | "Precisión") {
     page.getByRole("combobox", { name: "Control del tiro" }),
   ).toHaveCount(0);
   await expect(page.locator(".turn-intro")).toHaveCount(0);
+  await expect(page.locator(".hole-preview")).toHaveCount(0);
 }
 test("catalogue starts a single 18-hole round and keeps the chosen control", async ({
   page,

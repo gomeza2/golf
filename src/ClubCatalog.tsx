@@ -10,6 +10,8 @@ import { TrainingPicker } from "./Training";
 import type { PracticeHistory } from "./practiceRecords";
 import { ShotModePicker } from "./ShotModePicker";
 import type { ControlMode } from "./shotControls";
+import { SchoolEntry } from "./GolfSchool";
+import type { SchoolProgress } from "./school";
 export function SelectedRound({
   circuit,
   onChange,
@@ -47,6 +49,8 @@ export function ClubCatalog({
   onLocal,
   onOnline,
   savedRound,
+  schoolProgress,
+  onLearn,
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
@@ -60,6 +64,8 @@ export function ClubCatalog({
   onLocal: () => void;
   onOnline: () => void;
   savedRound?: React.ReactNode;
+  schoolProgress: SchoolProgress;
+  onLearn: () => void;
 }) {
   return (
     <section className="club-catalog">
@@ -245,6 +251,12 @@ export function ClubCatalog({
             history={practiceHistory}
             ready={ready}
             onStart={onPractice}
+          />
+          <SchoolEntry
+            control={controlMode}
+            progress={schoolProgress}
+            ready={ready}
+            onStart={onLearn}
           />
           <button className="primary" disabled={!ready} onClick={onLocal}>
             {ready ? "Jugar en este dispositivo" : "Cargando físicas…"} →

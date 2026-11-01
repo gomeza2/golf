@@ -173,7 +173,10 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
     // Joining is asynchronous. Confirm both views before clicking a button
     // whose position changes when the guest row is inserted.
     await expect(b.getByTestId("room-code")).toHaveText(code);
-    await expect(a.locator(".players")).toContainText("Luis");
+    // Bound asynchronous roster convergence, including the fallback transport.
+    await expect(a.locator(".players")).toContainText("Luis", {
+      timeout: 15000,
+    });
     await a.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await expect(
       a.getByRole("button", { name: "Cancelar preparado", exact: true }),

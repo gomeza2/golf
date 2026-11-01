@@ -25,7 +25,14 @@ import {
 import type { ControlMode } from "./shotControls";
 import type { useShotControls } from "./useShotControls";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { followPose, turnAngle, type CameraLook } from "./camera";
+import {
+  followPose,
+  overviewPose,
+  overviewFrame,
+  overviewBounds,
+  turnAngle,
+  type CameraLook,
+} from "./camera";
 import {
   renderProfile,
   updateShadow,
@@ -240,7 +247,29 @@ function Camera({
     heading = useRef(0),
     desiredHeading = useRef(0),
     wasMoving = useRef(false);
+  const projectedPoint = useRef(new THREE.Vector3()),
+    projectionTime = useRef(0);
   const active = s.players.find((p) => p.id === focusId) || s.players[s.turn];
+  const course = getCourse(s),
+    inMatch = s.phase === "playing";
+  const overviewTarget = useMemo(
+    () => overviewPose(course, size.width, size.height, cameraLook, inMatch),
+    [course, size.width, size.height, cameraLook, inMatch],
+  );
+  useEffect(() => {
+    const perspective = camera as THREE.PerspectiveCamera;
+    if (overview) {
+      const frame = overviewFrame(size.width, size.height, inMatch);
+      perspective.setViewOffset(
+        size.width,
+        size.height,
+        frame.offsetX,
+        frame.offsetY,
+        size.width,
+        size.height,
+      );
+    } else perspective.clearViewOffset();
+  }, [camera, overview, size.width, size.height, inMatch]);
   useEffect(() => {
     gl.domElement.dataset.cameraMode = overview ? "overview" : "follow";
     gl.domElement.dataset.focusPlayer = active?.id || "";
@@ -263,16 +292,16 @@ function Camera({
     gl.domElement.dataset.lookPitch = String(cameraLook.pitch);
     let position: THREE.Vector3, look: THREE.Vector3;
     if (overview) {
-      position = new THREE.Vector3(19, 28, 26).multiplyScalar(
-        (Math.max(1, 1.05 / (size.width / size.height)) *
-          courseSize(getCourse(s)).length) /
-          24,
+      position = new THREE.Vector3(
+        overviewTarget.position.x,
+        overviewTarget.position.y,
+        overviewTarget.position.z,
       );
-      position
-        .applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraLook.yaw)
-        .multiplyScalar(cameraLook.zoom);
-      position.y *= 1 + cameraLook.pitch;
-      look = new THREE.Vector3(0, 0, 0);
+      look = new THREE.Vector3(
+        overviewTarget.target.x,
+        overviewTarget.target.y,
+        overviewTarget.target.z,
+      );
     } else {
       const pose = followPose(
         ball.current,
@@ -290,6 +319,28 @@ function Camera({
     camera.position.lerp(position, 1 - Math.exp(-dt * 3.2));
     target.current.lerp(look, 1 - Math.exp(-dt * 5));
     camera.lookAt(target.current);
+    // A bounded diagnostic makes framing verifiable in a real WebGL browser.
+    projectionTime.current += dt;
+    if (overview && projectionTime.current > 0.25) {
+      projectionTime.current = 0;
+      camera.updateMatrixWorld();
+      const bounds = overviewBounds(course),
+        xs: number[] = [],
+        ys: number[] = [];
+      for (const x of [-bounds.width / 2, bounds.width / 2])
+        for (const y of [0, bounds.height])
+          for (const z of [-bounds.length / 2, bounds.length / 2]) {
+            const v = projectedPoint.current.set(x, y, z).project(camera);
+            xs.push(((v.x + 1) * size.width) / 2);
+            ys.push(((1 - v.y) * size.height) / 2);
+          }
+      gl.domElement.dataset.fieldRect = JSON.stringify({
+        left: Math.min(...xs),
+        right: Math.max(...xs),
+        top: Math.min(...ys),
+        bottom: Math.max(...ys),
+      });
+    }
   });
   return null;
 }
@@ -328,6 +379,7 @@ function World({
   focusId,
   onAim,
   rendering,
+  trainingTarget,
 }: {
   s: State;
   angle: number;
@@ -344,6 +396,7 @@ function World({
   focusId?: string;
   onAim: (a: number) => void;
   rendering: RenderProfile;
+  trainingTarget?: { x: number; y: number; z: number; radius: number };
 }) {
   const c = getCourse(s),
     theme = getCircuit(s.circuit);
@@ -435,6 +488,27 @@ function World({
         cameraLook={cameraLook}
       />
       <SceneReady />
+      {trainingTarget && (
+        <group
+          position={[trainingTarget.x, trainingTarget.y, trainingTarget.z]}
+        >
+          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry
+              args={[trainingTarget.radius - 0.08, trainingTarget.radius, 48]}
+            />
+            <meshBasicMaterial
+              color="#ffdb85"
+              transparent
+              opacity={0.85}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.08, 16]} />
+            <meshBasicMaterial color="#ffdb85" />
+          </mesh>
+        </group>
+      )}
       <CourseWater course={c} detail={rendering.detail} />
       <ImpactEffect event={s.event} time={s.time} detail={rendering.detail} />
       <CourseScenery course={c} circuit={s.circuit} detail={rendering.detail} />

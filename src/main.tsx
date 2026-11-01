@@ -37,6 +37,11 @@ import { ConnectionSettings } from "./ConnectionSettings";
 import type { MatchFormat } from "../shared/scoring";
 import { isGraphicsMode, type GraphicsMode } from "./graphics";
 import { Scene } from "./Scene";
+import { useGolfSchool } from "./useGolfSchool";
+import { SchoolCoach } from "./GolfSchool";
+import { schoolTarget } from "./school";
+import { useHoleIntro } from "./useHoleIntro";
+import { getCourse } from "../shared/courses";
 import { GamePanels } from "./GamePanels";
 import { tone, celebrateOutcome } from "./audio";
 import { useTurnPresentation } from "./useTurnPresentation";
@@ -128,12 +133,36 @@ function App() {
       return isGraphicsMode(saved) ? saved : "auto";
     }),
     [ready, setReady] = useState(false);
+  const [showHoleIntro, setShowHoleIntro] = useState(
+    readLocal("golf-hole-intro", "true") !== "false",
+  );
+  useEffect(
+    () => saveLocal("golf-hole-intro", String(showHoleIntro)),
+    [showHoleIntro],
+  );
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
   useEffect(() => {
     if (names.length < 2) setMatchFormat("strokes");
   }, [names.length]);
   const activeControl = mode === "online" ? "classic" : roundControl;
+  const school = useGolfSchool(
+    s,
+    activeControl,
+    mode === "local" && screen === "game",
+  );
+  const intro = useHoleIntro(
+    screen === "game" && s.phase === "playing"
+      ? `${roundId}:${s.circuit}:${s.hole}`
+      : null,
+    showHoleIntro &&
+      mode === "local" &&
+      !s.practice &&
+      !s.moving &&
+      s.players.every((p) => p.strokes === 0) &&
+      !paused &&
+      !settings,
+  );
   const turnKey =
     screen === "game" && s.phase === "playing"
       ? `${s.circuit}:${s.hole}:${s.players[s.turn]?.id}`
@@ -146,7 +175,15 @@ function App() {
   handoff.current = transitioning;
   const hold = useRef(false);
   const clockReset = useRef(false);
-  hold.current = mode === "local" && (paused || settings || lookMode || hidden);
+  hold.current =
+    mode === "local" &&
+    (paused ||
+      settings ||
+      lookMode ||
+      hidden ||
+      intro.active ||
+      (school.session !== null &&
+        (!s.moving || school.session.phase === "passed")));
   useEffect(() => {
     const update = () => {
       clockReset.current = true;
@@ -169,6 +206,7 @@ function App() {
     control: roundControl,
     angle,
     power,
+    school: school.session,
   });
   useEffect(() => {
     initPhysics()
@@ -292,6 +330,8 @@ function App() {
     !s.moving &&
     !settings &&
     !paused &&
+    !intro.active &&
+    school.session?.phase !== "passed" &&
     !(mode === "local" && hidden) &&
     !lookMode &&
     !transitioning &&
@@ -377,6 +417,7 @@ function App() {
     };
   }, []);
   function localStart() {
+    school.close();
     socket.current?.disconnect();
     game.current?.dispose();
     lastEvent.current = 0;
@@ -402,6 +443,7 @@ function App() {
     try {
       const round = recovery.save.round;
       const restored = restoreLocalRound(round);
+      school.restore(round.school, restored.state);
       socket.current?.disconnect();
       game.current?.dispose();
       game.current = restored;
@@ -434,16 +476,24 @@ function App() {
       );
     }
   }
-  function practiceStart(hole: number) {
+  function practiceStart(
+    hole: number,
+    selectedCircuit: CircuitId = circuit,
+    lesson?: number,
+    selectedControl: ControlMode = controlMode,
+  ) {
     saveLocal("golf-local-names", JSON.stringify(names));
     socket.current?.disconnect();
     game.current?.dispose();
     lastEvent.current = 0;
     const g = new Game();
-    g.selectCircuit(circuit);
+    g.selectCircuit(selectedCircuit);
     g.add("0", names[0]);
     g.startPractice(hole);
-    setRoundControl(controlMode);
+    setCircuit(selectedCircuit);
+    if (lesson === undefined) school.close();
+    else school.start(lesson, g.state);
+    setRoundControl(selectedControl);
     setRoundId((v) => v + 1);
     setRoundReport(null);
     setPracticeReport(null);
@@ -467,6 +517,7 @@ function App() {
       return;
     }
     recovery.checkpoint();
+    school.close();
     game.current?.dispose();
     game.current = null;
     socket.current?.disconnect();
@@ -585,6 +636,10 @@ function App() {
         const hole =
           game.current.state.hole + (type === "practice-next" ? 1 : 0);
         game.current.startPractice(hole);
+        if (school.session) {
+          if (type === "practice-next") school.close();
+          else school.start(school.session.lesson, game.current.state);
+        }
         setRoundId((v) => v + 1);
         setPracticeReport(null);
         setPaused(false);
@@ -603,6 +658,7 @@ function App() {
   }
   function leave() {
     recovery.checkpoint();
+    school.close();
     if (document.fullscreenElement)
       void document.exitFullscreen().catch(() => {});
     const previous = socket.current;
@@ -625,7 +681,10 @@ function App() {
   }
   return (
     <main
-      className={screen === "game" && s.phase === "playing" ? "in-match" : ""}
+      className={
+        (screen === "game" && s.phase === "playing" ? "in-match" : "") +
+        (school.session && screen === "game" ? " school-mode" : "")
+      }
     >
       <div className={"scene " + (screen === "game" ? "" : "hero-scene")}>
         <Scene
@@ -643,7 +702,19 @@ function App() {
           onPower={(p) => {
             if (canShoot) setPower(p);
           }}
-          overview={screen !== "game" || s.phase !== "playing" || overview}
+          overview={
+            screen !== "game" ||
+            s.phase !== "playing" ||
+            overview ||
+            intro.active
+          }
+          trainingTarget={
+            school.session?.lesson === 0 &&
+            school.session.phase === "playing" &&
+            screen === "game"
+              ? schoolTarget
+              : undefined
+          }
           focusId={focusId}
           onAim={(a) => {
             if (canShoot) setAngle(a);
@@ -705,6 +776,8 @@ function App() {
               onDiscard={recovery.discard}
             />
           }
+          schoolProgress={school.progress}
+          onLearn={() => practiceStart(0, "sunset", 0)}
         />
       )}
       {controls.active && controls.pointer && (
@@ -919,6 +992,42 @@ function App() {
           leave={leave}
         />
       )}
+      {intro.active && screen === "game" && !settings && (
+        <aside className="hole-preview" aria-label="Vista inicial del hoyo">
+          <small>LEE EL CAMPO · EL RELOJ ESTÁ DETENIDO</small>
+          <strong>{getCourse(s).name}</strong>
+          <p>{getCourse(s).subtitle}</p>
+          <button className="secondary" onClick={intro.skip}>
+            Omitir vista del hoyo →
+          </button>
+        </aside>
+      )}
+      {school.session &&
+        mode === "local" &&
+        screen === "game" &&
+        !settings &&
+        !paused && (
+          <SchoolCoach
+            state={s}
+            control={activeControl}
+            session={school.session}
+            persisted={school.persisted}
+            onRetry={() =>
+              practiceStart(0, "sunset", school.session!.lesson, activeControl)
+            }
+            onNext={() =>
+              school.session!.lesson < 2
+                ? practiceStart(
+                    0,
+                    "sunset",
+                    school.session!.lesson + 1,
+                    activeControl,
+                  )
+                : leave()
+            }
+            onClose={school.close}
+          />
+        )}
       {paused && mode === "local" && screen === "game" && !settings && (
         <PauseDialog
           saveStatus={recovery.save.kind === "saved" ? "saved" : "unavailable"}
@@ -945,6 +1054,14 @@ function App() {
             </button>
             <div className="eyebrow">A TU MANERA</div>
             <h2>Ajustes del club</h2>
+            <label className="intro-setting">
+              <input
+                type="checkbox"
+                checked={showHoleIntro}
+                onChange={(e) => setShowHoleIntro(e.target.checked)}
+              />
+              Vista inicial de cada hoyo local (se puede omitir)
+            </label>
             {screen === "game" && mode === "online" && (
               <p>
                 Una desconexión conserva tu plaza durante {disconnectGrace}{" "}

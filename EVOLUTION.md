@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.8.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.9.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -112,3 +112,15 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Compatibilidad: 21 hoyos anteriores intactos en sus mismas posiciones, vueltas de 9/18 conservadas, sin cambios a potencia/fricción/rebotes/turnos. Reglas v7, formato de guardado 1 y claves de marcas intactos. La red pasa a protocolo 9 por el catálogo nuevo.
 - Validación física: ronda segura completa, atajo, penalización única por fallo, uniones de las dos rampas, hueco físico del pórtico y recuperación idéntica fotograma a fotograma. Navegador móvil: cambio real de detalle, atajo con Eagle y recuperación. Dos clientes del servidor reciben los mismos resultados del recorrido nuevo.
 - Plan vigente en ROADMAP.md. Continúan pendientes teléfonos físicos, sesiones humanas prolongadas/carga, desafíos periódicos, torneos de varias rondas y editor; no se sustituyen por simulaciones locales presentadas como servicios compartidos.
+
+
+## Versión 0.9.0 — cámara y Escuela del Club
+
+- Encuadre por límites y proyección en perspectiva, incluyendo altura y espacios del HUD. Orientación vertical con más longitud visible, ajuste al rotar y disposición de controles de pantalla horizontal baja. Giro/inclinación/zoom y seguimiento anteriores conservados.
+- Vista inicial de cada hoyo local: 2,6 s con reloj detenido, omisión inmediata y ajuste persistente. No aparece durante un golpe iniciado ni introduce pausas en red.
+- Tres ejercicios de práctica con comprobaciones físicas: bola completa dentro del aro tras un golpe, rebote real y entrada en copa sin penalización/límite. Reintentos y feedback, preparación sin reloj y progreso por control. No se altera velocidad, fricción, paredes ni puntuaciones.
+- Metadato opcional de guía en guardado formato 1, recuperación del ejercicio/control y descarte independiente del metadato inválido. Preferencias y claves v7 existentes conservadas. La escuela no genera marcas de rondas completas ni resultados globales.
+- 134 pruebas unitarias; batería de 44 casos de navegador y cinco de producción. La prueba pública adicional comprueba versión actual y una aproximación real. Capturas vertical, horizontal, escritorio y guía táctil.
+- Siguiente entrega: desafíos deterministas compartibles con resultados personales separados; primero extraer la conexión/lobby para no concentrar más funciones en `main.tsx`. Teléfonos físicos, carga prolongada, editor y copas de varias rondas permanecen pendientes.
+
+- QA de 0.9.0: la comprobación de roster del anfitrión espera hasta 15 s a que aparezca realmente el invitado, manteniendo las condiciones de preparación. La CI conserva trazas/capturas de sus salas locales si falla; la comprobación pública conserva capturas/contexto y desactiva trazas de red.

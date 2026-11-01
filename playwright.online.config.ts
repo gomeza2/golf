@@ -19,5 +19,10 @@ export default defineConfig({
   webServer: undefined,
   globalSetup: "./tests/online-setup.ts",
   timeout: 180000,
-  use: { ...base.use, baseURL: target, screenshot: "only-on-failure" },
+  use: {
+    ...base.use,
+    baseURL: target,
+    screenshot: "only-on-failure",
+    trace: "off",
+  },
 });

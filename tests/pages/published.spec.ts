@@ -1,5 +1,37 @@
 import { test, expect } from "@playwright/test";
 import { PUBLIC_SERVER_URL } from "../../src/onlineServer";
+import { APP_VERSION } from "../../src/release";
+test("the released school completes a physical target with the actual published version", async ({
+  page,
+  baseURL,
+}) => {
+  if (process.env.PUBLIC_GAME_URL) test.setTimeout(180000);
+  await expect
+    .poll(
+      async () => {
+        await page.goto(baseURL!);
+        return page.locator(".header-right").innerText({ timeout: 15000 });
+      },
+      { timeout: 90000, intervals: [1000, 3000, 5000] },
+    )
+    .toContain(`v${APP_VERSION}`);
+  await page.getByRole("button", { name: /Aprender jugando/ }).click();
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+  await page
+    .getByRole("slider", { name: "Potencia", exact: true })
+    .fill("0.145");
+  await page.getByRole("button", { name: /GOLPEAR/ }).click();
+  await expect(
+    page.getByRole("button", { name: /Siguiente ejercicio/ }),
+  ).toBeVisible({ timeout: 25000 });
+  await page.screenshot({
+    path: "work/pages-school.png",
+    animations: "disabled",
+  });
+  console.log(
+    `PAGES SCHOOL VERIFIED: version ${APP_VERSION}, real approach completed, optional guide and normal physics: ${baseURL}`,
+  );
+});
 test("the built Pages site loads assets and plays a local match from /golf/", async ({
   page,
   baseURL,

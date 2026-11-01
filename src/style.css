@@ -2304,3 +2304,304 @@ button > span {
 .connection-settings .field {
   margin-top: 12px;
 }
+
+/* Learning stays optional and uses the same playable field. */
+.school-entry {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #bfcfa633;
+  padding-top: 18px;
+  margin: 18px 0;
+}
+.school-entry small {
+  color: #b7cbb8;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.school-entry strong {
+  font:
+    700 25px "Barlow Condensed",
+    sans-serif;
+  color: #f0d299;
+}
+.school-entry p {
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+}
+.school-entry span {
+  font-size: 11px;
+  color: #d8d4a5;
+}
+.school-coach {
+  position: fixed;
+  right: 20px;
+  top: 132px;
+  z-index: 7;
+  width: 245px;
+  padding: 15px;
+  background: #12362fee;
+  border: 1px solid #eac98566;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px #001a2440;
+}
+.school-coach small,
+.hole-preview small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #e9cc8e;
+  line-height: 1.5;
+}
+.school-coach strong,
+.hole-preview strong {
+  display: block;
+  font:
+    700 26px "Barlow Condensed",
+    sans-serif;
+  margin-top: 4px;
+}
+.school-coach p,
+.hole-preview p {
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+.school-coach .text-button {
+  font-size: 10px;
+  min-height: 36px;
+  display: block;
+}
+.school-coach .primary {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+}
+.school-passed {
+  top: 40%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100% - 28px));
+  border-color: #f0cc87;
+}
+.hole-preview {
+  position: fixed;
+  bottom: 170px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(440px, calc(100% - 24px));
+  padding: 16px 20px;
+  background: #10372fee;
+  border: 1px solid #e4cf9744;
+  border-radius: 10px;
+}
+.hole-preview .secondary {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 11px;
+}
+.intro-setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  margin: 14px 0;
+  line-height: 1.5;
+}
+.intro-setting input {
+  width: 20px;
+  height: 20px;
+}
+.in-match > header {
+  visibility: hidden;
+}
+@media (max-width: 700px) {
+  .school-coach:not(.school-passed) {
+    top: 225px;
+    left: 14px;
+    right: auto;
+    width: calc(100% - 28px);
+    padding: 10px 12px;
+  }
+  .school-coach:not(.school-passed) strong {
+    font-size: 21px;
+  }
+  .school-coach:not(.school-passed) p {
+    margin: 4px 0;
+    font-size: 10px;
+  }
+  .school-coach:not(.school-passed) .text-button {
+    display: inline-block;
+    min-height: 32px;
+    margin-right: 12px;
+  }
+  .hole-preview {
+    bottom: 166px;
+    padding: 12px 16px;
+  }
+  .hole-preview strong {
+    font-size: 24px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .in-match .hole-hud {
+    top: 8px;
+    left: 14px;
+    max-width: 225px;
+  }
+  .in-match .hole-hud h2 {
+    font-size: 19px;
+  }
+  .in-match .hole-hud p {
+    display: none;
+  }
+  .in-match .leaderboard {
+    top: 8px;
+    right: 12px;
+    max-width: 145px;
+  }
+  .in-match .view-controls {
+    top: 68px;
+    bottom: auto;
+    left: 14px;
+    max-width: 210px;
+  }
+  .turn-toast {
+    top: 156px;
+    left: 14px;
+    width: 180px;
+  }
+  .shot-panel {
+    bottom: 6px;
+  }
+  .school-coach:not(.school-passed) {
+    top: 100px;
+    right: 12px;
+    left: auto;
+    width: 205px;
+  }
+  .school-coach:not(.school-passed) p {
+    font-size: 10px;
+  }
+  .hole-preview {
+    bottom: 132px;
+    left: auto;
+    right: 12px;
+    transform: none;
+    width: 260px;
+  }
+  .hole-preview p {
+    display: none;
+  }
+}
+@media (min-width: 801px) and (min-height: 501px) {
+  .in-match .view-controls {
+    left: 22px;
+    top: 275px;
+    bottom: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 210px;
+    max-width: 210px;
+    gap: 6px;
+  }
+  .in-match .view-controls button {
+    min-height: 38px;
+    padding: 7px;
+    font-size: 10px;
+  }
+}
+@media (max-width: 700px) and (min-height: 501px) {
+  .school-mode .hole-hud {
+    max-width: calc(100% - 132px);
+  }
+  .school-mode .hole-hud h2 {
+    font-size: 20px;
+  }
+  .school-mode .hole-hud p,
+  .school-mode .leaderboard {
+    display: none;
+  }
+  .school-mode .turn-toast {
+    top: 16px;
+    left: auto;
+    right: 12px;
+    width: 105px;
+  }
+  .school-mode .turn-toast span {
+    font-size: 8px;
+  }
+  .school-mode .view-controls {
+    top: 68px;
+    left: 12px;
+  }
+  .school-mode .school-coach:not(.school-passed) {
+    top: 144px;
+  }
+  .school-mode .school-control-hint {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+  .school-mode .school-coach .text-button {
+    min-height: 38px;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .turn-toast {
+    top: 112px;
+    left: auto;
+    right: 12px;
+    width: 145px;
+  }
+  .school-mode .leaderboard {
+    display: none;
+  }
+  .school-mode .turn-toast {
+    top: 8px;
+    right: 12px;
+    width: 105px;
+  }
+  .school-mode .school-control-hint {
+    display: none;
+  }
+}
+@media (min-width: 801px) and (min-height: 501px) {
+  .in-match .hole-map {
+    left: 22px;
+    top: 420px;
+    bottom: auto;
+    width: 210px;
+    max-height: calc(100svh - 436px);
+    overflow: auto;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .in-match .hole-map {
+    top: 174px;
+    right: 12px;
+    left: auto;
+    bottom: auto;
+    width: 132px;
+    max-height: calc(100svh - 186px);
+    overflow: auto;
+  }
+  .in-match .hole-map svg {
+    max-height: calc(100svh - 240px);
+  }
+}
+@media (max-width: 700px) and (min-height: 501px) {
+  .in-match .hole-map {
+    top: 230px;
+    right: 12px;
+    left: auto;
+    bottom: auto;
+    width: 108px;
+    max-height: 225px;
+    overflow: auto;
+  }
+  .school-mode .hole-map {
+    top: 330px;
+  }
+}
