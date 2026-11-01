@@ -170,7 +170,14 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
     await b.getByRole("button", { name: /Jugar online/ }).click();
     await b.getByRole("textbox", { name: "Tu nombre" }).fill("Luis");
     await b.getByRole("button", { name: /Unirme/ }).click();
+    // Joining is asynchronous. Confirm both views before clicking a button
+    // whose position changes when the guest row is inserted.
+    await expect(b.getByTestId("room-code")).toHaveText(code);
+    await expect(a.locator(".players")).toContainText("Luis");
     await a.getByRole("button", { name: "Estoy listo", exact: true }).click();
+    await expect(
+      a.getByRole("button", { name: "Cancelar preparado", exact: true }),
+    ).toBeVisible();
     await b.getByRole("button", { name: "Estoy listo", exact: true }).click();
     await expect(
       a.getByRole("button", { name: /Comenzar partida/ }),
