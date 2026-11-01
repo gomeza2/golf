@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { PUBLIC_SERVER_URL } from "../../src/onlineServer";
-import { APP_VERSION } from "../../src/release";
+import { readFileSync } from "node:fs";
+const APP_VERSION = JSON.parse(
+  readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+).version;
 test("the released school completes a physical target with the actual published version", async ({
   page,
   baseURL,
