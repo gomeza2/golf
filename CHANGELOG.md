@@ -1,5 +1,13 @@
 # Hoyo en Uno · Golf Club
 
+## 0.8.0
+
+- Ruinas del Cielo: tres hoyos originales, 24 únicos y nueve recorridos. Puente diagonal con ahorro real de un golpe, dos rampas de templo/pórtico y reloj de mecanismos con ruta exterior. Los 21 anteriores y las vueltas de 9/18 permanecen.
+- Árboles/columnas/rocas instanciados: tres llamadas en lugar de las 36 de los árboles anteriores; detalle 4/8/14. Reflejos superficiales del agua agrupados en una llamada por zona en lugar de doce.
+- Superficies texturadas, bandera de tela animada y partículas de agua/impacto/copa, sin cambios de física. Ahorro elimina efectos opcionales; movimiento reducido respetado por bandera y partículas.
+- Reglas v7, claves de récords y guardados formato 1 intactos. Protocolo de red 9 para el catálogo ampliado; prueba pública adicional de dos jugadores sobre el nuevo puente. Sin dependencias nuevas.
+- Auditoría y fases siguientes en ROADMAP.md. Editor, desafíos periódicos y copas persistentes no implementados en esta entrega.
+
 ## 0.7.0
 
 - Dirección pública de Render configurada para entrar online desde Pages sin escribir una URL avanzada. La publicación queda condicionada a la comprobación del servidor público con dos clientes reales.

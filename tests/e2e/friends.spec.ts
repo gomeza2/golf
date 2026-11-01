@@ -6,6 +6,7 @@ import type { State } from "../../shared/game";
 import { NETWORK_PROTOCOL } from "../../shared/rules";
 import { confirmedPoints } from "../../shared/competition";
 import { aceShots } from "../fixtures/aces";
+import { skyBridgeShots } from "../fixtures/sky";
 function event<T = any>(
   socket: Socket,
   name: string,
@@ -204,6 +205,47 @@ test("two browser players share lobby rules, see real rival shots and receive th
   } finally {
     await ca.close();
     await cb.close();
+  }
+});
+test("the public sky circuit shares the real bridge shortcut and scores between two clients", async () => {
+  const a = await open(),
+    b = await open();
+  try {
+    const host = await enter(a, {
+      type: "create",
+      name: "Ana",
+      circuit: "skyruins",
+      format: "stableford",
+    });
+    await enter(b, { type: "join", name: "Luis", code: host.code });
+    await ready(a, b);
+    let update = state(a, (s) => s.phase === "playing");
+    a.emit("action", { type: "start" });
+    await update;
+    for (let shot = 0; shot < 2; shot++)
+      for (const [index, socket] of [a, b].entries()) {
+        const [angle, power] = skyBridgeShots[shot];
+        update = state(
+          a,
+          (s) =>
+            !s.moving &&
+            (shot === 0
+              ? s.players[index].strokes === 1
+              : s.players[index].done),
+        );
+        socket.emit("action", { type: "shoot", angle, power });
+        await update;
+      }
+    const scores = await state(b, (s) => s.phase === "scores");
+    expect(scores.circuit).toBe("skyruins");
+    expect(scores.players.map((p) => p.scores)).toEqual([[2], [2]]);
+    expect(scores.players.map((p) => p.penalties)).toEqual([0, 0]);
+    expect(scores.players.map((p) => confirmedPoints(p, scores))).toEqual([
+      4, 4,
+    ]);
+  } finally {
+    a.disconnect();
+    b.disconnect();
   }
 });
 test("an expired disconnect retires once, revokes recovery and lets the remaining friend finish", async () => {

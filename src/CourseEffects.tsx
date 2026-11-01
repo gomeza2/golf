@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { aimGuide } from "../shared/shot";
@@ -30,10 +30,10 @@ export function useGrassTexture() {
   useEffect(() => () => texture.dispose(), [texture]);
   return texture;
 }
-function Water({ zone }: { zone: Zone }) {
+function Water({ zone, detail }: { zone: Zone; detail: number }) {
   const ref = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
-    if (ref.current)
+    if (ref.current && detail > 0)
       ref.current.position.y =
         zone.y + Math.sin(clock.elapsedTime * 1.2) * 0.015;
   });
@@ -49,45 +49,100 @@ function Water({ zone }: { zone: Zone }) {
           opacity={0.92}
         />
       </mesh>
-      {Array.from({ length: 12 }, (_, i) => (
-        <mesh
-          key={i}
-          rotation={[-Math.PI / 2, 0, -0.15]}
-          position={[
-            ((i * 3.7) % (zone.width - 1)) - (zone.width - 1) / 2,
-            0.015,
-            ((i * 5.3) % (zone.length - 1)) - (zone.length - 1) / 2,
-          ]}
-        >
-          <planeGeometry args={[0.6 + (i % 3) * 0.3, 0.035]} />
-          <meshBasicMaterial color="#b8ede4" transparent opacity={0.24} />
-        </mesh>
-      ))}
+      {detail > 0 && <WaterRipples zone={zone} />}
     </group>
   );
 }
-export function CourseWater({ course }: { course: Course }) {
+function WaterRipples({ zone }: { zone: Zone }) {
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry(),
+      positions: number[] = [];
+    for (let i = 0; i < 12; i++) {
+      const x =
+        ((i * 3.7) % Math.max(0.1, zone.width - 1)) - (zone.width - 1) / 2;
+      const z =
+        ((i * 5.3) % Math.max(0.1, zone.length - 1)) - (zone.length - 1) / 2;
+      const half = (0.6 + (i % 3) * 0.3) / 2;
+      for (const [dx, dz] of [
+        [-half, -0.018],
+        [half, -0.018],
+        [half, 0.018],
+        [-half, -0.018],
+        [half, 0.018],
+        [-half, 0.018],
+      ])
+        positions.push(x + dx, 0.015, z + dz + dx * 0.15);
+    }
+    g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    return g;
+  }, [zone.width, zone.length]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh geometry={geometry}>
+      <meshBasicMaterial
+        color="#b8ede4"
+        transparent
+        opacity={0.24}
+        side={THREE.DoubleSide}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+export function CourseWater({
+  course,
+  detail = 1,
+}: {
+  course: Course;
+  detail?: number;
+}) {
   return (
     <>
       {course.water?.map((zone, i) => (
-        <Water key={i} zone={zone} />
+        <Water key={i} zone={zone} detail={detail} />
       ))}
       {[
         ...(course.rough || []).map((z) => ({ ...z, shade: "#536b38" })),
         ...(course.dirt || []).map((z) => ({ ...z, shade: "#967352" })),
         ...(course.sand || []).map((z) => ({ ...z, shade: "#d9bf86" })),
       ].map((zone, i) => (
-        <mesh
-          key={`sand${i}`}
-          position={[zone.x, zone.y + 0.008, zone.z]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          receiveShadow
-        >
-          <planeGeometry args={[zone.width, zone.length]} />
-          <meshStandardMaterial color={zone.shade} roughness={1} />
-        </mesh>
+        <SurfacePatch key={`sand${i}`} zone={zone} />
       ))}
     </>
+  );
+}
+function SurfacePatch({ zone }: { zone: Zone & { shade: string } }) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#eeeeee";
+    ctx.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 1600; i++) {
+      ctx.fillStyle = i % 3 ? "rgba(60,45,30,.13)" : "rgba(255,255,245,.6)";
+      ctx.fillRect(
+        (i * 31 + Math.floor(i / 17)) % 64,
+        (i * 19 + Math.floor(i / 23)) % 64,
+        1,
+        i % 7 ? 1 : 3,
+      );
+    }
+    const result = new THREE.CanvasTexture(canvas);
+    result.wrapS = result.wrapT = THREE.RepeatWrapping;
+    result.repeat.set(zone.width / 2, zone.length / 2);
+    result.colorSpace = THREE.SRGBColorSpace;
+    return result;
+  }, [zone.width, zone.length]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return (
+    <mesh
+      position={[zone.x, zone.y + 0.008, zone.z]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      receiveShadow
+    >
+      <planeGeometry args={[zone.width, zone.length]} />
+      <meshStandardMaterial color={zone.shade} map={texture} roughness={1} />
+    </mesh>
   );
 }
 export function AimLine({
@@ -167,9 +222,11 @@ export function AimLine({
 export function ImpactEffect({
   event,
   time,
+  detail = 1,
 }: {
   event: State["event"];
   time: number;
+  detail?: number;
 }) {
   if (!event || time - event.time > 1 || time < event.time) return null;
   const age = time - event.time;
@@ -181,6 +238,15 @@ export function ImpactEffect({
         event.pos.z,
       ]}
     >
+      {detail > 0 &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches && (
+          <ImpactParticles
+            key={`${event.seq}:${detail}`}
+            kind={event.kind}
+            age={age}
+            count={detail === 2 ? 24 : 12}
+          />
+        )}
       {[0, 0.3].map((offset, i) => (
         <mesh
           key={i}
@@ -197,5 +263,50 @@ export function ImpactEffect({
         </mesh>
       ))}
     </group>
+  );
+}
+function ImpactParticles({
+  kind,
+  age,
+  count,
+}: {
+  kind: NonNullable<State["event"]>["kind"];
+  age: number;
+  count: number;
+}) {
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(count * 3), 3),
+    );
+    return g;
+  }, [count]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useLayoutEffect(() => {
+    const positions = geometry.attributes.position;
+    for (let i = 0; i < count; i++) {
+      const angle = i * 2.39996,
+        speed = 0.5 + (i % 5) * 0.18;
+      positions.setXYZ(
+        i,
+        Math.cos(angle) * speed * age,
+        Math.max(0, (kind === "water" ? 2.6 : 1.7) * age - 3 * age * age),
+        Math.sin(angle) * speed * age,
+      );
+    }
+    positions.needsUpdate = true;
+    geometry.computeBoundingSphere();
+  }, [geometry, count, age, kind]);
+  return (
+    <points geometry={geometry}>
+      <pointsMaterial
+        color={kind === "water" ? "#d7ffff" : "#f3d794"}
+        size={kind === "water" ? 0.09 : 0.055}
+        transparent
+        opacity={Math.max(0, 1 - age)}
+        depthWrite={false}
+      />
+    </points>
   );
 }
