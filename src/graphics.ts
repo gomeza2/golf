@@ -40,7 +40,8 @@ export function renderProfile(
       : mode === "high"
         ? { ratio: 2, shadowSize: 2048, label: "detalle alto" }
         : automatic;
-  return { ...selected, ratio: Math.min(native, selected.ratio) };
+  const detail = mode === "low" ? 0 : mode === "high" ? 2 : tier;
+  return { ...selected, ratio: Math.min(native, selected.ratio), detail };
 }
 export type RenderProfile = ReturnType<typeof renderProfile>;
 

@@ -7,7 +7,7 @@ for (const index of [0, 1])
     if (index === 0) await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(page.locator(".catalog-intro")).toContainText(
-      "21 hoyos distintos",
+      "24 hoyos distintos",
     );
     await page.getByRole("button", { name: /Club del As/ }).click();
     await page.locator(".training-picker summary").click();

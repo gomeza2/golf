@@ -1,3 +1,4 @@
+import { createSkyCourses } from "./skyCourses";
 export type V3 = { x: number; y: number; z: number };
 export type Block = {
   pos: [number, number, number];
@@ -120,6 +121,7 @@ export const colors = [
 ];
 
 export type CircuitId =
+  | "skyruins"
   | "sunset"
   | "moonlight"
   | "park"
@@ -511,7 +513,12 @@ export const championshipCourses = [
   ...rivieraCourses,
   ...mastersCourses,
 ];
-export const uniqueCourses = [...championshipCourses, ...aceCourses];
+export const skyCourses = createSkyCourses({ deck, rampDeck });
+export const uniqueCourses = [
+  ...championshipCourses,
+  ...aceCourses,
+  ...skyCourses,
+];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
   Math.abs(p.z - zone.z) < zone.length / 2 + margin;
@@ -519,6 +526,7 @@ export const courseSize = (course: Course) =>
   course.dimensions || { width: 12, length: 24 };
 uniqueCourses.forEach(sealSideSlits);
 export const circuits = [
+  // Keep the original order and circuit identities for preferences and records.
   {
     id: "sunset" as const,
     name: "Club del atardecer",
@@ -604,6 +612,17 @@ export const circuits = [
     edge: "#e0d0aa",
     background: "#183c43",
     accent: "#ffcf83",
+  },
+  {
+    id: "skyruins" as const,
+    name: "Ruinas del Cielo",
+    description:
+      "Tres jardines suspendidos: diagonal arriesgada, templo elevado y mecanismos de piedra. Rutas seguras para recuperar.",
+    courses: skyCourses,
+    ground: "#689579",
+    edge: "#c4c4ac",
+    background: "#577b86",
+    accent: "#f0ce85",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>

@@ -34,6 +34,7 @@ import {
   type RenderProfile,
 } from "./graphics";
 import { RenderQuality } from "./RenderQuality";
+import { ClubFlag, CourseScenery } from "./CourseScenery";
 function Box({
   b,
   time,
@@ -434,16 +435,19 @@ function World({
         cameraLook={cameraLook}
       />
       <SceneReady />
-      <CourseWater course={c} />
-      <ImpactEffect event={s.event} time={s.time} />
-      <mesh position={[0, -1.7, 0]} receiveShadow>
-        <boxGeometry
-          args={[dimensions.width + 2, 1.3, dimensions.length + 2]}
-        />
-        <meshStandardMaterial
-          color={s.circuit === "moonlight" ? "#284658" : "#234b43"}
-        />
-      </mesh>
+      <CourseWater course={c} detail={rendering.detail} />
+      <ImpactEffect event={s.event} time={s.time} detail={rendering.detail} />
+      <CourseScenery course={c} circuit={s.circuit} detail={rendering.detail} />
+      {s.circuit !== "skyruins" && (
+        <mesh position={[0, -1.7, 0]} receiveShadow>
+          <boxGeometry
+            args={[dimensions.width + 2, 1.3, dimensions.length + 2]}
+          />
+          <meshStandardMaterial
+            color={s.circuit === "moonlight" ? "#284658" : "#234b43"}
+          />
+        </mesh>
+      )}
       <GreenSupport course={c} />
       <Green course={c} color={theme.ground} />
       <group position={[c.start.x, c.start.y - 0.21, c.start.z]}>
@@ -491,10 +495,13 @@ function World({
           <cylinderGeometry args={[0.025, 0.025, 2.4, 8]} />
           <meshStandardMaterial color="#f8ead3" />
         </mesh>
-        <mesh position={[0.47, 2.1, 0]}>
-          <boxGeometry args={[0.9, 0.55, 0.04]} />
-          <meshStandardMaterial color={theme.accent} />
-        </mesh>
+        <ClubFlag
+          color={theme.accent}
+          animated={
+            rendering.detail > 0 &&
+            !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          }
+        />
       </group>
       {s.players.length ? (
         s.players.map((p, i) => (
@@ -588,36 +595,16 @@ function World({
           depthWrite={false}
         />
       </mesh>
-      {Array.from({ length: 18 }, (_, i) => {
-        const x = (i % 2 ? 1 : -1) * (dimensions.width / 2 + 3 + (i % 3) * 2),
-          z = ((i * 7) % (dimensions.length + 9)) - (dimensions.length + 8) / 2;
-        return (
-          <group key={i} position={[x, -0.2, z]}>
-            <mesh position={[0, 1, 0]} castShadow>
-              <cylinderGeometry args={[0.14, 0.22, 2, 6]} />
-              <meshStandardMaterial color="#806950" />
-            </mesh>
-            <mesh position={[0, 2.5, 0]} castShadow>
-              <icosahedronGeometry args={[1.4, 0]} />
-              <meshStandardMaterial
-                color={
-                  s.circuit === "moonlight"
-                    ? i % 2
-                      ? "#557c94"
-                      : "#689d9b"
-                    : i % 2
-                      ? "#638f68"
-                      : "#8aa472"
-                }
-              />
-            </mesh>
-          </group>
-        );
-      })}
-      <mesh position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color={theme.background} roughness={0.9} />
-      </mesh>
+      {s.circuit !== "skyruins" && (
+        <mesh
+          position={[0, -2, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          receiveShadow
+        >
+          <planeGeometry args={[200, 200]} />
+          <meshStandardMaterial color={theme.background} roughness={0.9} />
+        </mesh>
+      )}
     </>
   );
 }

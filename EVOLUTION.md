@@ -1,5 +1,7 @@
 # Evolución del club — golpe normal
 
+**Estado actual 0.8.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
 | Fase             | Trabajo concreto                                                                                                                                                      | Verificación / estado                                                                             |
@@ -101,3 +103,12 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Fase 12: 122 pruebas unitarias y 37 de navegador, más cuatro de producción. Se prueban puntos físicos entre clientes, ambos navegadores viendo las mismas puntuaciones, permisos y preparados, reconexión, retiro caducado y podio/reconocimientos. El comando test:online también se prueba con el servidor Node compilado; solo una URL externa real permite declarar verificación por Internet.
 - Compatibilidad: protocolo de red 8 separado de reglas v7. Se actualizan cliente/servidor juntos; los guardados y marcas locales no se invalidan. Física, potencia, circuitos y tres controles conservados.
 - Pendiente externo para completar Internet: crear y activar el servicio en una cuenta de hosting y verificar su URL. El propietario fue informado de la opción Free y sus límites; los amigos no necesitan cuenta. La publicación podrá probar automáticamente esa URL antes de activar el online predeterminado de Pages.
+
+
+## Versión 0.8.0 — Ruinas del Cielo
+
+- Fases de contenido y mundo: tres trazados nuevos definidos en `shared/skyCourses.ts`, consumidos por la misma geometría del motor y del render. Par 4/4/5; pasarela segura, puente diagonal, rampas continuas, pórtico físico y mecanismos con ruta exterior. Vuelta real sin penalizaciones de 3/3/4; diagonal real de dos golpes frente a tres por la ruta segura.
+- Fases visuales y rendimiento: ambientación instanciada que sustituye los árboles anteriores, materiales procedurales, bandera y partículas. Detalle adaptativo 4/8/14, sin efectos opcionales en Ahorro; una sola llamada para reflejos superficiales por zona de agua.
+- Compatibilidad: 21 hoyos anteriores intactos en sus mismas posiciones, vueltas de 9/18 conservadas, sin cambios a potencia/fricción/rebotes/turnos. Reglas v7, formato de guardado 1 y claves de marcas intactos. La red pasa a protocolo 9 por el catálogo nuevo.
+- Validación física: ronda segura completa, atajo, penalización única por fallo, uniones de las dos rampas, hueco físico del pórtico y recuperación idéntica fotograma a fotograma. Navegador móvil: cambio real de detalle, atajo con Eagle y recuperación. Dos clientes del servidor reciben los mismos resultados del recorrido nuevo.
+- Plan vigente en ROADMAP.md. Continúan pendientes teléfonos físicos, sesiones humanas prolongadas/carga, desafíos periódicos, torneos de varias rondas y editor; no se sustituyen por simulaciones locales presentadas como servicios compartidos.

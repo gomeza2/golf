@@ -17,8 +17,8 @@ function settle(g: Game) {
   for (let f = 0; f < 1200 && g.state.moving; f++) g.tick();
 }
 it("adds three distinct challenge holes without changing the 18 and 9 hole championship rounds", () => {
-  expect(uniqueCourses).toHaveLength(21);
-  expect(new Set(uniqueCourses).size).toBe(21);
+  expect(uniqueCourses).toHaveLength(24);
+  expect(new Set(uniqueCourses).size).toBe(24);
   expect(getCircuit("tour").courses).toHaveLength(18);
   expect(getCircuit("nine").courses).toHaveLength(9);
   expect(getCircuit("aces").courses).toHaveLength(3);

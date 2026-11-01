@@ -73,8 +73,8 @@ export function ClubCatalog({
           </h1>
         </div>
         <p>
-          {uniqueCourses.length} hoyos distintos. Vueltas de 9 y 18 + Club del
-          As.
+          {uniqueCourses.length} hoyos distintos. Vueltas de 9 y 18, Club del As
+          y Ruinas del Cielo.
           <br />
           Elige el recorrido, tu forma de golpear y con quién jugar.
         </p>
