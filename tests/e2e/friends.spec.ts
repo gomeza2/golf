@@ -157,8 +157,16 @@ test("two browser players share lobby rules, see real rival shots and receive th
     await expect(
       b.getByRole("button", { name: /Menos golpes/ }),
     ).toBeDisabled();
+    await expect(b.getByTestId("room-code")).toHaveText(code);
+    await expect(a.locator(".players")).toContainText("Luis");
     await a.getByRole("button", { name: "Estoy listo", exact: true }).click();
+    await expect(
+      a.getByRole("button", { name: "Cancelar preparado", exact: true }),
+    ).toBeVisible();
     await b.getByRole("button", { name: "Estoy listo", exact: true }).click();
+    await expect(
+      b.getByRole("button", { name: "Cancelar preparado", exact: true }),
+    ).toBeVisible();
     await expect(
       a.getByRole("button", { name: /Comenzar partida/ }),
     ).toBeEnabled();
@@ -167,6 +175,15 @@ test("two browser players share lobby rules, see real rival shots and receive th
       b.getByRole("button", { name: "Estoy listo", exact: true }),
     ).toBeVisible();
     await a.getByRole("button", { name: /Duelo por puntos/ }).click();
+    await expect(
+      b.getByRole("button", { name: /Duelo por puntos/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      a.getByRole("button", { name: "Estoy listo", exact: true }),
+    ).toBeVisible();
+    await expect(
+      b.getByRole("button", { name: "Estoy listo", exact: true }),
+    ).toBeVisible();
     await a.screenshot({
       path: "work/friends-online-lobby.png",
       fullPage: true,
