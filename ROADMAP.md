@@ -27,10 +27,17 @@ La verificación de publicación incluye ahora tres pruebas públicas: dos anter
 
 ## Próximas entregas, en orden
 
-1. **Cámara y entrada al juego.** Encuadre de vista general según relación de aspecto, introducción breve y omisible al hoyo, tutorial interactivo de tiro sin enseñar una solución. Validación: teclado, tacto, tres controles, transición sin disparos accidentales y mediciones en teléfonos físicos.
+1. **Cámara y entrada al juego — implementada en 0.9.0.** Encuadre por proyección del volumen real en el espacio útil; vista local de 2,6 s omisible; Escuela del Club con tres objetivos físicos, los tres controles, progreso local y guía recuperable. Se comprobaron geometría proyectada, orientación, tiros reales, tacto y persistencia. Continúan pendientes las mediciones en teléfonos físicos.
 2. **Desafíos del club.** Selecciones diarias/semanales deterministas de contenido comprobado, objetivos completos y resultados personales separados. Compartir el mismo desafío por enlace. No presentar datos locales como un ranking compartido; sin recompensas que alteren la física.
 3. **Copas entre amigos.** Series de rondas dentro de la sala, acumulación autoritativa, revancha y resultados de la serie recuperables durante una desconexión. Definir abandono y empates antes de incorporar interfaz. Persistencia entre reinicios requerirá almacenamiento central real.
 4. **Taller de hoyos.** Aprovechar `Course`, `Block`, `Zone`, `geometry()` y `blockPose()`. Primero documento versionado/validado y prueba con el mismo Rapier; después colocar, mover, girar, deshacer y configurar salida/copa. Guardar/exportar/importar creaciones locales explícitas; los circuitos compartidos online deberán ser validados por el servidor. No aceptar snapshots físicos enviados por jugadores. Galería comunitaria y enlaces duraderos necesitan almacenamiento y moderación, aún no implementados.
 5. **Mundos y progresión.** Ciudad en miniatura, industria, cascadas y movimientos nuevos con colisiones compartidas; medallas, historial y cosméticos sin ventajas. Incorporar cada mundo solo después de completar sus rutas reales.
 
 No hay botones anticipados para funciones pendientes. Cada entrega exige compilación, reglas, ronda física, navegador, producción, revisión visual y prueba pública cuando afecta al online. Antes de escalar: teléfonos iOS/Android físicos, sesiones humanas largas y carga de varias salas. El número de llamadas de dibujo reducido no equivale a una mejora de FPS ya medida en esos equipos.
+
+
+## Base para la siguiente fase
+
+La fase prioritaria siguiente son desafíos del club: composición determinista sobre las pistas verificadas, identificador compartible y resultados personales separados. Antes de añadir otra preparación de partida, extraer conexión/lobby de `main.tsx`. La lógica nueva de escuela ya está separada en reglas puras (`school.ts`), estado (`useGolfSchool.ts`) e interfaz (`GolfSchool.tsx`); la presentación inicial está en `useHoleIntro.ts`. No reutilizar el progreso local como clasificación global.
+
+La entrega 0.9.0 mantiene los 24 hoyos/nueve recorridos y sus identidades. No añade una base de datos, cuentas ni editor superficial. La verificación pública exige la versión desplegada y completar el objetivo de aproximación, además de las salas/tiros reales.

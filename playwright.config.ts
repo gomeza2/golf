@@ -3,6 +3,8 @@ import { existsSync } from "node:fs";
 export default defineConfig({
   testDir: "tests/e2e",
   use: {
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
     baseURL: "http://localhost:5173",
     launchOptions: {
       executablePath:

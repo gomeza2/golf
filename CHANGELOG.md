@@ -1,5 +1,15 @@
 # Hoyo en Uno · Golf Club
 
+## 0.9.0
+
+- Vista general ajustada mediante límites 3D y proyección real, dirección adaptada a vertical, espacio reservado al HUD y recalculo al girar la pantalla. Menús laterales y controles de horizontal baja reorganizados.
+- Vista inicial local breve, omisible y con preferencia persistente. Detiene el reloj local; no interrumpe tiros iniciados ni pausa el online.
+- Escuela del Club opcional: aproximación dentro del aro, banda real y copa física, con fuerza normal y los tres controles. Feedback según el intento, reinicio y progreso individual por control. Preparación sin presión de reloj.
+- Guía recuperable como metadato opcional del guardado existente, validado independientemente. Un metadato dañado no descarta la simulación. Se mantienen reglas v7, protocolo 9, formatos y todas las pistas/modos.
+- 134 pruebas unitarias, 44 casos de navegador y cinco de producción; la publicación comprueba también la versión real y un objetivo físico de la escuela. Sin dependencias ni servicios nuevos.
+
+- QA de 0.9.0: la comprobación de roster del anfitrión espera hasta 15 s a que aparezca realmente el invitado, manteniendo las condiciones de preparación. La CI conserva trazas/capturas de sus salas locales si falla; la comprobación pública conserva capturas/contexto y desactiva trazas de red.
+
 ## 0.8.0
 
 - Ruinas del Cielo: tres hoyos originales, 24 únicos y nueve recorridos. Puente diagonal con ahorro real de un golpe, dos rampas de templo/pórtico y reloj de mecanismos con ruta exterior. Los 21 anteriores y las vueltas de 9/18 permanecen.
