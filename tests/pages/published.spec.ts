@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { aceShots } from "../fixtures/aces";
 import { PUBLIC_SERVER_URL } from "../../src/onlineServer";
 import { readFileSync } from "node:fs";
 const APP_VERSION = JSON.parse(
@@ -239,4 +240,41 @@ test("even a blocked entry script leaves a visible recovery action", async ({
   await expect(
     page.getByRole("button", { name: /Jugar en este/ }),
   ).toBeEnabled();
+});
+
+test("the published challenge link starts its fixed Classic round and accepts a real physical ace", async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto(`${baseURL!}?challenge=c1-d-2026-11-02`);
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
+  const preview = page.getByRole("dialog", { name: "Preparar desafío" });
+  await expect(preview).toContainText("Club del As");
+  await preview
+    .getByRole("button", { name: /Empezar reto individual/ })
+    .click();
+  await expect(page.locator(".locked-control")).toContainText("Clásico");
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
+  await page
+    .getByRole("slider", { name: "Ángulo", exact: true })
+    .fill(String(Number(aceShots[0].angle.toFixed(10))));
+  await page
+    .getByRole("slider", { name: "Potencia", exact: true })
+    .fill(String(aceShots[0].power));
+  await page.getByRole("button", { name: /GOLPEAR/ }).click();
+  await expect(
+    page.getByRole("button", { name: /Siguiente hoyo/ }),
+  ).toBeVisible({ timeout: 25000 });
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("club-local-round")!),
+  );
+  expect(saved.challenge.id).toBe("c1-d-2026-11-02");
+  expect(saved.state.players[0].scores).toEqual([1]);
+  await page.screenshot({
+    path: "work/pages-challenge.png",
+    animations: "disabled",
+  });
+  console.log(
+    `PAGES CHALLENGE VERIFIED: version ${APP_VERSION}, fixed link and real ace: ${baseURL}`,
+  );
 });

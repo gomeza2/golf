@@ -8,6 +8,7 @@ import {
 import type { Game, State } from "../shared/game";
 import type { ControlMode } from "./shotControls";
 import type { SchoolSession } from "./school";
+import type { ChallengeSession } from "./challengeRecords";
 import {
   captureLocalRound,
   discardLocalRound,
@@ -24,6 +25,7 @@ export function useLocalRecovery({
   angle,
   power,
   school,
+  challenge,
 }: {
   game: RefObject<Game | null>;
   mode: "local" | "online";
@@ -33,10 +35,19 @@ export function useLocalRecovery({
   angle: number;
   power: number;
   school?: SchoolSession | null;
+  challenge?: ChallengeSession | null;
 }) {
   const [save, setSave] = useState(readLocalRound);
-  const config = useRef({ mode, screen, control, angle, power, school });
-  config.current = { mode, screen, control, angle, power, school };
+  const config = useRef({
+    mode,
+    screen,
+    control,
+    angle,
+    power,
+    school,
+    challenge,
+  });
+  config.current = { mode, screen, control, angle, power, school, challenge };
   const checkpoint = useCallback(() => {
     const c = config.current,
       g = game.current;
@@ -53,6 +64,7 @@ export function useLocalRecovery({
         power: c.power,
       });
       if (c.school) round.school = { ...c.school };
+      if (c.challenge) round.challenge = { ...c.challenge };
       if (!persistLocalRound(round)) {
         setSave({ kind: "unavailable" });
         return false;
@@ -76,6 +88,8 @@ export function useLocalRecovery({
     school?.lesson,
     school?.phase,
     school?.bounced,
+    challenge?.id,
+    challenge?.attempt,
     checkpoint,
   ]);
   useEffect(() => {

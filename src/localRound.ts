@@ -11,10 +11,12 @@ import {
 import { isControlMode, type ControlMode } from "./shotControls";
 import { isMatchFormat } from "../shared/scoring";
 import type { SchoolSession } from "./school";
+import type { ChallengeSession } from "./challengeRecords";
 
 export const LOCAL_ROUND_KEY = "club-local-round";
 const MAX_BYTES = 2_000_000;
 export type LocalRound = {
+  challenge?: ChallengeSession;
   school?: SchoolSession;
   format: 1;
   rules: number;

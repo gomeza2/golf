@@ -4,6 +4,7 @@ import {
   useRef,
   type Dispatch,
   type SetStateAction,
+  type ReactNode,
 } from "react";
 import { total, canStart, type State } from "../shared/game";
 import {
@@ -29,6 +30,8 @@ import { MatchFormatPicker } from "./MatchFormatPicker";
 import { FinalPodium } from "./FinalPodium";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
+  shotExtras?: ReactNode;
+  resultExtras?: ReactNode;
   practiceReport: PracticeReport | null;
   onPause: () => void;
   lookMode: boolean;
@@ -63,6 +66,8 @@ type Props = {
   leave: () => void;
 };
 export function GamePanels({
+  shotExtras,
+  resultExtras,
   practiceReport,
   onPause,
   lookMode,
@@ -425,6 +430,7 @@ export function GamePanels({
                 {controlModes.find((mode) => mode.id === controlMode)?.name} ·
                 FIJO
               </span>
+              {shotExtras}
               {chargeActive && (
                 <button className="text-button" onClick={cancelCharge}>
                   Cancelar preparación
@@ -624,6 +630,7 @@ export function GamePanels({
               Albatros: 5. El hoyo en uno puntúa según el par.
             </div>
           )}
+          {resultExtras}
           <FinalPodium state={s} />
           <div className="table-wrap">
             <table>

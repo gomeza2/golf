@@ -1,4 +1,10 @@
 import { getCircuit } from "../shared/courses";
+import {
+  getChallenge,
+  challengeTitle,
+  challengeDate,
+} from "../shared/challenges";
+import { restoreChallengeSession } from "./challengeRecords";
 import { controlModes } from "./shotControls";
 import type { LocalSave } from "./localRound";
 
@@ -36,10 +42,17 @@ export function SavedRound({
     );
   const { state, control, savedAt } = save.round,
     circuit = getCircuit(state.circuit);
+  const session = restoreChallengeSession(save.round.challenge, state, control),
+    challenge = session ? getChallenge(session.id) : null;
   return (
     <section className="saved-round" aria-label="Partida local guardada">
       <div className="eyebrow">TU VUELTA TE ESPERA</div>
       <strong>{circuit.name}</strong>
+      {challenge && (
+        <span>
+          {challengeTitle(challenge)} · {challengeDate(challenge)} UTC
+        </span>
+      )}
       <p>
         {state.format === "stableford" ? "Duelo por puntos · " : ""}
         {state.practice

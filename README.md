@@ -1,6 +1,6 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.9.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.10.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
 ## Jugar desde GitHub Pages
 
@@ -9,6 +9,18 @@ URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiz
 Pages sirve el juego local completo para 1–8 personas y las nueve opciones de recorrido. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
+
+## Retos del club — 0.10.0
+
+Desde el catálogo puedes preparar el **Desafío diario** o la **Copa semanal**. Son vueltas individuales completas con control Clásico fijo: el diario rota entre cinco recorridos cortos y la copa ofrece 9 o 18 hoyos. Tu preferencia Clásico/Retroceso/Precisión para otras partidas se conserva. No se modifican las físicas ni las potencias de reglas v7.
+
+Cada reto tiene tres objetivos reales: terminar al par o mejor, sin penalizaciones y con al menos un hoyo bajo par (tres en la copa). Completar todos los hoyos sin llegar al límite da Bronce; dos objetivos dan Plata y los tres dan Oro. Un retiro, un hoyo al límite, entrenamiento, otro control o una vuelta incompleta no generan marca del reto. Los resultados muestran qué se consiguió y permiten repetir o copiar el resultado.
+
+**Compartir enlace** abre exactamente el mismo reto en otro navegador; por ejemplo `?challenge=c1-d-2026-11-04`. El calendario usa UTC (diario a medianoche, copa el lunes). El identificador versiona la selección y fija la fecha: un intento no cambia de recorrido al pasar medianoche y los enlaces antiguos siguen siendo jugables. Las invitaciones de sala tienen prioridad sobre un parámetro de reto.
+
+Las marcas y medallas son **personales en este navegador**, separadas de los récords de rondas normales y de la escuela; no se simula una clasificación global. Se conservan hasta 120 retos recientes y los últimos 32 identificadores de intento por reto para evitar duplicados por recuperación. Reanudar conserva el intento y la simulación real; repetir crea otro. Hay un único guardado local de partida: empezar una nueva sustituye el anterior, con aviso previo. El panel de objetivos pausa solamente la partida local.
+
+Para competir simultáneamente con amigos, sigue disponible **Online → Crear sala → Compartir invitación**, con el servidor autoritativo real. Los retos de esta entrega no son salas online ni guardan resultados en el servidor. Una futura copa compartida y un ranking persistente necesitan reglas de serie y almacenamiento central; todavía no están implementados.
 
 ## Presentación y cámara
 
@@ -333,7 +345,7 @@ La vegetación y las columnas se agrupan en tres llamadas de dibujo y permanecen
 
 Reglas v7, guardados formato 1 y marcas anteriores conservados. Protocolo de red **9**: actualiza también el servidor y recarga los clientes después de desplegar. `npm run test:online` incluye una comprobación real del nuevo recorrido con dos clientes y puntuación autoritativa. El workflow de Pages la exige antes de publicar.
 
-Auditoría, siguiente entrega y límites: [ROADMAP.md](ROADMAP.md). El editor, los desafíos periódicos y las copas de varias rondas quedan planificados; no se presentan como funciones terminadas.
+Auditoría, siguiente entrega y límites: [ROADMAP.md](ROADMAP.md). Al cerrar 0.8.0, el editor, los desafíos periódicos y las copas de varias rondas estaban pendientes. Los desafíos individuales periódicos se incorporan en 0.10.0; el editor y las series online continúan pendientes.
 
 
 ## 0.9.0 · Ver el campo y aprender jugando

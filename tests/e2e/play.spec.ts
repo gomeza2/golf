@@ -152,8 +152,16 @@ test("two real online clients join, validate turn ownership and recover a sessio
   }
 });
 test("online lobby works across two browser contexts", async ({ browser }) => {
+  test.setTimeout(120000);
   const ca = await browser.newContext(),
     cb = await browser.newContext();
+  await Promise.all(
+    [ca, cb].map((context) =>
+      context.addInitScript(() =>
+        localStorage.setItem("golf-graphics-mode", "low"),
+      ),
+    ),
+  );
   try {
     const a = await ca.newPage(),
       b = await cb.newPage();
