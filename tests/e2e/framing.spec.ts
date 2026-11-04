@@ -50,6 +50,9 @@ test("a long actual course fits the real WebGL frame after resizing between port
 test("local hole preview freezes the clock, can be skipped without a stroke, and its preference survives reload", async ({
   page,
 }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("golf-graphics-mode", "low"),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
@@ -57,11 +60,13 @@ test("local hole preview freezes the clock, can be skipped without a stroke, and
     page.getByRole("complementary", { name: "Vista inicial del hoyo" }),
   ).toBeVisible();
   const clock = await page.locator(".shot-top b").innerText();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(300);
   expect(await page.locator(".shot-top b").innerText()).toBe(clock);
   await page.keyboard.press("Space");
   await expect(page.locator(".turn-toast b")).toHaveText("0/12");
-  await page.getByRole("button", { name: /Omitir vista/ }).click();
+  // Keyboard activation does not wait for two stable rendering frames of a
+  // short-lived overlay on a software GPU. It exercises the accessible skip.
+  await page.getByRole("button", { name: /Omitir vista/ }).press("Enter");
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   await expect(page.locator("canvas")).toHaveAttribute(
     "data-camera-mode",

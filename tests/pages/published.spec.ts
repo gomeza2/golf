@@ -247,6 +247,7 @@ test("the published challenge link starts its fixed Classic round and accepts a 
   baseURL,
 }) => {
   await page.goto(`${baseURL!}?challenge=c1-d-2026-11-02`);
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
   const preview = page.getByRole("dialog", { name: "Preparar desafío" });
   await expect(preview).toContainText("Club del As");
   await preview
