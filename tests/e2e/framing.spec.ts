@@ -50,23 +50,31 @@ test("a long actual course fits the real WebGL frame after resizing between port
 test("local hole preview freezes the clock, can be skipped without a stroke, and its preference survives reload", async ({
   page,
 }) => {
+  test.setTimeout(120000);
   await page.addInitScript(() =>
     localStorage.setItem("golf-graphics-mode", "low"),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: /Jugar en este/ }).click();
-  await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
+  // Keep the 2.6 s UI window deterministic even when software rendering is slow.
+  await page.clock.install({ time: new Date("2026-11-04T12:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-11-04T12:01:00Z"));
+  await page.getByRole("button", { name: /Jugar en este/ }).press("Enter");
+  await page.getByRole("button", { name: /Comenzar recorrido/ }).press("Enter");
+  await page.clock.runFor(300);
   await expect(
     page.getByRole("complementary", { name: "Vista inicial del hoyo" }),
   ).toBeVisible();
   const clock = await page.locator(".shot-top b").innerText();
-  await page.waitForTimeout(300);
+  await page.clock.runFor(700);
   expect(await page.locator(".shot-top b").innerText()).toBe(clock);
   await page.keyboard.press("Space");
   await expect(page.locator(".turn-toast b")).toHaveText("0/12");
   // Keyboard activation does not wait for two stable rendering frames of a
   // short-lived overlay on a software GPU. It exercises the accessible skip.
   await page.getByRole("button", { name: /Omitir vista/ }).press("Enter");
+  await page.clock.runFor(1000);
+  await page.clock.resume();
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   await expect(page.locator("canvas")).toHaveAttribute(
     "data-camera-mode",

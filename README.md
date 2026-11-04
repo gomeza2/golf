@@ -345,7 +345,7 @@ La vegetación y las columnas se agrupan en tres llamadas de dibujo y permanecen
 
 Reglas v7, guardados formato 1 y marcas anteriores conservados. Protocolo de red **9**: actualiza también el servidor y recarga los clientes después de desplegar. `npm run test:online` incluye una comprobación real del nuevo recorrido con dos clientes y puntuación autoritativa. El workflow de Pages la exige antes de publicar.
 
-Auditoría, siguiente entrega y límites: [ROADMAP.md](ROADMAP.md). El editor, los desafíos periódicos y las copas de varias rondas quedan planificados; no se presentan como funciones terminadas.
+Auditoría, siguiente entrega y límites: [ROADMAP.md](ROADMAP.md). Al cerrar 0.8.0, el editor, los desafíos periódicos y las copas de varias rondas estaban pendientes. Los desafíos individuales periódicos se incorporan en 0.10.0; el editor y las series online continúan pendientes.
 
 
 ## 0.9.0 · Ver el campo y aprender jugando
