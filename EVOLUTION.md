@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.9.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.10.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -124,3 +124,13 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Siguiente entrega: desafíos deterministas compartibles con resultados personales separados; primero extraer la conexión/lobby para no concentrar más funciones en `main.tsx`. Teléfonos físicos, carga prolongada, editor y copas de varias rondas permanecen pendientes.
 
 - QA de 0.9.0: la comprobación de roster del anfitrión espera hasta 15 s a que aparezca realmente el invitado, manteniendo las condiciones de preparación. La CI conserva trazas/capturas de sus salas locales si falla; la comprobación pública conserva capturas/contexto y desactiva trazas de red.
+
+## Entrega 0.10.0 — retos repetibles y conexión separada
+
+Se implementan desafíos diarios y copas semanales individuales sobre los recorridos existentes, con objetivos y medallas calculados tras completar la vuelta. Calendario UTC, identificadores c1 y pools congelados mantienen los enlaces estables. Los desafíos se comparten por enlace, con resultados personales locales separados; no hay clasificación mundial ni copas online nuevas.
+
+La recuperación conserva el identificador del intento sin alterar el formato 1 del guardado. Metadatos incorrectos del reto se ignoran independientemente, conservando la partida. Repetir crea un intento nuevo. El control Clásico queda fijado sin cambiar la preferencia de las rondas normales. Los registros conservan mejor puntuación y máxima medalla por separado; se limitan a 120 retos y 32 intentos recientes para deduplicación.
+
+La conexión Socket.IO se mueve a `onlineConnection.ts`: validación de sesión/protocolo, acciones solo tras admisión, recuperación, ping reconocido, salida y limpieza. No se modifica el servidor ni el contrato de protocolo 9. La siguiente fase puede incorporar una copa entre amigos sobre esta base sin añadir otra implementación de conexión.
+
+Pendientes: copas de varias partidas en salas, persistencia central, editor completo y mediciones prolongadas en hardware móvil físico. El balance de golpe normal permanece intacto.

@@ -51,6 +51,7 @@ export function ClubCatalog({
   savedRound,
   schoolProgress,
   onLearn,
+  activities,
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
@@ -66,6 +67,7 @@ export function ClubCatalog({
   savedRound?: React.ReactNode;
   schoolProgress: SchoolProgress;
   onLearn: () => void;
+  activities?: React.ReactNode;
 }) {
   return (
     <section className="club-catalog">
@@ -85,6 +87,14 @@ export function ClubCatalog({
           Elige el recorrido, tu forma de golpear y con quién jugar.
         </p>
       </div>
+      {activities && (
+        <details className="club-activities">
+          <summary>
+            Retos del club <span>Desafío diario · Copa semanal →</span>
+          </summary>
+          {activities}
+        </details>
+      )}
       <div className="catalog-layout">
         <div
           className="course-catalog"

@@ -41,3 +41,11 @@ No hay botones anticipados para funciones pendientes. Cada entrega exige compila
 La fase prioritaria siguiente son desafíos del club: composición determinista sobre las pistas verificadas, identificador compartible y resultados personales separados. Antes de añadir otra preparación de partida, extraer conexión/lobby de `main.tsx`. La lógica nueva de escuela ya está separada en reglas puras (`school.ts`), estado (`useGolfSchool.ts`) e interfaz (`GolfSchool.tsx`); la presentación inicial está en `useHoleIntro.ts`. No reutilizar el progreso local como clasificación global.
 
 La entrega 0.9.0 mantiene los 24 hoyos/nueve recorridos y sus identidades. No añade una base de datos, cuentas ni editor superficial. La verificación pública exige la versión desplegada y completar el objetivo de aproximación, además de las salas/tiros reales.
+
+## Entrega 0.10.0 — retos del club y transporte desacoplado
+
+El siguiente objetivo de alto impacto era dar motivos concretos para volver sin añadir geometría repetida ni alterar los tiros ya equilibrados. Se implementan retos diarios y copas semanales **individuales**, con fecha UTC, circuitos versionados, objetivos, medallas y marcas personales locales. El mismo enlace prepara el mismo reto; sus reglas no cambian durante una vuelta. Se preservan el catálogo y todas las pistas, modos, controles, escuela y guardados.
+
+La conexión sale de `main.tsx` hacia `onlineConnection.ts`, con contrato de transporte comprobable y callbacks anulados al salir. Se mantienen servidor autoritativo, reconexión, salas privadas y protocolo 9. La preparación común de juegos locales se reúne en una función sin duplicar motor ni puntuación.
+
+**Siguiente entrega recomendada:** copas entre amigos como series reales en las salas existentes: selección de varias vueltas, clasificación acumulada del servidor, revancha y abandono/reconexión definidos. Los retos actuales no se presentan como copas online. Persistir series tras reiniciar Render requerirá almacenamiento central; no convertir localStorage en ranking compartido. Después: documento versionado/validado para el taller de hoyos, con la misma geometría y Rapier.

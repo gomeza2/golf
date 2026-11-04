@@ -1,5 +1,13 @@
 # Hoyo en Uno · Golf Club
 
+## 0.10.0
+
+- Retos del club integrados en el catálogo: diario y copa semanal individual de 9/18 hoyos, enlaces canónicos con fecha UTC y selección versionada estable. Objetivos completos de golpes, penalizaciones y hoyos bajo par; Bronce, Plata y Oro según resultados físicos reales.
+- Clásico fijado solo durante el reto, sin sobrescribir la preferencia de otras partidas. Objetivos consultables con pausa local, recuperación del mismo intento y revancha con identificador nuevo.
+- Marcas locales separadas y acotadas, deduplicación, validación de datos y copia del enlace/resultado. Guardados anteriores conservados mediante metadatos opcionales; sin rankings globales ficticios.
+- Transporte Socket.IO extraído de `main.tsx` a un controlador desechable: admisión validada, callbacks tardíos inertes, limpieza de sondeos, recuperación y salida confirmada. Conserva el protocolo 9 y el servidor autoritativo existente.
+- Se mantienen los 24 hoyos, nueve recorridos, escuela, tres controles, modos local/online, física y reglas v7; sin nuevas dependencias.
+
 ## 0.9.0
 
 - Vista general ajustada mediante límites 3D y proyección real, dirección adaptada a vertical, espacio reservado al HUD y recalculo al girar la pantalla. Menús laterales y controles de horizontal baja reorganizados.

@@ -1,8 +1,12 @@
-import { TURN_SECONDS, NETWORK_PROTOCOL } from "../shared/rules";
+import { TURN_SECONDS } from "../shared/rules";
 import { APP_VERSION, GAME_NAME } from "./release";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { io, type Socket } from "socket.io-client";
+import {
+  createOnlineConnection,
+  type OnlineConnection,
+  type RoomEntry,
+} from "./onlineConnection";
 import { normalizeServerUrl } from "./serverUrl";
 import { PUBLIC_SERVER_URL } from "./onlineServer";
 import { FixedStepper } from "../shared/timing";
@@ -38,6 +42,22 @@ import type { MatchFormat } from "../shared/scoring";
 import { isGraphicsMode, type GraphicsMode } from "./graphics";
 import { Scene } from "./Scene";
 import { useGolfSchool } from "./useGolfSchool";
+import { useClubChallenges } from "./useClubChallenges";
+import {
+  ChallengeHub,
+  ChallengeDialog,
+  ChallengeSummary,
+} from "./ClubChallenges";
+import {
+  challengeFromSearch,
+  challengeLink,
+  getChallenge,
+  type ClubChallenge,
+} from "../shared/challenges";
+import {
+  restoreChallengeSession,
+  challengeResultText,
+} from "./challengeRecords";
 import { SchoolCoach } from "./GolfSchool";
 import { schoolTarget } from "./school";
 import { useHoleIntro } from "./useHoleIntro";
@@ -70,6 +90,11 @@ const initial: State = {
 const defaultServerUrl =
   import.meta.env.VITE_SERVER_URL ||
   (import.meta.env.VITE_STATIC_HOST === "true" ? PUBLIC_SERVER_URL : "");
+const sharedChallenge = challengeFromSearch(location.search);
+const invalidChallengeLink =
+  new URLSearchParams(location.search).has("challenge") &&
+  !new URLSearchParams(location.search).has("room") &&
+  !sharedChallenge;
 function App() {
   const [s, setS] = useState<State>(initial),
     [screen, setScreen] = useState<"home" | "local" | "online" | "game">(
@@ -104,7 +129,11 @@ function App() {
     [code, setCode] = useState(
       new URLSearchParams(location.search).get("room") || "",
     ),
-    [error, setError] = useState(""),
+    [error, setError] = useState(
+      invalidChallengeLink
+        ? "El enlace del reto no es válido o usa otras reglas. Puedes jugar los retos actuales."
+        : "",
+    ),
     [latency, setLatency] = useState<number | null>(null),
     [status, setStatus] = useState("Sin conexión"),
     [disconnectGrace, setDisconnectGrace] = useState(90),
@@ -140,6 +169,9 @@ function App() {
     () => saveLocal("golf-hole-intro", String(showHoleIntro)),
     [showHoleIntro],
   );
+  const [challengePreview, setChallengePreview] =
+      useState<ClubChallenge | null>(sharedChallenge),
+    [challengeDetails, setChallengeDetails] = useState(false);
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
   useEffect(() => {
@@ -147,6 +179,11 @@ function App() {
   }, [names.length]);
   const activeControl = mode === "online" ? "classic" : roundControl;
   const school = useGolfSchool(
+    s,
+    activeControl,
+    mode === "local" && screen === "game",
+  );
+  const challenges = useClubChallenges(
     s,
     activeControl,
     mode === "local" && screen === "game",
@@ -182,6 +219,7 @@ function App() {
       lookMode ||
       hidden ||
       intro.active ||
+      challengeDetails ||
       (school.session !== null &&
         (!s.moving || school.session.phase === "passed")));
   useEffect(() => {
@@ -196,7 +234,7 @@ function App() {
     if (turnKey) setOverview(false);
   }, [turnKey]);
   const game = useRef<Game | null>(null),
-    socket = useRef<Socket | null>(null),
+    socket = useRef<OnlineConnection | null>(null),
     lastTurn = useRef("");
   const recovery = useLocalRecovery({
     game,
@@ -207,6 +245,7 @@ function App() {
     angle,
     power,
     school: school.session,
+    challenge: challenges.session,
   });
   useEffect(() => {
     initPhysics()
@@ -282,6 +321,7 @@ function App() {
       }
       return;
     }
+    if (challenges.session) return;
     const result = recordCompletedRound(personalHistory, s, roundControl);
     if (result) {
       const persisted = persistPersonalRecords(result.history);
@@ -307,23 +347,6 @@ function App() {
         );
     }
   }, [s.event?.seq]);
-  useEffect(() => {
-    if (status !== "Conectado") {
-      setLatency(null);
-      return;
-    }
-    const measure = () => {
-      const started = performance.now();
-      socket.current
-        ?.timeout(3000)
-        .emit("action", { type: "ping" }, (error: Error | null) =>
-          setLatency(error ? null : Math.round(performance.now() - started)),
-        );
-    };
-    measure();
-    const timer = setInterval(measure, 5000);
-    return () => clearInterval(timer);
-  }, [status]);
   const current = s.players[s.turn];
   const canShoot =
     s.phase === "playing" &&
@@ -331,6 +354,7 @@ function App() {
     !settings &&
     !paused &&
     !intro.active &&
+    !challengeDetails &&
     school.session?.phase !== "passed" &&
     !(mode === "local" && hidden) &&
     !lookMode &&
@@ -357,7 +381,7 @@ function App() {
       );
       setS(structuredClone(game.current!.state));
     } else
-      socket.current?.emit("action", {
+      socket.current?.send({
         type: "shoot",
         angle: shot?.angle ?? angle,
         power: shot?.power ?? power,
@@ -416,21 +440,22 @@ function App() {
       window.removeEventListener("keyup", release);
     };
   }, []);
-  function localStart() {
-    school.close();
+  function mountLocalGame(g: Game, control: ControlMode) {
     socket.current?.disconnect();
     game.current?.dispose();
+    controls.cancel();
     lastEvent.current = 0;
-    const g = new Game();
-    g.selectCircuit(circuit);
-    names.forEach((n, i) => g.add(String(i), n));
-    g.start(matchFormat);
     saveLocal("golf-local-names", JSON.stringify(names));
-    setRoundControl(controlMode);
+    setRoundControl(control);
     setRoundId((v) => v + 1);
     setRoundReport(null);
     setPracticeReport(null);
     setPaused(false);
+    setLookMode(false);
+    setSettings(false);
+    setChallengeDetails(false);
+    setCameraLook(defaultLook);
+    setAngle(0);
     game.current = g;
     setMode("local");
     setS(structuredClone(g.state));
@@ -438,12 +463,24 @@ function App() {
     setOverview(false);
     setError("");
   }
+  function localStart() {
+    const g = new Game();
+    g.selectCircuit(circuit);
+    names.forEach((n, i) => g.add(String(i), n));
+    g.start(matchFormat);
+    school.close();
+    challenges.close();
+    mountLocalGame(g, controlMode);
+  }
   function resumeLocal() {
     if (!ready || recovery.save.kind !== "saved") return;
     try {
       const round = recovery.save.round;
       const restored = restoreLocalRound(round);
       school.restore(round.school, restored.state);
+      challenges.restore(round.challenge, restored.state, round.control);
+      setChallengePreview(null);
+      setChallengeDetails(false);
       socket.current?.disconnect();
       game.current?.dispose();
       game.current = restored;
@@ -482,33 +519,44 @@ function App() {
     lesson?: number,
     selectedControl: ControlMode = controlMode,
   ) {
-    saveLocal("golf-local-names", JSON.stringify(names));
-    socket.current?.disconnect();
-    game.current?.dispose();
-    lastEvent.current = 0;
     const g = new Game();
     g.selectCircuit(selectedCircuit);
     g.add("0", names[0]);
     g.startPractice(hole);
+    challenges.close();
+    mountLocalGame(g, selectedControl);
     setCircuit(selectedCircuit);
     if (lesson === undefined) school.close();
     else school.start(lesson, g.state);
-    setRoundControl(selectedControl);
-    setRoundId((v) => v + 1);
-    setRoundReport(null);
-    setPracticeReport(null);
-    setPaused(false);
-    setLookMode(false);
-    setSettings(false);
-    setCameraLook(defaultLook);
-    setAngle(0);
-    game.current = g;
-    setMode("local");
-    setS(structuredClone(g.state));
-    setScreen("game");
-    setOverview(false);
-    setError("");
   }
+  function startChallenge(c: ClubChallenge) {
+    if (!ready) return;
+    const g = new Game();
+    g.selectCircuit(c.circuit);
+    g.add("0", names[0]);
+    g.start("strokes");
+    school.close();
+    mountLocalGame(g, "classic");
+    challenges.start(c.id);
+    setCircuit(c.circuit);
+    setChallengePreview(null);
+  }
+  async function copyChallenge(text: string, label: string) {
+    try {
+      if (!navigator.clipboard) throw Error("clipboard unavailable");
+      await navigator.clipboard.writeText(text);
+      setError(label);
+      return true;
+    } catch {
+      setError("Copia este texto: " + text);
+      return false;
+    }
+  }
+  const shareChallenge = (c: ClubChallenge) =>
+    copyChallenge(
+      challengeLink(c, location.origin, location.pathname),
+      "Enlace del reto copiado",
+    );
   function connect(type: "create" | "join" | "resume") {
     if (!onlineAvailable) {
       setError(
@@ -518,6 +566,8 @@ function App() {
     }
     recovery.checkpoint();
     school.close();
+    challenges.close();
+    setChallengeDetails(false);
     game.current?.dispose();
     game.current = null;
     socket.current?.disconnect();
@@ -533,86 +583,35 @@ function App() {
       return;
     }
     saveLocal("golf-server-url", endpoint);
-    const sock = io(endpoint || undefined, {
-      timeout: 7000,
-      reconnectionAttempts: 10,
-    });
-    socket.current = sock;
-    sock.on("connect", () => {
-      if (socket.current !== sock) return;
-      setStatus("Recuperando sesión…");
-      const saved = readSession();
-      sock.emit(
-        "action",
-        saved && type === "resume"
-          ? { type: "resume", ...saved }
-          : {
-              type,
-              name,
-              code: code.trim().toUpperCase(),
-              circuit,
-              ...(type === "create" ? { format: onlineFormat } : {}),
-            },
-      );
-    });
-    sock.on("session", (session) => {
-      if (socket.current !== sock) return;
-      if (session.protocol !== NETWORK_PROTOCOL) {
-        setError(
-          `El servidor y el juego necesitan la misma versión online (protocolo ${NETWORK_PROTOCOL}). Actualiza el servidor y recarga el juego.`,
-        );
-        setStatus("Servidor de otra versión");
-        saveSession(null);
-        sock
-          .timeout(1500)
-          .emit("action", { type: "leave" }, () => sock.disconnect());
-        setTimeout(() => sock.disconnect(), 1600);
-        return;
-      }
-      setStatus("Conectado");
-      setDisconnectGrace(
-        Number.isInteger(session.disconnectGraceSeconds) &&
-          session.disconnectGraceSeconds >= 1 &&
-          session.disconnectGraceSeconds <= 300
-          ? session.disconnectGraceSeconds
-          : 90,
-      );
-      setId(session.id);
-      setCode(session.code);
-      saveSession(session);
-      saveLocal("golf-name", name);
-      setScreen("game");
-    });
-    sock.on("state", (state: State) => {
-      if (socket.current === sock) setS(state);
-    });
-    sock.on("notice", (msg: string) => {
-      if (socket.current !== sock) return;
-      setError(msg);
-      if (msg === "Sesión no válida" || msg === "Sala inexistente o caducada") {
-        saveSession(null);
-        setStatus("Sesión no recuperada");
-      }
-    });
-    sock.on(
-      "connect_error",
-      () =>
-        socket.current === sock &&
-        setStatus("Servidor no disponible. Reintentando…"),
-    );
-    sock.on("disconnect", () => {
-      if (socket.current !== sock) return;
-      setStatus("Desconectado. Reconectando…");
-      type = "resume";
+    const entry: RoomEntry =
+      type === "resume"
+        ? { type }
+        : type === "create"
+          ? { type, name, circuit, format: onlineFormat }
+          : { type, name, code: code.trim().toUpperCase() };
+    setLatency(null);
+    socket.current = createOnlineConnection(endpoint, entry, {
+      onStatus: setStatus,
+      onError: setError,
+      onState: setS,
+      onLatency: setLatency,
+      onSession: (session) => {
+        setDisconnectGrace(session.disconnectGraceSeconds);
+        setId(session.id);
+        setCode(session.code);
+        saveLocal("golf-name", name);
+        setScreen("game");
+      },
     });
   }
+
   function action(type: string, value?: string) {
     if (mode === "online") {
       if (!socket.current?.connected || status !== "Conectado") {
         setError("Recupera la conexión antes de continuar");
         return;
       }
-      socket.current.emit("action", {
+      socket.current.send({
         type,
         ...(type === "remove"
           ? { id: value }
@@ -622,6 +621,8 @@ function App() {
       });
     } else if (game.current) {
       if (type === "lobby") {
+        challenges.close();
+        setChallengeDetails(false);
         recovery.checkpoint();
         game.current.dispose();
         game.current = null;
@@ -650,6 +651,7 @@ function App() {
       } else if (type === "next") game.current.next();
       else {
         game.current.start(game.current.state.format ?? "strokes");
+        challenges.restart();
         setRoundId((v) => v + 1);
         setRoundReport(null);
       }
@@ -659,15 +661,15 @@ function App() {
   function leave() {
     recovery.checkpoint();
     school.close();
+    challenges.close();
+    setChallengeDetails(false);
+    setChallengePreview(null);
     if (document.fullscreenElement)
       void document.exitFullscreen().catch(() => {});
     const previous = socket.current;
     socket.current = null;
-    if (previous?.connected)
-      previous
-        .timeout(1500)
-        .emit("action", { type: "leave" }, () => previous.disconnect());
-    else previous?.disconnect();
+    previous?.leave();
+    setLatency(null);
     if (mode === "online") saveSession(null);
     game.current?.dispose();
     game.current = null;
@@ -774,6 +776,14 @@ function App() {
               ready={ready}
               onResume={resumeLocal}
               onDiscard={recovery.discard}
+            />
+          }
+          activities={
+            <ChallengeHub
+              history={challenges.history}
+              incoming={sharedChallenge}
+              onPreview={setChallengePreview}
+              onShare={shareChallenge}
             />
           }
           schoolProgress={school.progress}
@@ -958,6 +968,41 @@ function App() {
       )}
       {screen === "game" && (
         <GamePanels
+          shotExtras={
+            challenges.definition ? (
+              <button
+                className="text-button pause-shot"
+                aria-label="Objetivos del reto"
+                onClick={() => setChallengeDetails(true)}
+              >
+                Objetivos
+              </button>
+            ) : undefined
+          }
+          resultExtras={
+            challenges.definition && challenges.report ? (
+              <ChallengeSummary
+                challenge={challenges.definition}
+                report={challenges.report}
+                persisted={challenges.persisted}
+                onShare={() => void shareChallenge(challenges.definition!)}
+                onCopyResult={() =>
+                  void copyChallenge(
+                    challengeResultText(
+                      challenges.definition!,
+                      challenges.report!,
+                      challengeLink(
+                        challenges.definition!,
+                        location.origin,
+                        location.pathname,
+                      ),
+                    ),
+                    "Resultado del reto copiado",
+                  )
+                }
+              />
+            ) : undefined
+          }
           roundReport={roundReport}
           practiceReport={practiceReport}
           onPause={() => setPaused(true)}
@@ -990,6 +1035,35 @@ function App() {
           shoot={shoot}
           action={action}
           leave={leave}
+        />
+      )}
+      {challengePreview && screen === "home" && (
+        <ChallengeDialog
+          challenge={challengePreview}
+          record={challenges.history[challengePreview.id]}
+          startDisabled={!ready}
+          onStart={() => startChallenge(challengePreview)}
+          onClose={() => setChallengePreview(null)}
+          onShare={() => shareChallenge(challengePreview)}
+          onResume={
+            recovery.save.kind === "saved" &&
+            restoreChallengeSession(
+              recovery.save.round.challenge,
+              recovery.save.round.state,
+              recovery.save.round.control,
+            )?.id === challengePreview.id
+              ? resumeLocal
+              : undefined
+          }
+        />
+      )}
+      {challengeDetails && challenges.definition && screen === "game" && (
+        <ChallengeDialog
+          challenge={challenges.definition}
+          record={challenges.history[challenges.definition.id]}
+          state={s}
+          onClose={() => setChallengeDetails(false)}
+          onShare={() => shareChallenge(challenges.definition!)}
         />
       )}
       {intro.active && screen === "game" && !settings && (

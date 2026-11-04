@@ -1,0 +1,198 @@
+import { io } from "socket.io-client";
+import type { State } from "../shared/game";
+import type { CircuitId } from "../shared/courses";
+import type { MatchFormat } from "../shared/scoring";
+import { NETWORK_PROTOCOL } from "../shared/rules";
+import { readSession, saveSession, type Session } from "./storage";
+
+export type RoomEntry =
+  | { type: "create"; name: string; circuit: CircuitId; format: MatchFormat }
+  | { type: "join"; name: string; code: string }
+  | { type: "resume" };
+export type RoomSession = Session & {
+  protocol: number;
+  disconnectGraceSeconds: number;
+};
+export type OnlineConnection = {
+  readonly connected: boolean;
+  send: (action: Record<string, unknown>) => boolean;
+  leave: () => void;
+  disconnect: () => void;
+};
+type Callbacks = {
+  onStatus: (status: string) => void;
+  onError: (error: string) => void;
+  onSession: (session: RoomSession) => void;
+  onState: (state: State) => void;
+  onLatency: (latency: number | null) => void;
+};
+
+/** Owns one transport; disposing it makes every late callback inert. */
+export function createOnlineConnection(
+  endpoint: string,
+  entry: RoomEntry,
+  callbacks: Callbacks,
+): OnlineConnection {
+  const socket = io(endpoint || undefined, {
+    timeout: 7000,
+    reconnectionAttempts: 10,
+  });
+  let disposed = false,
+    admitted = false,
+    recovering = entry.type === "resume";
+  let ping: ReturnType<typeof setInterval> | undefined,
+    exitTimer: ReturnType<typeof setTimeout> | undefined;
+  const clearPing = () => {
+    clearInterval(ping);
+    ping = undefined;
+  };
+  const disconnect = () => {
+    if (disposed) return;
+    disposed = true;
+    admitted = false;
+    clearPing();
+    clearTimeout(exitTimer);
+    socket.disconnect();
+  };
+  const leave = () => {
+    if (disposed) return;
+    saveSession(null);
+    disposed = true;
+    admitted = false;
+    clearPing();
+    if (!socket.connected) {
+      socket.disconnect();
+      return;
+    }
+    const finish = () => {
+      clearTimeout(exitTimer);
+      socket.disconnect();
+    };
+    exitTimer = setTimeout(finish, 1600);
+    socket.timeout(1500).emit("action", { type: "leave" }, finish);
+  };
+  socket.on("connect", () => {
+    if (disposed) return;
+    admitted = false;
+    callbacks.onStatus("Recuperando sesión…");
+    const saved = readSession();
+    if (recovering && !saved) {
+      callbacks.onStatus("Sesión no recuperada");
+      callbacks.onError(
+        "No hay una sesión para recuperar. Vuelve al club y entra en una sala.",
+      );
+      disconnect();
+      return;
+    }
+    socket.emit(
+      "action",
+      recovering && saved ? { ...saved, type: "resume" } : entry,
+    );
+  });
+  socket.on("session", (value: unknown) => {
+    if (disposed) return;
+    const s = value as Partial<RoomSession> | null;
+    if (s?.protocol !== NETWORK_PROTOCOL) {
+      callbacks.onError(
+        `El servidor y el juego necesitan la misma versión online (protocolo ${NETWORK_PROTOCOL}). Actualiza el servidor y recarga el juego.`,
+      );
+      callbacks.onStatus("Servidor de otra versión");
+      leave();
+      return;
+    }
+    if (
+      typeof s.id !== "string" ||
+      !s.id ||
+      s.id.length > 100 ||
+      typeof s.token !== "string" ||
+      !s.token ||
+      s.token.length > 256 ||
+      typeof s.code !== "string" ||
+      !/^[A-F0-9]{6}$/.test(s.code)
+    ) {
+      callbacks.onError("El servidor envió una sesión no válida");
+      callbacks.onStatus("Sesión no recuperada");
+      leave();
+      return;
+    }
+    const grace = s.disconnectGraceSeconds;
+    const session: RoomSession = {
+      id: s.id,
+      token: s.token,
+      code: s.code,
+      protocol: s.protocol,
+      disconnectGraceSeconds:
+        typeof grace === "number" &&
+        Number.isInteger(grace) &&
+        grace >= 1 &&
+        grace <= 300
+          ? grace
+          : 90,
+    };
+    admitted = true;
+    saveSession({ id: session.id, token: session.token, code: session.code });
+    callbacks.onStatus("Conectado");
+    callbacks.onSession(session);
+    clearPing();
+    const measure = () => {
+      if (disposed || !admitted || !socket.connected) return;
+      const started = performance.now();
+      socket
+        .timeout(3000)
+        .emit("action", { type: "ping" }, (error: Error | null) => {
+          if (!disposed && admitted)
+            callbacks.onLatency(
+              error ? null : Math.round(performance.now() - started),
+            );
+        });
+    };
+    measure();
+    ping = setInterval(measure, 5000);
+  });
+  socket.on("state", (state: State) => {
+    if (!disposed && admitted) callbacks.onState(state);
+  });
+  socket.on("notice", (message: unknown) => {
+    if (disposed || typeof message !== "string") return;
+    callbacks.onError(message);
+    if (
+      message === "Sesión no válida" ||
+      message === "Sala inexistente o caducada"
+    ) {
+      admitted = false;
+      clearPing();
+      saveSession(null);
+      callbacks.onLatency(null);
+      callbacks.onStatus("Sesión no recuperada");
+    }
+  });
+  socket.on("connect_error", () => {
+    if (!disposed) {
+      admitted = false;
+      clearPing();
+      callbacks.onLatency(null);
+      callbacks.onStatus("Servidor no disponible. Reintentando…");
+    }
+  });
+  socket.on("disconnect", () => {
+    if (!disposed) {
+      admitted = false;
+      recovering = true;
+      clearPing();
+      callbacks.onLatency(null);
+      callbacks.onStatus("Desconectado. Reconectando…");
+    }
+  });
+  return {
+    get connected() {
+      return !disposed && admitted && socket.connected;
+    },
+    send: (action) => {
+      if (disposed || !admitted || !socket.connected) return false;
+      socket.emit("action", action);
+      return true;
+    },
+    leave,
+    disconnect,
+  };
+}
