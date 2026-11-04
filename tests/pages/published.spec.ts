@@ -257,7 +257,7 @@ test("the published challenge link starts its fixed Classic round and accepts a 
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   await page
     .getByRole("slider", { name: "Ángulo", exact: true })
-    .fill(String(aceShots[0].angle));
+    .fill(String(Number(aceShots[0].angle.toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
     .fill(String(aceShots[0].power));
