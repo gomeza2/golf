@@ -294,3 +294,26 @@ it("a sole survivor can continue a points cup, while an ordinary single-player p
     r.game.dispose();
   }
 });
+it("a departure after the final physical state but before its first broadcast cannot rewrite the winner", () => {
+  const r = room();
+  try {
+    chooseCup(r, "risk");
+    startRoomMatch(r);
+    finishByConcession(r);
+    advanceRoomCup(r);
+    // Finish through normal game actions, without requesting a cup snapshot yet.
+    while (r.game.state.phase !== "finished") {
+      if (r.game.state.phase === "scores") r.game.next();
+      else r.game.concede(r.game.state.players[r.game.state.turn].id);
+    }
+    expect(r.cup!.phase).toBe("playing");
+    expect(r.cup!.rounds).toHaveLength(1);
+    retireCupPlayer(r, "a");
+    expect(r.cup!.phase).toBe("finished");
+    expect(r.cup!.rounds).toHaveLength(2);
+    expect(r.cup!.entrants.find((p) => p.id === "a")!.withdrawn).toBe(false);
+    expect(cupWinnerLabel(r.cup!)).toBe("Copa compartida.");
+  } finally {
+    r.game.dispose();
+  }
+});

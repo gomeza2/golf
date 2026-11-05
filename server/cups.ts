@@ -35,6 +35,8 @@ export function settleRoomCup(room: CupRoom) {
   if (room.cup) room.cup = settleCup(room.cup, room.game.state);
 }
 export function retireCupPlayer(room: CupRoom, id: string) {
+  // Close a physically finished leg before classifying a late departure.
+  settleRoomCup(room);
   if (room.cup) room.cup = withdrawFromCup(room.cup, id);
   room.game.withdraw(id);
   settleRoomCup(room);
