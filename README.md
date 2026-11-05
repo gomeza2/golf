@@ -1,6 +1,6 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.10.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.11.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
 ## Jugar desde GitHub Pages
 
@@ -9,6 +9,24 @@ URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiz
 Pages sirve el juego local completo para 1–8 personas y las nueve opciones de recorrido. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
+
+## Copas entre amigos — 0.11.0
+
+En **Online → Crear sala**, el anfitrión elige **Tipo de encuentro** antes de preparar a los participantes:
+
+- **Partida única:** conserva todos los recorridos y los formatos habituales.
+- **Copa del Club:** Club del atardecer, Jardín lunar y Gran Parque; tres vueltas y nueve hoyos.
+- **Copa del Riesgo:** Club del As y Ruinas del Cielo; dos vueltas y seis hoyos.
+
+Se pueden usar **Menos golpes** o **Duelo por puntos**. Cambiar la copa o el formato cancela los preparados. Al comenzar quedan fijados el plan, formato y participantes; no se admiten incorporaciones entre vueltas. Todos usan Clásico online, sin modificar su preferencia para partidas locales.
+
+El servidor conserva un acta por vuelta y calcula el acumulado. Durante el juego, **Ver copa** muestra el total provisional y las columnas confirmadas; consultar el marcador no pausa el reloj online. Al terminar un recorrido el anfitrión pulsa **Siguiente vuelta**. Los honores de la salida siguiente siguen el resultado de la vuelta anterior. Los empates del total se resuelven por ases; si persisten, la victoria es compartida.
+
+Una desconexión conserva plaza, resultados y token durante el plazo configurado (90 s por defecto), también entre vueltas. Si vence o el jugador sale, queda retirado de la copa y conserva sus resultados anteriores, sin inventar puntuaciones de vueltas futuras. Los demás pueden continuar, incluso si queda uno. La copa cerrada conserva su clasificación al salir un participante. **La revancha** inicia la misma copa desde cero si hay dos participantes conectados; **Preparar otra partida** vuelve al lobby al terminar la serie.
+
+En todos los modos, **Más ajustes → Ceder este hoyo → Confirmar: 12 golpes** permite recoger la pelota detenida durante el propio turno. Cuenta como límite de golpes y otorga cero puntos: no genera récord, medalla ni objetivo limpio de un reto. No se permite durante el movimiento ni sobre el turno de otro jugador.
+
+Las copas usan el servidor real y no localStorage para resultados. Las salas y actas siguen en memoria: un reinicio/despliegue del servidor las elimina. Persistencia central e historial durable de copas todavía no están implementados. **Protocolo online 10:** cliente y servidor deben actualizarse juntos. Las físicas/registros locales conservan reglas v7 y guardados formato 1.
 
 ## Retos del club — 0.10.0
 
@@ -20,7 +38,7 @@ Cada reto tiene tres objetivos reales: terminar al par o mejor, sin penalizacion
 
 Las marcas y medallas son **personales en este navegador**, separadas de los récords de rondas normales y de la escuela; no se simula una clasificación global. Se conservan hasta 120 retos recientes y los últimos 32 identificadores de intento por reto para evitar duplicados por recuperación. Reanudar conserva el intento y la simulación real; repetir crea otro. Hay un único guardado local de partida: empezar una nueva sustituye el anterior, con aviso previo. El panel de objetivos pausa solamente la partida local.
 
-Para competir simultáneamente con amigos, sigue disponible **Online → Crear sala → Compartir invitación**, con el servidor autoritativo real. Los retos de esta entrega no son salas online ni guardan resultados en el servidor. Una futura copa compartida y un ranking persistente necesitan reglas de serie y almacenamiento central; todavía no están implementados.
+Para competir simultáneamente con amigos, sigue disponible **Online → Crear sala → Compartir invitación**, con el servidor autoritativo real. Los retos de esta entrega no son salas online ni guardan resultados en el servidor. Las copas compartidas de varias vueltas se incorporan en 0.11.0; un ranking persistente todavía necesita almacenamiento central y no está implementado.
 
 ## Presentación y cámara
 

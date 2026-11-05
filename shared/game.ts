@@ -1,3 +1,4 @@
+import type { CupState } from "./cups";
 import { TURN_SECONDS } from "./rules";
 import {
   holeOutcome,
@@ -40,6 +41,7 @@ export type Player = {
   capped: number[];
 };
 export type State = {
+  cup?: CupState;
   format?: MatchFormat;
   practice?: boolean;
   phase: "lobby" | "playing" | "scores" | "finished";
@@ -124,10 +126,17 @@ export class Game {
     if (!this.state.host) this.state.host = id;
     return p;
   }
-  start(format: MatchFormat = this.state.format ?? "strokes") {
+  start(
+    format: MatchFormat = this.state.format ?? "strokes",
+    options: { cupContinuation?: boolean } = {},
+  ) {
     const players = this.state.players.filter((p) => !p.withdrawn);
     if (!isMatchFormat(format)) throw Error("Formato de partida inválido");
-    if (format === "stableford" && players.length < 2)
+    if (
+      format === "stableford" &&
+      players.length < 2 &&
+      !options.cupContinuation
+    )
       throw Error("El duelo por puntos necesita al menos dos jugadores");
     if (!players.length) throw Error("Faltan jugadores");
     this.state.format = format;
@@ -282,6 +291,23 @@ export class Game {
     this.quiet = 0;
     this.capturedAt = null;
     s.message = "La pelota está en juego";
+    return true;
+  }
+  concede(id: string) {
+    const s = this.state,
+      p = s.players[s.turn];
+    if (
+      s.phase !== "playing" ||
+      s.moving ||
+      !p ||
+      p.id !== id ||
+      p.done ||
+      p.withdrawn
+    )
+      return false;
+    p.strokes = MAX_STROKES;
+    s.message = "Hoyo concedido: límite de 12 golpes";
+    this.endTurn();
     return true;
   }
   tick() {
