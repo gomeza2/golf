@@ -16,6 +16,13 @@ export const cupPlans = [
     circuits: ["aces", "skyruins"] as CircuitId[],
     description: "Seis hoyos: líneas de as y puentes sobre las ruinas.",
   },
+  {
+    id: "edge",
+    name: "Copa Al Filo",
+    circuits: ["rift", "rift-alt"] as CircuitId[],
+    description:
+      "Ocho hoyos: cuatro huellas y dos juegos de banderas. Adaptarse vale más que repetir el tiro.",
+  },
 ] as const;
 export type CupPlanId = (typeof cupPlans)[number]["id"];
 export const getCupPlan = (id: unknown) => cupPlans.find((p) => p.id === id);

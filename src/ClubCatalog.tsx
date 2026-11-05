@@ -1,6 +1,8 @@
+import { CourseFootprint } from "./CourseFootprint";
 import {
   circuits,
   courseSize,
+  courseDistance,
   geometry,
   uniqueCourses,
   type CircuitId,
@@ -69,6 +71,10 @@ export function ClubCatalog({
   onLearn: () => void;
   activities?: React.ReactNode;
 }) {
+  const catalog = [
+    circuits.find((c) => c.id === "rift")!,
+    ...circuits.filter((c) => c.id !== "rift" && c.id !== "rift-alt"),
+  ];
   return (
     <section className="club-catalog">
       <div className="catalog-intro">
@@ -80,12 +86,27 @@ export function ClubCatalog({
             Mucha <em>rivalidad.</em>
           </h1>
         </div>
-        <p>
-          {uniqueCourses.length} hoyos distintos. Vueltas de 9 y 18, Club del As
-          y Ruinas del Cielo.
-          <br />
-          Elige el recorrido, tu forma de golpear y con quién jugar.
-        </p>
+        <div className="catalog-feature">
+          <p>
+            {uniqueCourses.length} hoyos distintos. Nuevo Al Filo: horquilla,
+            diagonal, órbita y balcones. Clásicos y vueltas de 9/18 conservados.
+            <br />
+            Elige el recorrido, tu forma de golpear y con quién jugar.
+          </p>
+          <button
+            className="primary"
+            disabled={!ready}
+            onClick={() => {
+              if (circuit !== "rift-alt") setCircuit("rift");
+              onLocal();
+            }}
+          >
+            Jugar Al Filo →
+          </button>
+          <small>
+            Cuatro huellas · Dos posiciones de banderas · Riesgo real
+          </small>
+        </div>
       </div>
       {activities && (
         <details className="club-activities">
@@ -101,10 +122,10 @@ export function ClubCatalog({
           role="group"
           aria-label="Catálogo de recorridos"
         >
-          {circuits.map((c, i) => {
+          {catalog.map((c, i) => {
             const first = c.courses[0],
               size = courseSize(first),
-              longest = Math.max(...c.courses.map((h) => courseSize(h).length)),
+              longest = Math.max(...c.courses.map(courseDistance)),
               par = c.courses.reduce((n, h) => n + h.par, 0);
             const tags = [
               c.courses.some((h) => h.water?.length) ? "Agua" : "",
@@ -121,7 +142,10 @@ export function ClubCatalog({
               <button
                 key={c.id}
                 className={`course-choice ${c.id === "tour" ? "full-tour" : ""}`}
-                aria-pressed={circuit === c.id}
+                aria-pressed={
+                  circuit === c.id ||
+                  (c.id === "rift" && circuit === "rift-alt")
+                }
                 onClick={() => setCircuit(c.id)}
               >
                 <div
@@ -137,8 +161,8 @@ export function ClubCatalog({
                       y={-size.length / 2}
                       width={size.width}
                       height={size.length}
-                      fill={c.ground}
-                      stroke={c.edge}
+                      fill={first.outerWalls === false ? "none" : c.ground}
+                      stroke={first.outerWalls === false ? "none" : c.edge}
                       strokeWidth={0.6}
                     />
                     {first.water?.map((z, j) => (
@@ -151,7 +175,11 @@ export function ClubCatalog({
                         fill="#2194a0"
                       />
                     ))}
-                    {first.terrain &&
+                    {first.outerWalls === false && (
+                      <CourseFootprint course={first} color={c.ground} />
+                    )}
+                    {first.outerWalls !== false &&
+                      first.terrain &&
                       geometry(first).surfaces.map((b, j) => (
                         <rect
                           key={`d${j}`}
@@ -190,20 +218,25 @@ export function ClubCatalog({
                     />
                   </svg>
                   <span>
-                    {c.id === "aces"
-                      ? "RIESGO / RECOMPENSA"
-                      : c.id === "tour"
-                        ? "18 HOYOS SEGUIDOS"
-                        : longest >= 48
-                          ? "DESAFÍO"
-                          : i === 0
-                            ? "INICIACIÓN"
-                            : "COMPETITIVO"}
+                    {c.id === "rift"
+                      ? "NUEVO · SIN PERÍMETRO RECTANGULAR"
+                      : c.id === "aces"
+                        ? "RIESGO / RECOMPENSA"
+                        : c.id === "tour"
+                          ? "18 HOYOS SEGUIDOS"
+                          : longest >= 48
+                            ? "DESAFÍO"
+                            : c.id === "sunset"
+                              ? "INICIACIÓN"
+                              : "COMPETITIVO"}
                   </span>
                 </div>
                 <div className="course-copy">
                   <small>
-                    0{i + 1} / {c.courses.length} HOYOS · PAR {par}
+                    {String(
+                      circuits.findIndex((v) => v.id === c.id) + 1,
+                    ).padStart(2, "0")}{" "}
+                    / {c.courses.length} HOYOS · PAR {par}
                   </small>
                   <strong>{c.name}</strong>
                   <p>{c.description}</p>
@@ -211,8 +244,14 @@ export function ClubCatalog({
                     {tags.join(" · ") || "Césped · Bandas"}
                   </span>
                   <span>
-                    Hasta {longest} m por hoyo{" "}
-                    {circuit === c.id ? "· SELECCIONADO" : ""}
+                    Hasta {longest} m{" "}
+                    {c.id.startsWith("rift")
+                      ? "por la ruta amplia"
+                      : "por hoyo"}{" "}
+                    {circuit === c.id ||
+                    (c.id === "rift" && circuit === "rift-alt")
+                      ? "· SELECCIONADO"
+                      : ""}
                   </span>
                 </div>
               </button>
@@ -222,6 +261,29 @@ export function ClubCatalog({
         <aside className="match-builder">
           {savedRound}
           <div className="eyebrow">TU PRÓXIMA PARTIDA</div>
+          {(circuit === "rift" || circuit === "rift-alt") && (
+            <div
+              className="pin-picker"
+              role="group"
+              aria-label="Posición de banderas"
+            >
+              <small>BANDERAS · MISMA HUELLA, OTRAS LLEGADAS</small>
+              <div>
+                {(["rift", "rift-alt"] as CircuitId[]).map((id) => (
+                  <button
+                    key={id}
+                    aria-pressed={circuit === id}
+                    onClick={() => setCircuit(id)}
+                  >
+                    {id === "rift" ? "Abiertas" : "Cruzadas"}
+                  </button>
+                ))}
+              </div>
+              <p>
+                Se eligen antes de jugar. Todos afrontan las mismas posiciones.
+              </p>
+            </div>
+          )}
           <SelectedRound
             circuit={circuit}
             onChange={() =>

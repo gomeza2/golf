@@ -35,6 +35,7 @@ test("mobile quality changes the real drawing buffer, stays selectable and persi
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/");
+    await page.getByRole("button", { name: /Club del atardecer/ }).click();
     await expect(page.locator("#boot-screen")).toHaveCount(0, {
       timeout: 30000,
     });
@@ -75,6 +76,7 @@ test("changing graphics during a paused shot keeps the ball, clock, strokes and 
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
@@ -143,6 +145,7 @@ test("hidden tabs stop issuing real WebGL draw calls and resume when visible", a
       () => (window as unknown as { __golfDrawCalls: number }).__golfDrawCalls,
     );
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
   await expect(page.locator("canvas")).toHaveAttribute(
     "data-render-mode",

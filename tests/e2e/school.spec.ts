@@ -23,6 +23,7 @@ test("school completes three physical exercises, recovers the guide and locked c
 }) => {
   test.setTimeout(180000);
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Aprender jugando/ }).click();
   await expect(page.locator(".school-coach strong")).toHaveText(
     "La fuerza justa",
@@ -94,6 +95,7 @@ test("touch pull control completes the same target without changing the chosen s
   try {
     const page = await context.newPage();
     await page.goto("/");
+    await page.getByRole("button", { name: /Club del atardecer/ }).click();
     await page
       .locator(".shot-mode-picker")
       .getByRole("button", { name: /Retroceso/ })

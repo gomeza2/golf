@@ -15,6 +15,7 @@ test("a real points duel awards completed aces, survives reload and keeps scores
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Club del As/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page
@@ -81,6 +82,7 @@ test("local points require two players, removing a rival restores strokes and on
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   const points = page.getByRole("button", { name: /Duelo por puntos/ });
   await expect(points).toBeDisabled();

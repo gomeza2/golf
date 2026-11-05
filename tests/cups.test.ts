@@ -317,3 +317,24 @@ it("a departure after the final physical state but before its first broadcast ca
     r.game.dispose();
   }
 });
+
+it("the new eight-hole cup fixes both flag profiles and records all four holes per leg", () => {
+  const r = room();
+  try {
+    chooseCup(r, "edge");
+    startRoomMatch(r);
+    expect(r.game.state.circuit).toBe("rift");
+    finishByConcession(r);
+    expect(r.cup!.rounds[0].players.every((p) => p.scores.length === 4)).toBe(
+      true,
+    );
+    advanceRoomCup(r);
+    expect(r.game.state.circuit).toBe("rift-alt");
+    finishByConcession(r);
+    expect(r.cup!.phase).toBe("finished");
+    expect(r.cup!.rounds).toHaveLength(2);
+    expect(cupStandings(r.cup!).every((p) => p.strokes === 96)).toBe(true);
+  } finally {
+    r.game.dispose();
+  }
+});

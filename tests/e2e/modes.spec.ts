@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 async function local(page: Page, mode: "Retroceso" | "Precisión") {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page
     .locator(".shot-mode-picker")
     .getByRole("button", { name: new RegExp(mode) })
@@ -18,6 +19,7 @@ test("catalogue starts a single 18-hole round and keeps the chosen control", asy
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Vuelta completa/ }).click();
   await expect(
     page.getByRole("button", { name: /Vuelta completa/ }),

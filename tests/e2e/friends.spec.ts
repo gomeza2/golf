@@ -646,3 +646,54 @@ test("cup recovery expires between rounds without blocking the surviving friend"
     child.kill();
   }
 });
+
+test("the real risk course rewards a narrow shortcut against a wide route on the authoritative server", async () => {
+  test.setTimeout(180000);
+  const { riftRiskShots, riftSafeShots } = await import("../fixtures/rift");
+  const a = await open(),
+    b = await open();
+  try {
+    const host = await enter(a, {
+      type: "create",
+      name: "Ana",
+      circuit: "rift",
+    });
+    const guest = await enter(b, {
+      type: "join",
+      name: "Luis",
+      code: host.code,
+    });
+    await ready(a, b);
+    let update = state(a, (s) => s.phase === "playing");
+    a.emit("action", { type: "start" });
+    let current = await update;
+    const routes = [riftRiskShots[0], riftSafeShots[0]],
+      taken = [0, 0];
+    while (current.phase === "playing") {
+      const turn = current.turn,
+        player = current.players[turn],
+        route = routes[player.id === host.id ? 0 : 1],
+        index = player.id === host.id ? 0 : 1;
+      const shot = route[taken[index]++];
+      expect(shot).toBeDefined();
+      const before = player.strokes;
+      const sender = player.id === host.id ? a : b;
+      update = state(
+        sender,
+        (s) =>
+          !s.moving &&
+          (s.phase !== "playing" ||
+            s.players.find((p) => p.id === player.id)!.strokes === before + 1),
+      );
+      sender.emit("action", { type: "shoot", angle: shot[0], power: shot[1] });
+      current = await update;
+    }
+    expect(current.phase).toBe("scores");
+    expect(current.players.map((p) => p.scores)).toEqual([[3], [5]]);
+    expect(current.players.map((p) => p.penalties)).toEqual([0, 0]);
+    expect(current.circuit).toBe("rift");
+  } finally {
+    a.disconnect();
+    b.disconnect();
+  }
+});

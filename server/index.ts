@@ -48,7 +48,7 @@ const http = createServer(async (req, res) => {
         version,
         commit: process.env.RENDER_GIT_COMMIT || process.env.APP_COMMIT || null,
         formats: ["strokes", "stableford"],
-        cups: ["club", "risk"],
+        cups: ["club", "risk", "edge"],
         concede: true,
         disconnectGraceSeconds,
         rooms: rooms.size,

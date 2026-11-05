@@ -6,6 +6,7 @@ test("a long actual course fits the real WebGL frame after resizing between port
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Desafío Maestro/ }).click();
   await page.locator(".training-picker summary").click();
   await page
@@ -55,6 +56,7 @@ test("local hole preview freezes the clock, can be skipped without a stroke, and
     localStorage.setItem("golf-graphics-mode", "low"),
   );
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 30000 });
   // Keep the 2.6 s UI window deterministic even when software rendering is slow.
   await page.clock.install({ time: new Date("2026-11-04T12:00:00Z") });

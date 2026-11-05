@@ -56,7 +56,13 @@ it("no axis-aligned cross-bank leaves a ball-sized accidental side slit in any o
     for (const b of c.blocks) {
       expect(b.bevel).toBeGreaterThan(0);
       expect(b.size.every((v) => v > 2 * b.bevel!)).toBe(true);
-      if (b.moving || b.rotation || b.yaw || b.size[0] < b.size[2] * 2)
+      if (
+        c.outerWalls === false ||
+        b.moving ||
+        b.rotation ||
+        b.yaw ||
+        b.size[0] < b.size[2] * 2
+      )
         continue;
       for (const gap of [
         b.pos[0] - b.size[0] / 2 + half,

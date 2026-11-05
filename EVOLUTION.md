@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.11.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.12.0:** 28 hoyos físicos, diez tarjetas de catálogo y once selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -142,3 +142,17 @@ Se añaden dos planes de copa online de dos/tres vueltas, acumulación autoritat
 La cesión de hoyo requiere confirmación y validación del turno con pelota detenida. Registra 12 golpes y límite; es útil para rondas entre amigos y no concede récord ni medalla. La simulación no cambia: reglas v7 y snapshots formato 1; el protocolo online pasa a 10. Los snapshots locales ignoran metadatos de copa reservados al servidor. No se borra ninguna preferencia, marca anterior ni pista.
 
 Reglas/actas: `shared/cups.ts`; ciclo de vida y reemplazo seguro de mundos Rapier: `server/cups.ts`; lobby, marcador y resultados: `src/CupPanels.tsx`. Las pruebas nuevas cubren física real, cesión, series completas, puntuación, idempotencia, retiros, guardados, revancha y sesiones reales. La publicación exige también una copa completa real contra el servidor público. Pendientes: persistencia de salas/actas entre reinicios y taller de hoyos.
+
+## Entrega 0.12.0 — canchas con riesgo real
+
+Fases 5–6: cuatro huellas distintas sobre agua, sin perímetro rectangular global: horquilla, serpiente/diagonal, órbita de 270° y balcones. Rutas amplias de 82/72/66/47 m y atajos de riesgo comprobados. Dos perfiles de copas obligan a recalcular aproximaciones; no sustituyen ni duplican los 24 hoyos anteriores.
+
+Fases 2, 7 y 11: malla de suelo cerrada compartida entre colisión, render y mapa, cuaternión compartido para rampas diagonales, soporte visual del suelo real y mapa con decisiones. Se conserva golpe normal, potencia, cámara y controles; sin predicción resuelta ni impulso vertical.
+
+Fases 8–10: nueva selección principal persistente, récords de ronda/práctica separados por perfil conservando índices antiguos, y Copa Al Filo de dos vueltas en las salas autoritativas existentes. Protocolo 11, reglas v7/formato 1.
+
+Fase 12: rondas amplias y arriesgadas completas en ambos perfiles sin recolocar pelota; caída real al agua, compuerta, raycasts del anillo, alineación de rampa, snapshot a mitad de tiro y registros. Ronda de navegador de 14 golpes y duelo online real de 3 frente a 5 en el primer hoyo; prueba del puente también en producción. El detalle del resultado final se informa con la entrega y GitHub Actions.
+
+Fase 13: equilibrio humano con amigos, teléfonos físicos, cargas de muchas salas y taller de hoyos continúan pendientes. Las salas no sobreviven reinicios.
+
+Cierre de regresión de 0.12.0: 173 pruebas de reglas/física y 53 de navegador pasaron localmente; GitHub Actions repitió ambas y completó siete casos de producción bajo `/golf/`. La revisión visual detectó parpadeo en cruces coplanares: se corrige solo la prioridad de profundidad de las superficies nuevas, sin mover mallas ni colisiones; se repite la ronda nueva y la comprobación de producción después del ajuste. La prueba pública espera la versión desplegada para tolerar la propagación de Pages.
