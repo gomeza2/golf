@@ -1,5 +1,15 @@
 # Evolución total del club
 
+## Prioridad actual — 0.12.0, canchas que cambien la decisión
+
+La revisión de 0.11.0 encontró que muchas pistas conservaban un perímetro rectangular con una línea de ataque demasiado parecida. La prioridad solicitada pasa a ser el diseño del campo antes del taller. Se preservan los 24 hoyos anteriores por compatibilidad y se crea una entrada principal distinta: **Al Filo**, cuatro huellas sobre agua, rutas amplias y atajos estrechos, anillo físico y descenso diagonal.
+
+Abiertas y Cruzadas cambian las copas de los mismos cuatro campos, con registros independientes. La Copa Al Filo usa ambas vueltas en las salas existentes. No se duplica el motor, la competición ni el transporte. Las nuevas estructuras comparten geometría y rotación entre física, escena y mapa; no tienen un relleno rectangular invisible.
+
+Verificación: rondas completas con rutas amplias y atajos en ambos perfiles, penalización de fallos, compuerta cerrada, soporte del anillo, pendiente y recuperación de snapshot. Navegador completa la nueva ronda, conserva perfil y juega un duelo con dos sockets. La publicación exige además el nuevo puente en el cliente estático y contra el servidor público.
+
+**Siguiente fase:** recoger resultados de amigos en Al Filo, estudiar dispersión real de puntuaciones y puntos de caída, y ajustar dificultad con esas evidencias; después construir el documento versionado/validado del taller y una prueba real con el mismo motor. Siguen pendientes persistencia central de salas/copas, editor visual, mediciones en teléfonos físicos y carga concurrente. No se declara todo el plan terminado.
+
 ## Auditoría de partida — main 05a4ce7, versión 0.7.0
 
 Se revisaron las definiciones y geometrías, Rapier y reglas de partido, entradas y tres controles, cámara y efectos, guardado/recuperación, récords, lobby y servidor Socket.IO, configuración Render/Pages y pruebas.
@@ -56,4 +66,4 @@ Las copas se implementan sobre la sala Socket.IO existente: actas y ranking de s
 
 La interfaz añade selector en lobby, consulta compacta dentro del juego y tabla de vueltas en resultados. Se conservan las partidas únicas, todos los recorridos, entrenamiento, tres controles y desafíos individuales. El protocolo cambia a 10; las reglas físicas y guardados locales permanecen en v7/formato 1. Las actas no sobreviven a reinicios del servidor.
 
-**Siguiente entrega recomendada:** base del taller de hoyos: documento versionado y validado que reutilice `Course`, `geometry()` y Rapier, con colocación de paredes/rampas/superficies, salida y copa, deshacer y prueba real. Primero guardado/exportación local explícitos; compartir online requerirá validación de geometría y límites por servidor. Historial de copas durable y rankings compartidos requieren persistencia central y siguen pendientes. Mantener pendientes los ensayos prolongados en teléfonos físicos y pruebas de muchas salas simultáneas.
+**Prioridad prevista al cerrar 0.11.0 (reordenada por Al Filo en 0.12.0):** base del taller de hoyos: documento versionado y validado que reutilice `Course`, `geometry()` y Rapier, con colocación de paredes/rampas/superficies, salida y copa, deshacer y prueba real. Primero guardado/exportación local explícitos; compartir online requerirá validación de geometría y límites por servidor. Historial de copas durable y rankings compartidos requieren persistencia central y siguen pendientes. Mantener pendientes los ensayos prolongados en teléfonos físicos y pruebas de muchas salas simultáneas.

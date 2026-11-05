@@ -3,7 +3,7 @@ import {
   getCourse,
   getCircuit,
   isCircuitId,
-  uniqueCourses,
+  practiceLayouts,
   type CircuitId,
 } from "../shared/courses";
 import type { State } from "../shared/game";
@@ -22,7 +22,7 @@ export const practiceKey = (
   circuit: CircuitId,
   hole: number,
   control: ControlMode,
-) => `${uniqueCourses.indexOf(getCourse({ circuit, hole }))}:${control}`;
+) => `${practiceLayouts.indexOf(getCourse({ circuit, hole }))}:${control}`;
 export function practiceMedal(score: number, par: number) {
   return score < par
     ? "Oro"
@@ -48,7 +48,7 @@ export function readPracticeRecords(): PracticeHistory {
         r = value as PracticeBest;
       if (
         !match ||
-        Number(match[1]) >= uniqueCourses.length ||
+        Number(match[1]) >= practiceLayouts.length ||
         String(Number(match[1])) !== match[1] ||
         !r ||
         !Number.isInteger(r.best) ||

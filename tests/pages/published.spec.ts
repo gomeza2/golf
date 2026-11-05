@@ -1,10 +1,60 @@
 import { test, expect } from "@playwright/test";
 import { aceShots } from "../fixtures/aces";
+import { riftRiskShots } from "../fixtures/rift";
+import { wrapAngle } from "../../shared/shot";
 import { PUBLIC_SERVER_URL } from "../../src/onlineServer";
 import { readFileSync } from "node:fs";
 const APP_VERSION = JSON.parse(
   readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
 ).version;
+test("the published irregular course plays its physical bridge shortcut and saves the real score", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(120000);
+  await page.addInitScript(() => {
+    localStorage.setItem("golf-graphics-mode", "low");
+    localStorage.setItem("golf-hole-intro", "false");
+  });
+  await page.goto(baseURL!);
+  await expect(page.locator(".header-right")).toContainText(`v${APP_VERSION}`);
+  await page.getByRole("button", { name: /Jugar Al Filo/ }).click();
+  await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.locator(".hole-hud")).toContainText(
+    "La horquilla del vértigo",
+  );
+  for (const [a, p] of riftRiskShots[0]) {
+    await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled({
+      timeout: 15000,
+    });
+    await page
+      .getByRole("slider", { name: "Ángulo", exact: true })
+      .fill(String(Number(wrapAngle(a).toFixed(10))));
+    await page
+      .getByRole("slider", { name: "Potencia", exact: true })
+      .fill(String(p));
+    await page.getByRole("button", { name: /GOLPEAR/ }).click();
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeHidden({ timeout: 25000 });
+  }
+  await expect(
+    page.getByRole("button", { name: /Siguiente hoyo/ }),
+  ).toBeVisible();
+  const saved = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("club-local-round")!).state,
+  );
+  expect(saved.circuit).toBe("rift");
+  expect(saved.players[0].scores).toEqual([3]);
+  expect(saved.players[0].penalties).toBe(0);
+  await page.screenshot({ path: "work/pages-rift-shortcut.png" });
+  console.log(
+    `PAGES RIFT VERIFIED: version ${APP_VERSION}, real narrow bridge, three strokes and no penalties: ${baseURL}`,
+  );
+});
 test("the released school completes a physical target with the actual published version", async ({
   page,
   baseURL,

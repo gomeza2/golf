@@ -18,6 +18,7 @@ import {
   colors,
   circuits,
   getCircuit,
+  isCircuitId,
   type CircuitId,
 } from "../shared/courses";
 import {
@@ -108,7 +109,10 @@ function App() {
         defaultServerUrl,
     ),
     [mode, setMode] = useState<"local" | "online">("local"),
-    [circuit, setCircuit] = useState<CircuitId>("sunset"),
+    [circuit, setCircuit] = useState<CircuitId>(() => {
+      const saved = readLocal("golf-circuit");
+      return isCircuitId(saved) ? saved : "rift";
+    }),
     [names, setNames] = useState<string[]>(() => {
       try {
         const saved = JSON.parse(readLocal("golf-local-names", "null"));
@@ -176,6 +180,7 @@ function App() {
     [challengeDetails, setChallengeDetails] = useState(false);
   const [cupDetails, setCupDetails] = useState(false);
   useEffect(() => setCupDetails(false), [s.phase, s.cup?.round]);
+  useEffect(() => saveLocal("golf-circuit", circuit), [circuit]);
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
   useEffect(() => {

@@ -9,6 +9,7 @@ test("release branding, real package version, precise power and thirty second tu
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await expect(page).toHaveTitle(/Hoyo en Uno/);
   await expect(page.locator(".wordmark")).toContainText("HOYO EN UNO");
   await expect(page.locator(".edition")).toContainText(`v${APP_VERSION}`);
@@ -32,6 +33,7 @@ test("a real two-stroke tower finish displays Eagle minus two and preserves the 
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.locator(".training-picker summary").click();
   await page
     .getByRole("combobox", { name: "Hoyo de entrenamiento" })

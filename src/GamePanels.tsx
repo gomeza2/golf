@@ -17,7 +17,13 @@ import {
   holePoints,
 } from "../shared/competition";
 import { wrapAngle } from "../shared/shot";
-import { getCourse, getCircuit, courseSize, colors } from "../shared/courses";
+import {
+  getCourse,
+  getCircuit,
+  courseSize,
+  courseDistance,
+  colors,
+} from "../shared/courses";
 import { controlModes, type ControlMode } from "./shotControls";
 import { CircuitPicker } from "./CircuitPicker";
 import { HoleMap } from "./HoleMap";
@@ -271,7 +277,8 @@ export function GamePanels({
             </h2>
             <p>
               PAR {courses[s.hole].par} <span>·</span>{" "}
-              {courseSize(courses[s.hole]).length} m <span>·</span>{" "}
+              {courseDistance(courses[s.hole])} m
+              {courses[s.hole].routeLength ? " ruta amplia" : ""} <span>·</span>{" "}
               {courses[s.hole].subtitle}
             </p>
           </div>

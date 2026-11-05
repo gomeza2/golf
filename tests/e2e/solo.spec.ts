@@ -8,6 +8,7 @@ test("solo round keeps normal control locked, records a real finish and persists
 }) => {
   test.setTimeout(240000);
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await expect(
     page.locator(".shot-mode-picker").getByRole("button", { name: /Clásico/ }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -133,6 +134,7 @@ test("a chosen control preference survives reload but has no switch during play"
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page
     .locator(".shot-mode-picker")
     .getByRole("button", { name: /Retroceso/ })
@@ -160,6 +162,7 @@ test("mobile controls leave the field visible, turn stays on the side and chosen
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page
     .getByRole("textbox", { name: "Jugador 1", exact: true })

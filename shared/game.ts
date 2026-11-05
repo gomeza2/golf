@@ -18,6 +18,7 @@ import {
   surfaceAt,
   rollingResistance,
   blockPose,
+  blockRotation,
   type Block,
   type CircuitId,
   type V3,
@@ -176,17 +177,13 @@ export class Game {
     const box = (block: Block, restitution = 0.52) => {
       const pose = blockPose(block, this.state.time),
         rotation = block.rotation || 0;
-      const sx = Math.sin(rotation / 2),
-        cx = Math.cos(rotation / 2),
-        sy = Math.sin(pose.yaw / 2),
-        cy = Math.cos(pose.yaw / 2);
       const descriptor = block.moving
         ? RAPIER.RigidBodyDesc.kinematicPositionBased()
         : RAPIER.RigidBodyDesc.fixed();
       const body = this.world.createRigidBody(
         descriptor
           .setTranslation(...pose.pos)
-          .setRotation({ x: sx * cy, y: cx * sy, z: sx * sy, w: cx * cy }),
+          .setRotation(blockRotation(rotation, pose.yaw)),
       );
       this.world.createCollider(
         (block.bevel
@@ -214,6 +211,16 @@ export class Game {
     shape.surfaces.forEach((block) => box(block, 0));
     [...shape.walls, ...c.blocks].forEach((block) => box(block, 0.52));
     cupWalls(c).forEach((block) => box(block, 0.08));
+    for (const mesh of shape.meshes)
+      this.world.createCollider(
+        RAPIER.ColliderDesc.trimesh(
+          new Float32Array(mesh.vertices),
+          new Uint32Array(mesh.indices),
+          RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES,
+        )
+          .setFriction(0.08)
+          .setRestitution(0),
+      );
     const green = cupGreen(c);
     this.world.createCollider(
       RAPIER.ColliderDesc.trimesh(

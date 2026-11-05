@@ -25,6 +25,7 @@ test("a real practice finish earns a separate mark, can be retried and persists 
 }) => {
   test.setTimeout(150000);
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   const before = await page.evaluate(
     (key) => localStorage.getItem(key),
     RECORDS_KEY,
@@ -96,6 +97,7 @@ test("mobile training selects the 18th actual hole and restarts without changing
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Vuelta completa/ }).click();
   await page
     .locator(".shot-mode-picker")
@@ -127,6 +129,7 @@ test("local pause, inspection, settings and background keep the clock and moving
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();

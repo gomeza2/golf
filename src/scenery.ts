@@ -13,7 +13,7 @@ export function sceneryLayout(course: Course, detail: number): SceneryItem[] {
   }));
 }
 export function sceneryTheme(circuit: CircuitId) {
-  return circuit === "skyruins"
+  return circuit === "skyruins" || circuit === "rift" || circuit === "rift-alt"
     ? "ruins"
     : circuit === "moonlight"
       ? "lunar"

@@ -22,6 +22,7 @@ test("reload mid-shot preserves the lie, shot, names, aim and remaining turn, an
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page
     .getByRole("textbox", { name: "Jugador 1", exact: true })
@@ -70,6 +71,7 @@ test("mobile saves on leaving, keeps the locked control and lets a new round rep
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Vuelta completa/ }).click();
   await page
     .locator(".shot-mode-picker")
@@ -113,6 +115,7 @@ test("the actual between-hole result survives reload and advances to the right n
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Club del As/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
@@ -148,6 +151,7 @@ test("an interrupted practice finishes once, clears recovery and preserves its m
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Club del As/ }).click();
   await page.locator(".training-picker summary").click();
   await page.getByRole("button", { name: /Practicar este hoyo/ }).click();
@@ -181,6 +185,7 @@ test("a corrupt save can be discarded without removing preferences, and unavaila
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.evaluate((key) => {
     localStorage.setItem(key, "{broken");
     localStorage.setItem("golf-control-mode", "pull");

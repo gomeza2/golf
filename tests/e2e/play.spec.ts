@@ -7,6 +7,7 @@ test("local game renders WebGL and executes a physical shot on desktop and mobil
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.screenshot({ path: "work/home.png" });
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Añadir jugador/ }).click();
@@ -169,12 +170,14 @@ test("online lobby works across two browser contexts", async ({ browser }) => {
       localStorage.setItem("golf-control-mode", "pulse"),
     );
     await a.goto("/");
+    await a.getByRole("button", { name: /Club del atardecer/ }).click();
     await a.getByRole("button", { name: /Jugar online/ }).click();
     await a.getByRole("textbox", { name: "Tu nombre" }).fill("Ana");
     await a.getByRole("button", { name: /Crear sala/ }).click();
     await expect(a.getByTestId("room-code")).toHaveText(/^[A-F0-9]{6}$/);
     const code = await a.getByTestId("room-code").innerText();
     await b.goto("/?room=" + code);
+    await b.getByRole("button", { name: /Club del atardecer/ }).click();
     await b.getByRole("button", { name: /Jugar online/ }).click();
     await b.getByRole("textbox", { name: "Tu nombre" }).fill("Luis");
     await b.getByRole("button", { name: /Unirme/ }).click();
@@ -341,6 +344,7 @@ test("touch aiming never shoots accidentally and the lunar circuit works with co
       sessionStorage.setItem("golf-session", "{broken"),
     );
     await page.goto("/");
+    await page.getByRole("button", { name: /Club del atardecer/ }).click();
     await page.getByRole("button", { name: /Jardín lunar/ }).tap();
     await page.getByRole("button", { name: /Jugar en este/ }).tap();
     await page.getByRole("button", { name: /Comenzar recorrido/ }).tap();
@@ -408,6 +412,7 @@ test("dragging adjusts aim and power without firing; fine adjustments use only t
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /Club del atardecer/ }).click();
   await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();

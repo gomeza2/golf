@@ -1,3 +1,4 @@
+import { CourseFootprint } from "./CourseFootprint";
 import {
   getCourse,
   blockPose,
@@ -23,8 +24,8 @@ export function HoleMap({ s }: { s: State }) {
           width={width + 0.4}
           height={length + 0.4}
           rx={0.3}
-          fill="#205b4b"
-          stroke="#c4d4be"
+          fill={course.outerWalls === false ? "none" : "#205b4b"}
+          stroke={course.outerWalls === false ? "none" : "#c4d4be"}
           strokeWidth={0.25}
         />
         {course.water?.map((zone, i) => (
@@ -37,7 +38,11 @@ export function HoleMap({ s }: { s: State }) {
             fill="#279bab"
           />
         ))}
-        {course.terrain &&
+        {course.outerWalls === false && (
+          <CourseFootprint course={course} color="#438b6b" />
+        )}
+        {course.outerWalls !== false &&
+          course.terrain &&
           geometry(course).surfaces.map((b, i) => (
             <rect
               key={`deck${i}`}
@@ -118,6 +123,17 @@ export function HoleMap({ s }: { s: State }) {
         )}
       </svg>
       <small>La pelota con borde blanco tiene el turno.</small>
+      {course.strategy && (
+        <div className="route-choice">
+          <b>{course.strategy.skill}</b>
+          <p>
+            <strong>Defender:</strong> {course.strategy.safe}
+          </p>
+          <p>
+            <strong>Arriesgar:</strong> {course.strategy.risk}
+          </p>
+        </div>
+      )}
     </aside>
   );
 }

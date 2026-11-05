@@ -3003,3 +3003,70 @@ button > span {
     font-size: 26px;
   }
 }
+
+.route-choice {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #edcd8840;
+}
+.route-choice > b {
+  color: #edcc83;
+  font-size: 11px;
+}
+.route-choice p {
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.course-choice:has(.course-copy strong):first-child {
+  border-color: #d8b97b70;
+}
+
+.pin-picker {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #ebc27c60;
+  border-radius: 8px;
+  background: #284e3f;
+}
+.pin-picker > small {
+  font-size: 9px;
+  color: #f2d399;
+  letter-spacing: 1px;
+}
+.pin-picker > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pin-picker button {
+  min-height: 44px;
+  border: 1px solid #9cb29c70;
+  border-radius: 5px;
+  color: #e9e8ce;
+  background: #173e32;
+}
+.pin-picker button[aria-pressed="true"] {
+  color: #1a332b;
+  background: #efcd89;
+}
+.pin-picker p {
+  font-size: 11px;
+  margin: 10px 0 0;
+}
+
+.catalog-feature {
+  max-width: 390px;
+}
+.catalog-feature p {
+  margin-top: 0;
+}
+.catalog-feature .primary {
+  width: 100%;
+  margin: 12px 0 8px;
+}
+.catalog-feature > small {
+  font-size: 10px;
+  color: #c8d4bc;
+}

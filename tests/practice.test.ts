@@ -2,6 +2,7 @@ import { beforeAll, afterEach, it, expect, vi } from "vitest";
 import { Game, initPhysics, MAX_STROKES } from "../shared/game";
 import { getCourse, uniqueCourses } from "../shared/courses";
 import { tourShots } from "./fixtures/tour";
+import { riftRiskShots, riftAlternateRiskShots } from "./fixtures/rift";
 import { recordCompletedRound } from "../src/personalRecords";
 import {
   practiceKey,
@@ -168,4 +169,36 @@ it("blocked storage leaves the result usable without claiming it was persisted",
   });
   expect(readPracticeRecords()).toEqual({});
   expect(persistPracticeRecords({})).toBe(false);
+});
+it("alternate flags retain independent real practice records without renumbering legacy keys", () => {
+  let value: string | null = null;
+  vi.stubGlobal("localStorage", {
+    getItem: () => value,
+    setItem: (_k: string, v: string) => (value = v),
+  });
+  let history = recordPractice({}, completed(), "classic")!.history;
+  for (const circuit of ["rift", "rift-alt"] as const) {
+    const g = game();
+    g.selectCircuit(circuit);
+    g.startPractice(0);
+    const route =
+      circuit === "rift" ? riftRiskShots[0] : riftAlternateRiskShots[0];
+    for (const [a, p] of route) {
+      expect(g.shoot("a", a, p)).toBe(true);
+      for (let f = 0; g.state.moving && f < 1500; f++) g.tick();
+    }
+    expect(g.state.phase).toBe("finished");
+    expect(g.state.players[0].capped).toEqual([]);
+    history = recordPractice(history, g.state, "classic")!.history;
+  }
+  expect(practiceKey("sunset", 0, "classic")).toBe("0:classic");
+  expect(practiceKey("rift", 0, "classic")).toBe("24:classic");
+  expect(practiceKey("rift-alt", 0, "classic")).toBe("28:classic");
+  expect(Object.keys(history).sort()).toEqual([
+    "0:classic",
+    "24:classic",
+    "28:classic",
+  ]);
+  expect(persistPracticeRecords(history)).toBe(true);
+  expect(readPracticeRecords()).toEqual(history);
 });

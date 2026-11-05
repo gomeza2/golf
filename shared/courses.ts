@@ -1,3 +1,4 @@
+import { createRiftCourses } from "./riftCourses";
 import { createSkyCourses } from "./skyCourses";
 export type V3 = { x: number; y: number; z: number };
 export type Block = {
@@ -18,7 +19,16 @@ export type Zone = {
   length: number;
   y: number;
 };
+export type FloorMesh = {
+  vertices: number[];
+  indices: number[];
+  color?: string;
+};
 export type Course = {
+  routeLength?: number;
+  outerWalls?: false;
+  floorMeshes?: FloorMesh[];
+  strategy?: { safe: string; risk: string; skill: string };
   name: string;
   subtitle: string;
   par: number;
@@ -121,6 +131,8 @@ export const colors = [
 ];
 
 export type CircuitId =
+  | "rift"
+  | "rift-alt"
   | "skyruins"
   | "sunset"
   | "moonlight"
@@ -494,6 +506,12 @@ export const aceCourses: Course[] = [
 ];
 // Close only accidental near-wall slits; intended routes remain at least 0.9 m wide.
 export function sealSideSlits(course: Course) {
+  if (course.outerWalls === false) {
+    course.blocks.forEach((b) => {
+      b.bevel = Math.min(0.06, ...b.size.map((v) => v / 4));
+    });
+    return;
+  }
   const half = courseSize(course).width / 2;
   for (const b of course.blocks) {
     b.bevel = Math.min(0.06, ...b.size.map((v) => v / 4));
@@ -514,14 +532,29 @@ export const championshipCourses = [
   ...mastersCourses,
 ];
 export const skyCourses = createSkyCourses({ deck, rampDeck });
+export const riftCourses = createRiftCourses({ deck, rampDeck, curvedBank });
+export const riftAlternateCourses = riftCourses.map((course, i) => ({
+  ...course,
+  cup: [
+    { x: 6.2, y: 0, z: 19.2 },
+    { x: 8.1, y: 0, z: -12.6 },
+    { x: -2.2, y: 0, z: -1.2 },
+    { x: 10, y: 0, z: -18 },
+  ][i],
+}));
 export const uniqueCourses = [
   ...championshipCourses,
   ...aceCourses,
   ...skyCourses,
+  ...riftCourses,
 ];
+// Append alternate pin layouts without renumbering any existing practice record.
+export const practiceLayouts = [...uniqueCourses, ...riftAlternateCourses];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
   Math.abs(p.z - zone.z) < zone.length / 2 + margin;
+export const courseDistance = (course: Course) =>
+  course.routeLength ?? courseSize(course).length;
 export const courseSize = (course: Course) =>
   course.dimensions || { width: 12, length: 24 };
 uniqueCourses.forEach(sealSideSlits);
@@ -624,6 +657,28 @@ export const circuits = [
     background: "#577b86",
     accent: "#f0ce85",
   },
+  {
+    id: "rift" as const,
+    name: "Al Filo",
+    description:
+      "Cuatro huellas nuevas: U, zigzag, órbita y terrazas. Atajos abiertos sobre el agua y rutas largas para defender una ventaja.",
+    courses: riftCourses,
+    ground: "#4a8267",
+    edge: "#c9b18a",
+    background: "#29414b",
+    accent: "#f0b373",
+  },
+  {
+    id: "rift-alt" as const,
+    name: "Al Filo · Banderas cruzadas",
+    description:
+      "Las mismas cuatro huellas con copas desplazadas: el atajo directo cambia y hay que preparar otra llegada.",
+    courses: riftAlternateCourses,
+    ground: "#4a8267",
+    edge: "#c9b18a",
+    background: "#29414b",
+    accent: "#f0b373",
+  },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
   circuits.some((c) => c.id === value);
@@ -634,6 +689,7 @@ export const getCourse = (state: { circuit: CircuitId; hole: number }) =>
 export function geometry(course: Course): {
   surfaces: Block[];
   walls: Block[];
+  meshes: FloorMesh[];
 } {
   const { width, length } = courseSize(course);
   const surfaces: Block[] = course.ramp
@@ -672,7 +728,11 @@ export function geometry(course: Course): {
   );
   if (course.terrain) surfaces.splice(0, surfaces.length, ...course.terrain);
   else surfaces.pop(); // Cup platform is supplied by cupGreen(), including its opening.
-  return { surfaces, walls };
+  return {
+    surfaces,
+    walls: course.outerWalls === false ? [] : walls,
+    meshes: course.floorMeshes || [],
+  };
 }
 export function blockPose(block: Block, time: number) {
   const pos: [number, number, number] = [...block.pos];
@@ -684,6 +744,14 @@ export function blockPose(block: Block, time: number) {
   return { pos, yaw };
 }
 
+// Tilt in local X, then orient the whole ramp around world Y.
+export function blockRotation(rotation: number, yaw: number) {
+  const sx = Math.sin(rotation / 2),
+    cx = Math.cos(rotation / 2),
+    sy = Math.sin(yaw / 2),
+    cy = Math.cos(yaw / 2);
+  return { x: sx * cy, y: cx * sy, z: -sx * sy, w: cx * cy };
+}
 export const CUP_RADIUS = 0.5;
 export const CUP_DEPTH = 0.85;
 // Annular mesh: radial spokes connect the circular rim to a rectangular outer edge.

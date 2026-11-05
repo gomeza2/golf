@@ -6,6 +6,7 @@ for (const mobile of [false, true])
   }) => {
     if (mobile) await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
+    await page.getByRole("button", { name: /Club del atardecer/ }).click();
     if (mobile)
       await page
         .locator(".shot-mode-picker")

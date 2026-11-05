@@ -11,6 +11,7 @@ import {
   CUP_RADIUS,
   CUP_DEPTH,
   blockPose,
+  blockRotation,
   colors,
   type Block,
 } from "../shared/courses";
@@ -51,7 +52,8 @@ function Box({
   time: number;
   grass?: THREE.Texture;
 }) {
-  const pose = blockPose(b, time);
+  const pose = blockPose(b, time),
+    q = blockRotation(b.rotation || 0, pose.yaw);
   const box = useMemo(() => {
     const result = b.bevel
       ? new RoundedBoxGeometry(...b.size, 2, b.bevel)
@@ -68,7 +70,7 @@ function Box({
   return (
     <mesh
       position={pose.pos}
-      rotation={[b.rotation || 0, pose.yaw, 0]}
+      quaternion={[q.x, q.y, q.z, q.w]}
       castShadow
       receiveShadow
     >
@@ -77,6 +79,46 @@ function Box({
         color={b.color || "#dbc89f"}
         roughness={0.8}
         map={grass}
+      />
+    </mesh>
+  );
+}
+function FloorSurface({
+  data,
+  color,
+}: {
+  data: { vertices: number[]; indices: number[]; color?: string };
+  color: string;
+}) {
+  const grass = useGrassTexture();
+  const mesh = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(data.vertices, 3),
+    );
+    g.setAttribute(
+      "uv",
+      new THREE.Float32BufferAttribute(
+        data.vertices.flatMap((_, i) =>
+          i % 3 === 0 ? [data.vertices[i] / 4, data.vertices[i + 2] / 4] : [],
+        ),
+        2,
+      ),
+    );
+    g.setIndex(data.indices);
+    g.computeVertexNormals();
+    return g;
+  }, [data]);
+  useEffect(() => () => mesh.dispose(), [mesh]);
+  return (
+    <mesh geometry={mesh} receiveShadow castShadow>
+      <meshStandardMaterial
+        color={data.color || color}
+        map={grass}
+        roughness={0.9}
+        flatShading
+        side={THREE.DoubleSide}
       />
     </mesh>
   );
@@ -512,7 +554,7 @@ function World({
       <CourseWater course={c} detail={rendering.detail} />
       <ImpactEffect event={s.event} time={s.time} detail={rendering.detail} />
       <CourseScenery course={c} circuit={s.circuit} detail={rendering.detail} />
-      {s.circuit !== "skyruins" && (
+      {s.circuit !== "skyruins" && c.outerWalls !== false && (
         <mesh position={[0, -1.7, 0]} receiveShadow>
           <boxGeometry
             args={[dimensions.width + 2, 1.3, dimensions.length + 2]}
@@ -537,10 +579,13 @@ function World({
         ))}
       </group>
 
+      {shape.meshes.map((mesh, i) => (
+        <FloorSurface key={`floor${i}`} data={mesh} color={theme.ground} />
+      ))}
       {shape.surfaces.map((b, i) => (
         <Box
           key={i}
-          b={{ ...b, color: theme.ground }}
+          b={{ ...b, color: b.color || theme.ground }}
           time={s.time}
           grass={grass}
         />
