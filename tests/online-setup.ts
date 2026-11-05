@@ -13,10 +13,12 @@ export default async function setup(config: FullConfig) {
       const health = await response.json();
       if (
         health.protocol !== NETWORK_PROTOCOL ||
-        !health.formats?.includes("stableford")
+        !health.formats?.includes("stableford") ||
+        !health.cups?.includes("risk") ||
+        !health.concede
       )
         throw Error(
-          `El servidor necesita protocolo ${NETWORK_PROTOCOL} y Duelo por puntos`,
+          `El servidor necesita protocolo ${NETWORK_PROTOCOL} y copas entre amigos`,
         );
       if (
         process.env.EXPECTED_ONLINE_COMMIT &&

@@ -1,3 +1,13 @@
+import {
+  chooseCup,
+  startRoomMatch,
+  settleRoomCup,
+  retireCupPlayer,
+  advanceRoomCup,
+  replayRoomCup,
+  resetRoomCup,
+} from "./cups";
+import type { CupState } from "../shared/cups";
 import { RULES_VERSION, NETWORK_PROTOCOL } from "../shared/rules";
 import { isMatchFormat } from "../shared/scoring";
 import { reconnectGrace, shouldWithdraw } from "./disconnections";
@@ -38,6 +48,8 @@ const http = createServer(async (req, res) => {
         version,
         commit: process.env.RENDER_GIT_COMMIT || process.env.APP_COMMIT || null,
         formats: ["strokes", "stableford"],
+        cups: ["club", "risk"],
+        concede: true,
         disconnectGraceSeconds,
         rooms: rooms.size,
         maxPlayers: capacity,
@@ -99,6 +111,7 @@ const io = new Server(http, {
     ),
 });
 type Room = {
+  cup?: CupState;
   game: Game;
   tokens: Map<string, string>;
   sockets: Map<string, string>;
@@ -115,7 +128,10 @@ const capacity = Math.max(
   2,
   Math.min(8, Math.floor(Number(process.env.MAX_PLAYERS)) || 8),
 );
-const snapshot = (r: Room) => r.game.state;
+const snapshot = (r: Room) => {
+  settleRoomCup(r);
+  return { ...r.game.state, ...(r.cup ? { cup: r.cup } : {}) };
+};
 const fail = (socket: Socket, message: string) =>
   socket.emit("notice", message);
 io.on("connection", (socket) => {
@@ -219,7 +235,7 @@ io.on("connection", (socket) => {
         case "leave": {
           const previous = room,
             code = s.code;
-          room.game.withdraw(pid);
+          retireCupPlayer(room, pid);
           revoke(pid);
           room.sockets.delete(pid);
           if (s.host === pid)
@@ -247,16 +263,18 @@ io.on("connection", (socket) => {
         case "circuit":
           if (s.host !== pid || !isCircuitId(d.circuit))
             throw Error("Solo el anfitrión elige un recorrido válido");
+          if (room.cup) throw Error("El recorrido está fijado por la copa");
           room.game.selectCircuit(d.circuit);
           break;
         case "format":
           if (s.host !== pid || !isMatchFormat(d.format))
             throw Error("Solo el anfitrión elige un formato válido en la sala");
           room.game.selectFormat(d.format);
+          if (room.cup) room.cup.format = d.format;
           break;
         case "lobby":
           if (s.host !== pid) throw Error("Solo el anfitrión vuelve a la sala");
-          room.game.returnToLobby();
+          resetRoomCup(room);
           break;
         case "ready":
           if (s.phase === "lobby") p.ready = !p.ready;
@@ -271,7 +289,19 @@ io.on("connection", (socket) => {
               room.game.removeFromLobby(player.id);
               revoke(player.id);
             }
-          room.game.start();
+          startRoomMatch(room);
+          break;
+        case "cup":
+          if (s.host !== pid) throw Error("Solo el anfitrión elige la copa");
+          chooseCup(room, d.cup);
+          break;
+        case "cup-next":
+          if (s.host !== pid) throw Error("Solo el anfitrión avanza la copa");
+          advanceRoomCup(room);
+          break;
+        case "concede":
+          if (!room.game.concede(pid))
+            throw Error("Solo puedes conceder tu hoyo con la pelota detenida");
           break;
         case "shoot":
           if (
@@ -293,14 +323,20 @@ io.on("connection", (socket) => {
             s.players.filter((p) => p.connected && !p.withdrawn).length < 2
           )
             throw Error("Acción no disponible");
-          s.players = s.players.filter((p) => p.connected && !p.withdrawn);
-          room.game.start();
+          if (room.cup) replayRoomCup(room);
+          else {
+            s.players = s.players.filter((p) => p.connected && !p.withdrawn);
+            room.game.start();
+          }
           break;
         default:
           throw Error("Acción desconocida");
       }
       for (const [token, owner] of room.tokens)
-        if (!s.players.some((p) => p.id === owner)) room.tokens.delete(token);
+        if (!room.game.state.players.some((p) => p.id === owner)) {
+          room.tokens.delete(token);
+          room.disconnectedAt.delete(owner);
+        }
       io.to(s.code).emit("state", snapshot(room));
     } catch (e) {
       fail(socket, e instanceof Error ? e.message : "Error de sala");
@@ -339,13 +375,15 @@ setInterval(() => {
       if (
         shouldWithdraw(
           p,
-          r.game.state.phase,
+          r.cup?.phase === "playing" && r.game.state.phase === "finished"
+            ? "scores"
+            : r.game.state.phase,
           r.disconnectedAt.get(p.id),
           Date.now(),
           disconnectGraceSeconds * 1000,
         )
       ) {
-        r.game.withdraw(p.id);
+        retireCupPlayer(r, p.id);
         revokePlayer(r, p.id);
         if (r.game.state.host === p.id)
           r.game.state.host =
@@ -353,6 +391,7 @@ setInterval(() => {
             "";
       }
     }
+    settleRoomCup(r);
     active.push(r);
   }
   stepper.advance(now, () => active.forEach((r) => r.game.tick()));

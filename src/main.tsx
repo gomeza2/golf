@@ -1,3 +1,5 @@
+import { CupDialog } from "./CupPanels";
+import { getCupPlan } from "../shared/cups";
 import { TURN_SECONDS } from "../shared/rules";
 import { APP_VERSION, GAME_NAME } from "./release";
 import React, { useEffect, useRef, useState } from "react";
@@ -172,6 +174,8 @@ function App() {
   const [challengePreview, setChallengePreview] =
       useState<ClubChallenge | null>(sharedChallenge),
     [challengeDetails, setChallengeDetails] = useState(false);
+  const [cupDetails, setCupDetails] = useState(false);
+  useEffect(() => setCupDetails(false), [s.phase, s.cup?.round]);
   const onlineAvailable =
     import.meta.env.VITE_STATIC_HOST !== "true" || Boolean(serverUrl.trim());
   useEffect(() => {
@@ -355,6 +359,7 @@ function App() {
     !paused &&
     !intro.active &&
     !challengeDetails &&
+    !cupDetails &&
     school.session?.phase !== "passed" &&
     !(mode === "local" && hidden) &&
     !lookMode &&
@@ -615,9 +620,11 @@ function App() {
         type,
         ...(type === "remove"
           ? { id: value }
-          : type === "format"
-            ? { format: value }
-            : { circuit: value }),
+          : type === "cup"
+            ? { cup: value }
+            : type === "format"
+              ? { format: value }
+              : { circuit: value }),
       });
     } else if (game.current) {
       if (type === "lobby") {
@@ -648,6 +655,11 @@ function App() {
         setCameraLook(defaultLook);
         setAngle(0);
         setOverview(false);
+      } else if (type === "concede") {
+        controls.cancel();
+        game.current.concede(
+          game.current.state.players[game.current.state.turn].id,
+        );
       } else if (type === "next") game.current.next();
       else {
         game.current.start(game.current.state.format ?? "strokes");
@@ -969,7 +981,15 @@ function App() {
       {screen === "game" && (
         <GamePanels
           shotExtras={
-            challenges.definition ? (
+            s.cup && s.cup.phase !== "setup" ? (
+              <button
+                className="text-button pause-shot"
+                aria-label="Ver copa"
+                onClick={() => setCupDetails(true)}
+              >
+                Copa {s.cup.round + 1}/{getCupPlan(s.cup.plan)!.circuits.length}
+              </button>
+            ) : challenges.definition ? (
               <button
                 className="text-button pause-shot"
                 aria-label="Objetivos del reto"
@@ -1036,6 +1056,9 @@ function App() {
           action={action}
           leave={leave}
         />
+      )}
+      {cupDetails && s.cup && screen === "game" && (
+        <CupDialog state={s} onClose={() => setCupDetails(false)} />
       )}
       {challengePreview && screen === "home" && (
         <ChallengeDialog

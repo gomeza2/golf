@@ -1,5 +1,13 @@
 # Hoyo en Uno · Golf Club
 
+## 0.11.0
+
+- Copas online completas: Copa del Club (tres vueltas/nueve hoyos) y Copa del Riesgo (dos/seis). Preparación por anfitrión, cancelación de preparados, plan/formato/participantes fijados al empezar y acumulado autoritativo por golpes o Stableford.
+- Actas por vuelta sin duplicados, clasificación provisional/definitiva, honores de salida por resultado anterior, desempate por ases, victorias compartidas y revancha limpia en la misma sala.
+- Recuperación entre vueltas con el plazo existente, retiro al salir/expirar sin inventar futuras puntuaciones y continuación con el participante restante. Resultados cerrados inmutables ante salidas tardías.
+- Cesión voluntaria de hoyo con confirmación, 12 golpes/0 puntos y validación del turno/pelota detenida, en local y online. Los límites no generan récord ni medalla de retos.
+- Protocolo online 10; reglas físicas v7 y guardado local formato 1 conservados, junto con todos los hoyos, controles, escuela y retos. Sin dependencias ni base de datos nuevas; las actas de copa viven en la sala del servidor.
+
 ## 0.10.0
 
 - Retos del club integrados en el catálogo: diario y copa semanal individual de 9/18 hoyos, enlaces canónicos con fecha UTC y selección versionada estable. Objetivos completos de golpes, penalizaciones y hoyos bajo par; Bronce, Plata y Oro según resultados físicos reales.

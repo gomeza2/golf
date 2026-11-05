@@ -238,6 +238,8 @@ export function restoreLocalRound(round: LocalRound): Game {
       throw Error("La simulación guardada está incompleta.");
     const game = new Game();
     game.state = structuredClone(round.state);
+    // Series are server-owned; local snapshots never restore online cup metadata.
+    delete game.state.cup;
     // Old cup/bounce notifications must not be played again after recovery.
     game.state.event = undefined;
     game.turnOrder = [...round.order];

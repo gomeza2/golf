@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.10.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.11.0:** 24 hoyos, nueve recorridos y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -134,3 +134,11 @@ La recuperación conserva el identificador del intento sin alterar el formato 1 
 La conexión Socket.IO se mueve a `onlineConnection.ts`: validación de sesión/protocolo, acciones solo tras admisión, recuperación, ping reconocido, salida y limpieza. No se modifica el servidor ni el contrato de protocolo 9. La siguiente fase puede incorporar una copa entre amigos sobre esta base sin añadir otra implementación de conexión.
 
 Pendientes: copas de varias partidas en salas, persistencia central, editor completo y mediciones prolongadas en hardware móvil físico. El balance de golpe normal permanece intacto.
+
+## Entrega 0.11.0 — copas entre amigos
+
+Se añaden dos planes de copa online de dos/tres vueltas, acumulación autoritativa por golpes o puntos, actas por vuelta inmutables, honores de salida, desempate por ases y victoria compartida. Selección y preparación se integran en la sala existente; se mantienen invitación, reconexión, anfitrión, turnos y todos los modos anteriores. Un retirado conserva únicamente sus resultados reales, sin puntuaciones futuras inventadas; la copa puede continuar con un participante. Al cerrar la copa las salidas no reescriben el podio. Revancha y vuelta a preparación funcionan en la misma sala.
+
+La cesión de hoyo requiere confirmación y validación del turno con pelota detenida. Registra 12 golpes y límite; es útil para rondas entre amigos y no concede récord ni medalla. La simulación no cambia: reglas v7 y snapshots formato 1; el protocolo online pasa a 10. Los snapshots locales ignoran metadatos de copa reservados al servidor. No se borra ninguna preferencia, marca anterior ni pista.
+
+Reglas/actas: `shared/cups.ts`; ciclo de vida y reemplazo seguro de mundos Rapier: `server/cups.ts`; lobby, marcador y resultados: `src/CupPanels.tsx`. Las pruebas nuevas cubren física real, cesión, series completas, puntuación, idempotencia, retiros, guardados, revancha y sesiones reales. La publicación exige también una copa completa real contra el servidor público. Pendientes: persistencia de salas/actas entre reinicios y taller de hoyos.

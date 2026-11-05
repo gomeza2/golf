@@ -1,3 +1,4 @@
+import type { CupState } from "./cups";
 import { TURN_SECONDS } from "./rules";
 import {
   holeOutcome,
@@ -40,6 +41,7 @@ export type Player = {
   capped: number[];
 };
 export type State = {
+  cup?: CupState;
   format?: MatchFormat;
   practice?: boolean;
   phase: "lobby" | "playing" | "scores" | "finished";
@@ -282,6 +284,23 @@ export class Game {
     this.quiet = 0;
     this.capturedAt = null;
     s.message = "La pelota está en juego";
+    return true;
+  }
+  concede(id: string) {
+    const s = this.state,
+      p = s.players[s.turn];
+    if (
+      s.phase !== "playing" ||
+      s.moving ||
+      !p ||
+      p.id !== id ||
+      p.done ||
+      p.withdrawn
+    )
+      return false;
+    p.strokes = MAX_STROKES;
+    s.message = "Hoyo concedido: límite de 12 golpes";
+    this.endTurn();
     return true;
   }
   tick() {

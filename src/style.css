@@ -2899,3 +2899,107 @@ button > span {
     margin-top: 6px;
   }
 }
+
+/* Cup UI stays off the playing surface until the player opens its table. */
+.cup-picker {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #e5ca7b45;
+  border-radius: 8px;
+  background: #21483d;
+}
+.cup-picker label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: #ebd497;
+}
+.cup-picker select {
+  min-height: 46px;
+  width: 100%;
+  background: #12382f;
+  color: #f4edda;
+  border: 1px solid #adc3ad70;
+  border-radius: 5px;
+  padding: 8px;
+}
+.cup-picker ol {
+  padding-left: 20px;
+  font-size: 12px;
+  color: #c7d7c7;
+  line-height: 1.9;
+}
+.cup-picker small,
+.cup-results > small {
+  font-size: 11px;
+  color: #b8cbb9;
+  line-height: 1.6;
+}
+.cup-results {
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid #e5ca7b65;
+  border-radius: 10px;
+  background: linear-gradient(140deg, #33564a, #1b3e36);
+}
+.cup-results h3 {
+  font:
+    700 32px "Barlow Condensed",
+    sans-serif;
+  color: #f2d48d;
+  margin: 12px 0;
+}
+.cup-results p {
+  font-size: 12px;
+}
+.cup-results .table-wrap {
+  margin: 12px 0;
+}
+.cup-results td small {
+  display: block;
+  font-size: 10px;
+  color: #c0b7a0;
+}
+.cup-dialog.panel {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(680px, calc(100% - 24px));
+  max-height: 90svh;
+  overflow: auto;
+  padding: 24px;
+  color: #eee7d1;
+  background: #14372e;
+}
+.cup-dialog::backdrop {
+  background: #001b20bd;
+  backdrop-filter: blur(4px);
+}
+.cup-dialog .cup-results {
+  margin: 12px 0;
+}
+.concede-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.concede-controls[hidden] {
+  display: none;
+}
+.concede-controls button {
+  min-height: 36px;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .cup-results {
+    padding: 12px;
+  }
+  .cup-dialog.panel {
+    padding: 20px 12px;
+  }
+  .cup-results h3 {
+    font-size: 26px;
+  }
+}

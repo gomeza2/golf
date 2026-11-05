@@ -1,3 +1,5 @@
+import { CupPicker, CupTable } from "./CupPanels";
+import { cupWinnerLabel } from "../shared/cups";
 import {
   useState,
   useEffect,
@@ -103,6 +105,8 @@ export function GamePanels({
 }: Props) {
   const [mapOpen, setMapOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [conceding, setConceding] = useState(false);
+  useEffect(() => setConceding(false), [s.turn, s.hole, s.phase, s.moving]);
   useEffect(() => setExpanded(false), [s.turn, s.hole, s.moving]);
   const chargePointer = useRef<number | null>(null);
   useEffect(() => {
@@ -132,8 +136,11 @@ export function GamePanels({
   const points = pointsMatch(s);
   const sorted = matchRanking(s),
     winners = sorted.filter((p) => !p.withdrawn && matchPosition(p, s) === 1);
-  const winnerLabel =
-    s.players.length === 1 && !s.players[0].withdrawn
+  const winnerLabel = s.cup
+    ? s.cup.phase === "finished"
+      ? cupWinnerLabel(s.cup)
+      : "Vuelta terminada. La copa continúa."
+    : s.players.length === 1 && !s.players[0].withdrawn
       ? "Tu vuelta, tu marca."
       : !winners.length
         ? "Partida abandonada."
@@ -171,11 +178,18 @@ export function GamePanels({
             <span data-testid="room-code">{s.code}</span>
             <small>COPIAR INVITACIÓN →</small>
           </button>
-          <CircuitPicker
-            value={s.circuit}
-            onChange={(id) => action("circuit", id)}
+          <CupPicker
+            state={s}
             disabled={!isHost || status !== "Conectado"}
+            onChange={(id) => action("cup", id)}
           />
+          {!s.cup && (
+            <CircuitPicker
+              value={s.circuit}
+              onChange={(id) => action("circuit", id)}
+              disabled={!isHost || status !== "Conectado"}
+            />
+          )}
           <MatchFormatPicker
             value={s.format ?? "strokes"}
             players={s.players.length}
@@ -184,8 +198,8 @@ export function GamePanels({
             onChange={(format) => action("format", format)}
           />
           <p className="muted">
-            Cambiar el recorrido o el formato cancela el estado preparado. Al
-            comenzar solo entran los invitados conectados.
+            Cambiar el recorrido, la copa o el formato cancela el estado
+            preparado. Al comenzar solo entran los invitados conectados.
           </p>
           <small className="muted">
             Una desconexión durante la partida conserva la plaza{" "}
@@ -585,6 +599,35 @@ export function GamePanels({
                 </button>
               ))}
             </div>
+            <div className="concede-controls" hidden={!expanded}>
+              <button
+                className="text-button"
+                disabled={!canShoot || chargeActive}
+                onClick={() => {
+                  if (!conceding) setConceding(true);
+                  else {
+                    action("concede");
+                    setConceding(false);
+                  }
+                }}
+              >
+                {conceding ? "Confirmar: 12 golpes" : "Ceder este hoyo"}
+              </button>
+              {conceding && (
+                <>
+                  <button
+                    className="text-button"
+                    onClick={() => setConceding(false)}
+                  >
+                    Cancelar cesión
+                  </button>
+                  <small>
+                    Se registra el límite de 12 golpes y 0 puntos. No genera
+                    récord personal.
+                  </small>
+                </>
+              )}
+            </div>
             <small>
               {controlMode === "classic"
                 ? "Clásico · Flecha y potencia · Shift + flechas: ajuste fino · Golpear confirma"
@@ -631,7 +674,8 @@ export function GamePanels({
             </div>
           )}
           {resultExtras}
-          <FinalPodium state={s} />
+          <CupTable state={s} />
+          {!s.cup && <FinalPodium state={s} />}
           <div className="table-wrap">
             <table>
               <thead>
@@ -786,21 +830,37 @@ export function GamePanels({
                 mode === "online" &&
                 (status !== "Conectado" ||
                   (s.phase === "finished" &&
+                    s.cup?.phase !== "playing" &&
                     s.players.filter((p) => p.connected && !p.withdrawn)
                       .length < 2))
               }
-              onClick={() => action(s.phase === "scores" ? "next" : "replay")}
+              onClick={() =>
+                action(
+                  s.phase === "scores"
+                    ? "next"
+                    : s.cup?.phase === "playing"
+                      ? "cup-next"
+                      : "replay",
+                )
+              }
             >
-              {s.phase === "scores" ? "Siguiente hoyo →" : "La revancha →"}
+              {s.phase === "scores"
+                ? "Siguiente hoyo →"
+                : s.cup?.phase === "playing"
+                  ? "Siguiente vuelta →"
+                  : "La revancha →"}
             </button>
           ) : (
             <p>Esperando al anfitrión…</p>
           )}
-          {s.phase === "finished" && isHost && !s.practice && (
-            <button className="secondary" onClick={() => action("lobby")}>
-              Elegir otro recorrido
-            </button>
-          )}
+          {s.phase === "finished" &&
+            isHost &&
+            !s.practice &&
+            s.cup?.phase !== "playing" && (
+              <button className="secondary" onClick={() => action("lobby")}>
+                {s.cup ? "Preparar otra partida" : "Elegir otro recorrido"}
+              </button>
+            )}
           <button className="text-button" onClick={leave}>
             Volver al inicio
           </button>
