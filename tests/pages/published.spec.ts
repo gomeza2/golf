@@ -11,13 +11,20 @@ test("the published irregular course plays its physical bridge shortcut and save
   page,
   baseURL,
 }) => {
-  test.setTimeout(120000);
+  test.setTimeout(180000);
   await page.addInitScript(() => {
     localStorage.setItem("golf-graphics-mode", "low");
     localStorage.setItem("golf-hole-intro", "false");
   });
-  await page.goto(baseURL!);
-  await expect(page.locator(".header-right")).toContainText(`v${APP_VERSION}`);
+  await expect
+    .poll(
+      async () => {
+        await page.goto(baseURL!);
+        return page.locator(".header-right").innerText({ timeout: 15000 });
+      },
+      { timeout: 90000, intervals: [1000, 3000, 5000] },
+    )
+    .toContain(`v${APP_VERSION}`);
   await page.getByRole("button", { name: /Jugar Al Filo/ }).click();
   await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
   await expect(page.locator(".hole-hud")).toContainText(

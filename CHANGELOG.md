@@ -8,6 +8,7 @@
 - Copa Al Filo online con ambas posiciones de banderas, reutilizando el servidor y acumulado existentes. Protocolo 11; reglas v7 y guardados formato 1 intactos.
 - Malla de suelo compartida por Three.js/Rapier/mapa y rotación compartida para rampas con inclinación y giro. Claves de práctica antiguas conservadas y perfiles nuevos sin colisiones.
 - Regresión física de las dos rondas nuevas, rutas seguras/arriesgadas, agua, compuerta, soporte del anillo, rampas, recuperación y récords; ronda real de navegador, preferencias móvil y duelo autoritativo de atajo frente a ruta amplia. Prueba de producción/pública de un puente y embocado reales.
+- Corrección del parpadeo en cruces coplanares mediante prioridad de profundidad, sin cambiar geometría física. La comprobación pública espera la versión actual tras propagar Pages.
 - Conservados todos los hoyos, controles, escuela, desafíos, partidas, copas y datos anteriores. Editor, persistencia central y pruebas prolongadas en teléfonos físicos siguen pendientes.
 
 ## 0.11.0

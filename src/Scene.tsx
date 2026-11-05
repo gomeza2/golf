@@ -47,10 +47,12 @@ function Box({
   b,
   time,
   grass,
+  surfaceLayer = 0,
 }: {
   b: Block;
   time: number;
   grass?: THREE.Texture;
+  surfaceLayer?: number;
 }) {
   const pose = blockPose(b, time),
     q = blockRotation(b.rotation || 0, pose.yaw);
@@ -79,6 +81,10 @@ function Box({
         color={b.color || "#dbc89f"}
         roughness={0.8}
         map={grass}
+        // Coplanar crossings keep their physical height; only depth priority changes.
+        polygonOffset={surfaceLayer > 0}
+        polygonOffsetFactor={surfaceLayer > 0 ? -1 : 0}
+        polygonOffsetUnits={-surfaceLayer}
       />
     </mesh>
   );
@@ -588,6 +594,7 @@ function World({
           b={{ ...b, color: b.color || theme.ground }}
           time={s.time}
           grass={grass}
+          surfaceLayer={c.outerWalls === false ? i + 1 : 0}
         />
       ))}
       {blocks.map((b, i) => (

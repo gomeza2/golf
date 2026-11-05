@@ -154,3 +154,5 @@ Fases 8–10: nueva selección principal persistente, récords de ronda/práctic
 Fase 12: rondas amplias y arriesgadas completas en ambos perfiles sin recolocar pelota; caída real al agua, compuerta, raycasts del anillo, alineación de rampa, snapshot a mitad de tiro y registros. Ronda de navegador de 14 golpes y duelo online real de 3 frente a 5 en el primer hoyo; prueba del puente también en producción. El detalle del resultado final se informa con la entrega y GitHub Actions.
 
 Fase 13: equilibrio humano con amigos, teléfonos físicos, cargas de muchas salas y taller de hoyos continúan pendientes. Las salas no sobreviven reinicios.
+
+Cierre de regresión de 0.12.0: 173 pruebas de reglas/física y 53 de navegador pasaron localmente; GitHub Actions repitió ambas y completó siete casos de producción bajo `/golf/`. La revisión visual detectó parpadeo en cruces coplanares: se corrige solo la prioridad de profundidad de las superficies nuevas, sin mover mallas ni colisiones; se repite la ronda nueva y la comprobación de producción después del ajuste. La prueba pública espera la versión desplegada para tolerar la propagación de Pages.
