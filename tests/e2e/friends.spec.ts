@@ -555,7 +555,11 @@ test("cup recovery expires between rounds without blocking the surviving friend"
     const a = await open(`http://localhost:${port}`),
       b = await open(`http://localhost:${port}`);
     sockets.push(a, b);
-    const host = await enter(a, { type: "create", name: "Ana" }),
+    const host = await enter(a, {
+        type: "create",
+        name: "Ana",
+        format: "stableford",
+      }),
       guest = await enter(b, { type: "join", code: host.code, name: "Luis" });
     const send = async (
       socket: Socket,
@@ -617,6 +621,7 @@ test("cup recovery expires between rounds without blocking the surviving friend"
       (s) => s.phase === "playing" && s.cup?.round === 1,
     );
     expect(current.players.map((p) => p.id)).toEqual([host.id]);
+    expect(current.format).toBe("stableford");
     while (current.phase !== "finished") {
       if (current.phase === "scores") {
         const h = current.hole;

@@ -101,6 +101,9 @@ test("two friends complete a whole cup through real controls, keep the cumulativ
           animations: "disabled",
         });
         await a.getByRole("button", { name: /Siguiente vuelta/ }).click();
+        await expect(
+          a.getByRole("complementary", { name: "Acumulado de la copa" }),
+        ).toContainText("25");
       }
     }
     for (const page of [a, b]) {

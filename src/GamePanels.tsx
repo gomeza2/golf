@@ -1,4 +1,4 @@
-import { CupPicker, CupTable } from "./CupPanels";
+import { CupPicker, CupTable, CupLiveBoard } from "./CupPanels";
 import { cupWinnerLabel } from "../shared/cups";
 import {
   useState,
@@ -275,29 +275,33 @@ export function GamePanels({
               {courses[s.hole].subtitle}
             </p>
           </div>
-          <aside className="leaderboard">
-            <div className="eyebrow">
-              {points ? "PUNTOS CONFIRMADOS" : "CLASIFICACIÓN"}{" "}
-              {mode === "online"
-                ? "· " + status + (latency !== null ? ` · ${latency} ms` : "")
-                : ""}
-            </div>
-            {sorted.map((p) => (
-              <div className={p.id === current.id ? "active" : ""} key={p.id}>
-                <span>{matchPosition(p, s)}</span>
-                <i style={{ background: colors[s.players.indexOf(p)] }} />
-                <strong>
-                  {p.name}
-                  {p.withdrawn
-                    ? " · retirado"
-                    : !p.connected && mode === "online"
-                      ? " · sin red"
-                      : ""}
-                </strong>
-                <b>{points ? `${confirmedPoints(p, s)} pt` : total(p)}</b>
+          {s.cup ? (
+            <CupLiveBoard state={s} status={status} latency={latency} />
+          ) : (
+            <aside className="leaderboard">
+              <div className="eyebrow">
+                {points ? "PUNTOS CONFIRMADOS" : "CLASIFICACIÓN"}{" "}
+                {mode === "online"
+                  ? "· " + status + (latency !== null ? ` · ${latency} ms` : "")
+                  : ""}
               </div>
-            ))}
-          </aside>
+              {sorted.map((p) => (
+                <div className={p.id === current.id ? "active" : ""} key={p.id}>
+                  <span>{matchPosition(p, s)}</span>
+                  <i style={{ background: colors[s.players.indexOf(p)] }} />
+                  <strong>
+                    {p.name}
+                    {p.withdrawn
+                      ? " · retirado"
+                      : !p.connected && mode === "online"
+                        ? " · sin red"
+                        : ""}
+                  </strong>
+                  <b>{points ? `${confirmedPoints(p, s)} pt` : total(p)}</b>
+                </div>
+              ))}
+            </aside>
+          )}
           {transitioning && (
             <div className="turn-intro" role="status">
               <div

@@ -199,30 +199,33 @@ it("keeps unfinished live totals out of confirmed columns and never double count
     r.game.dispose();
   }
 });
-it("retirement outranks any cheap partial score; disconnected friends can retain their seat between rounds", () => {
-  const r = room();
-  try {
-    chooseCup(r, "risk");
-    startRoomMatch(r);
-    finishByConcession(r);
-    r.game.state.players[1].connected = false;
-    advanceRoomCup(r);
-    expect(r.game.state.players.find((p) => p.id === "b")?.connected).toBe(
-      false,
-    );
-    retireCupPlayer(r, "a");
-    finishByConcession(r);
-    expect(cupStandings(r.cup!)[0].id).toBe("b");
-    expect(cupStandings(r.cup!)[1].withdrawn).toBe(true);
-    expect(() => replayRoomCup(r)).toThrow();
-    r.game.state.players[1].connected = true;
-    resetRoomCup(r);
-    expect(r.cup!.phase).toBe("setup");
-    expect(r.game.state.phase).toBe("lobby");
-  } finally {
-    r.game.dispose();
-  }
-});
+it.each(["strokes", "stableford"] as const)(
+  "retirement never blocks a surviving %s friend between rounds",
+  (format) => {
+    const r = room(format);
+    try {
+      chooseCup(r, "risk");
+      startRoomMatch(r);
+      finishByConcession(r);
+      r.game.state.players[1].connected = false;
+      advanceRoomCup(r);
+      expect(r.game.state.players.find((p) => p.id === "b")?.connected).toBe(
+        false,
+      );
+      retireCupPlayer(r, "a");
+      finishByConcession(r);
+      expect(cupStandings(r.cup!)[0].id).toBe("b");
+      expect(cupStandings(r.cup!)[1].withdrawn).toBe(true);
+      expect(() => replayRoomCup(r)).toThrow();
+      r.game.state.players[1].connected = true;
+      resetRoomCup(r);
+      expect(r.cup!.phase).toBe("setup");
+      expect(r.game.state.phase).toBe("lobby");
+    } finally {
+      r.game.dispose();
+    }
+  },
+);
 it("keeps late departures from rewriting a final result and shares a genuine tie", () => {
   const r = room();
   try {
@@ -251,6 +254,43 @@ it("can abandon a cup completely without invented future-round results", () => {
     expect(cupWinnerLabel(r.cup!)).toBe("Copa abandonada.");
     expect(r.cup!.rounds).toEqual([]);
   } finally {
+    r.game.dispose();
+  }
+});
+
+it("the previous winner tees first without changing the players' ball colour order", () => {
+  const r = room();
+  try {
+    chooseCup(r, "risk");
+    startRoomMatch(r);
+    r.game.concede("a");
+    r.game.shoot("b", aceShots[0].angle, aceShots[0].power);
+    while (r.game.state.moving) r.game.tick();
+    finishByConcession(r);
+    advanceRoomCup(r);
+    expect(r.game.state.players.map((p) => p.id)).toEqual(["a", "b"]);
+    expect(r.game.state.players[r.game.state.turn].id).toBe("b");
+  } finally {
+    r.game.dispose();
+  }
+});
+it("a sole survivor can continue a points cup, while an ordinary single-player points start stays forbidden", () => {
+  const single = new Game();
+  const r = room("stableford");
+  try {
+    single.add("0", "Solo");
+    expect(() => single.start("stableford")).toThrow();
+    chooseCup(r, "risk");
+    startRoomMatch(r);
+    finishByConcession(r);
+    retireCupPlayer(r, "a");
+    advanceRoomCup(r);
+    expect(r.game.state.players.map((p) => p.id)).toEqual(["b"]);
+    expect(r.game.state.format).toBe("stableford");
+    finishByConcession(r);
+    expect(cupWinnerLabel(r.cup!)).toBe("Luis gana la copa.");
+  } finally {
+    single.dispose();
     r.game.dispose();
   }
 });

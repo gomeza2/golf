@@ -126,10 +126,17 @@ export class Game {
     if (!this.state.host) this.state.host = id;
     return p;
   }
-  start(format: MatchFormat = this.state.format ?? "strokes") {
+  start(
+    format: MatchFormat = this.state.format ?? "strokes",
+    options: { cupContinuation?: boolean } = {},
+  ) {
     const players = this.state.players.filter((p) => !p.withdrawn);
     if (!isMatchFormat(format)) throw Error("Formato de partida inválido");
-    if (format === "stableford" && players.length < 2)
+    if (
+      format === "stableford" &&
+      players.length < 2 &&
+      !options.cupContinuation
+    )
       throw Error("El duelo por puntos necesita al menos dos jugadores");
     if (!players.length) throw Error("Faltan jugadores");
     this.state.format = format;

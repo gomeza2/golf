@@ -4,6 +4,7 @@ import {
   beginCup,
   getCupPlan,
   setupCup,
+  cupStandings,
   settleCup,
   withdrawFromCup,
   type CupState,
@@ -48,7 +49,13 @@ function replaceRound(
     next = new Game();
   try {
     next.selectCircuit(circuit);
-    players.forEach((p) => {
+    // Keep ball colours stable while tee honours use a separate turn order.
+    const roster = [...players].sort(
+      (a, b) =>
+        room.cup!.entrants.findIndex((p) => p.id === a.id) -
+        room.cup!.entrants.findIndex((p) => p.id === b.id),
+    );
+    roster.forEach((p) => {
       const added = next.add(p.id, p.name);
       added.connected = p.connected;
     });
@@ -57,7 +64,13 @@ function replaceRound(
       : players.find((p) => p.connected)?.id || "";
     next.state.code = s.code;
     next.eventSeq = previous.eventSeq;
-    next.start(room.cup!.format);
+    // A cup already admitted at least two friends; its survivor may finish in points.
+    next.start(room.cup!.format, { cupContinuation: true });
+    next.turnOrder = players.map((p) =>
+      next.state.players.findIndex((v) => v.id === p.id),
+    );
+    next.state.turn = next.turnOrder[0];
+    next.place();
   } catch (error) {
     next.dispose();
     throw error;
@@ -90,11 +103,10 @@ export function replayRoomCup(room: CupRoom) {
     s = room.game.state;
   if (!c || c.phase !== "finished" || s.phase !== "finished")
     throw Error("Termina la copa antes de la revancha");
-  const players = s.players.filter(
-    (p) =>
-      p.connected &&
-      !p.withdrawn &&
-      !c.entrants.find((v) => v.id === p.id)?.withdrawn,
+  const players = cupStandings(c).flatMap((row) =>
+    s.players.filter(
+      (p) => p.id === row.id && p.connected && !p.withdrawn && !row.withdrawn,
+    ),
   );
   if (players.length < 2)
     throw Error("La revancha necesita dos jugadores conectados");
@@ -102,7 +114,7 @@ export function replayRoomCup(room: CupRoom) {
   room.cup = {
     ...setupCup(c.plan, c.format),
     phase: "playing",
-    entrants: players.map((p) => ({
+    entrants: room.game.state.players.map((p) => ({
       id: p.id,
       name: p.name,
       withdrawn: false,

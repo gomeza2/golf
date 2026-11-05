@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getCircuit } from "../shared/courses";
+import { getCircuit, colors } from "../shared/courses";
 import type { State } from "../shared/game";
 import {
   cupPlans,
@@ -159,5 +159,51 @@ export function CupDialog({
         Volver a jugar
       </button>
     </dialog>
+  );
+}
+
+export function CupLiveBoard({
+  state,
+  status,
+  latency,
+}: {
+  state: State;
+  status: string;
+  latency: number | null;
+}) {
+  if (!state.cup) return null;
+  return (
+    <aside className="leaderboard" aria-label="Acumulado de la copa">
+      <div className="eyebrow">
+        COPA · {status}
+        {latency !== null ? ` · ${latency} ms` : ""}
+      </div>
+      {cupStandings(state.cup, state).map((p) => {
+        const player = state.players.find((v) => v.id === p.id),
+          index = state.players.findIndex((v) => v.id === p.id);
+        return (
+          <div
+            key={p.id}
+            className={p.id === state.players[state.turn]?.id ? "active" : ""}
+          >
+            <span>{p.withdrawn ? "RET" : p.place}</span>
+            <i style={{ background: index >= 0 ? colors[index] : "#89978c" }} />
+            <strong>
+              {p.name}
+              {p.withdrawn
+                ? " · retirado"
+                : !player?.connected
+                  ? " · sin red"
+                  : ""}
+            </strong>
+            <b>
+              {state.cup!.format === "stableford"
+                ? `${p.points} pt`
+                : p.strokes}
+            </b>
+          </div>
+        );
+      })}
+    </aside>
   );
 }
