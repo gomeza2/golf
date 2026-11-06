@@ -190,3 +190,13 @@ Fases 9–11: acceso nuevo desde el catálogo, entrenamiento y online, mapas con
 Fase siguiente preparada en COMMUNITY.md: validar y sincronizar una creación en sala privada antes de comunidad con persistencia/autoría/revisiones. Publicación central, galería y revisión específica de Retroceso/Precisión siguen pendientes, además de pruebas humanas en dispositivos físicos y carga concurrente.
 
 Validación local de 0.15.0: 199 pruebas de reglas/física/cámara, incluida la colisión de los laterales visibles del green elevado. Se conservan las rutas amplias y el as oblicuo después de ese ajuste. La entrega exige además ronda completa en navegador, prueba móvil, duelo real con dos sockets y compilación de producción bajo `/golf/`.
+
+## Entrega 0.16.0 — creación compartida en sala privada
+
+Fases 3, 8–12 y taller: documento validado/compilado y limitado por servidor, revisión SHA-256 y acuse antes de preparar o golpear. Contenido por entrada/reconexión, sin reenviar geometría en estados de movimiento. Un hoyo privado con reloj de 30 s, límite de golpes, puntos/par del diseño, resultados, desconexiones y revancha. Sala fija; formato elegible antes de iniciar, copas/cambio de diseño bloqueados.
+
+El cliente resuelve la geometría validada para escena/mapa/cámara/HUD y clasificación; los snapshots de red la excluyen. Guardados oficiales rechazan metadatos/geometría privados y no se guardan récords privados como oficiales. Se conserva el sandbox sin reloj y el contenido/mecánicas oficiales. Documento 1, guardado 1 y reglas 7; protocolo 13.
+
+Pruebas cubren coste, formato, SHA, recepción/fallo de contenido, par/puntos, reloj/sandbox y aislamiento de guardados; sockets reales comprueban permisos, recepción, reconexión, embocados y revancha. Dos navegadores incluyen móvil y recarga, con el mismo diseño y sin marcas oficiales. La producción comprueba el traspaso taller/preparación y borrador. Pendientes: publicación/galería persistente, autoría/moderación, ensayos humanos y carga concurrente.
+
+Revisión visual de 0.16.0: el HUD de creaciones muestra la distancia recta salida–copa, etiquetada, en lugar del tamaño genérico del mapa; el soporte del green usa prioridad de profundidad para reducir superficies coplanares. La creación pendiente se limpia al volver al modo oficial. Validación local: 207 casos de reglas/física/datos, siete de taller y salas y repetición visual del duelo móvil tras el ajuste.

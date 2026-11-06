@@ -1,3 +1,4 @@
+import type { WorkshopDocument } from "../shared/workshop";
 import { CupDialog } from "./CupPanels";
 import { getCupPlan } from "../shared/cups";
 import { TURN_SECONDS } from "../shared/rules";
@@ -182,6 +183,9 @@ function App() {
       useState<ClubChallenge | null>(sharedChallenge),
     [challengeDetails, setChallengeDetails] = useState(false);
   const [cupDetails, setCupDetails] = useState(false);
+  const [roomWorkshop, setRoomWorkshop] = useState<WorkshopDocument | null>(
+    null,
+  );
   useEffect(() => setCupDetails(false), [s.phase, s.cup?.round]);
   useEffect(() => saveLocal("golf-circuit", circuit), [circuit]);
   const onlineAvailable =
@@ -600,7 +604,13 @@ function App() {
       type === "resume"
         ? { type }
         : type === "create"
-          ? { type, name, circuit, format: onlineFormat }
+          ? {
+              type,
+              name,
+              circuit,
+              format: onlineFormat,
+              ...(roomWorkshop ? { workshop: roomWorkshop } : {}),
+            }
           : { type, name, code: code.trim().toUpperCase() };
     setLatency(null);
     socket.current = createOnlineConnection(endpoint, entry, {
@@ -694,6 +704,7 @@ function App() {
     game.current?.dispose();
     game.current = null;
     setS(initial);
+    setRoomWorkshop(null);
     setPaused(false);
     setLookMode(false);
     setSettings(false);
@@ -757,9 +768,11 @@ function App() {
         </button>
         <div className="header-right">
           <span className="edition">
-            {getCircuit(
-              screen === "game" ? s.circuit : circuit,
-            ).name.toUpperCase()}{" "}
+            {screen === "game" && s.custom
+              ? "TALLER PRIVADO"
+              : getCircuit(
+                  screen === "game" ? s.circuit : circuit,
+                ).name.toUpperCase()}{" "}
             / v{APP_VERSION}
           </span>
           <button
@@ -791,7 +804,10 @@ function App() {
           ready={ready}
           onlineAvailable={onlineAvailable}
           onLocal={() => setScreen("local")}
-          onOnline={() => setScreen("online")}
+          onOnline={() => {
+            setRoomWorkshop(null);
+            setScreen("online");
+          }}
           savedRound={
             <SavedRound
               save={recovery.save}
@@ -824,6 +840,10 @@ function App() {
           <Workshop
             graphicsMode={graphicsMode}
             onClose={() => setScreen("home")}
+            onPlayOnline={(document) => {
+              setRoomWorkshop(document);
+              setScreen("online");
+            }}
           />
         </Suspense>
       )}
@@ -960,7 +980,32 @@ function App() {
               placeholder="¿Cómo te llamas?"
             />
           </label>
-          <SelectedRound circuit={circuit} onChange={() => setScreen("home")} />
+          {roomWorkshop ? (
+            <div className="private-course-summary">
+              <strong>{roomWorkshop.name}</strong>
+              <p>
+                Cancha del taller · Par {roomWorkshop.par} · Un hoyo privado. El
+                servidor valida el diseño antes de admitir la sala.
+              </p>
+              <button
+                className="text-button"
+                onClick={() => setScreen("workshop")}
+              >
+                Volver al taller
+              </button>
+              <button
+                className="text-button"
+                onClick={() => setRoomWorkshop(null)}
+              >
+                Usar recorrido oficial
+              </button>
+            </div>
+          ) : (
+            <SelectedRound
+              circuit={circuit}
+              onChange={() => setScreen("home")}
+            />
+          )}
           <MatchFormatPicker
             value={onlineFormat}
             players={1}

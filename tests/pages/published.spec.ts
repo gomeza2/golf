@@ -462,3 +462,46 @@ test("the published Cumbres course loads its high terrain and completes the real
     `PAGES CUMBRES VERIFIED: version ${APP_VERSION}, high terrain, three real strokes, no penalties: ${baseURL}`,
   );
 });
+
+test("the published workshop prepares a real private design and keeps its draft when returning to official play", async ({
+  page,
+  baseURL,
+}) => {
+  const { privateWorkshop } = await import("../fixtures/workshop");
+  await page.addInitScript((document) => {
+    localStorage.setItem("golf-graphics-mode", "low");
+    localStorage.setItem("club-workshop-draft-v1", JSON.stringify(document));
+  }, privateWorkshop());
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Jugar con amigos online", exact: true })
+    .click();
+  await expect(page.locator(".private-course-summary")).toContainText(
+    "La cancha de Ana",
+  );
+  await expect(page.locator(".private-course-summary")).toContainText("Par 5");
+  await page
+    .getByRole("button", { name: "Volver al taller", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Nombre del diseño", exact: true }),
+  ).toHaveValue("La cancha de Ana");
+  await page
+    .getByRole("button", { name: "Jugar con amigos online", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Usar recorrido oficial", exact: true })
+    .click();
+  await expect(page.locator(".private-course-summary")).toHaveCount(0);
+  await expect(page.locator(".selected-round")).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("club-personal-normal-v7")),
+  ).toBeNull();
+  await page.screenshot({ path: "work/pages-workshop-private.png" });
+  console.log(
+    `PAGES PRIVATE WORKSHOP VERIFIED: version ${APP_VERSION}, bounded draft handed to online preparation and retained after return: ${baseURL}`,
+  );
+});

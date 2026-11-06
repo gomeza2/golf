@@ -15,7 +15,8 @@ export default async function setup(config: FullConfig) {
         health.protocol !== NETWORK_PROTOCOL ||
         !health.formats?.includes("stableford") ||
         !health.cups?.includes("risk") ||
-        !health.concede
+        !health.concede ||
+        !health.workshopRooms
       )
         throw Error(
           `El servidor necesita protocolo ${NETWORK_PROTOCOL} y copas entre amigos`,

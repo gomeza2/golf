@@ -1,6 +1,12 @@
 # Evolución total del club
 
-## Entrega actual — 0.15.0, alturas y rutas de riesgo
+## Entrega actual — 0.16.0, jugar creaciones con amigos
+
+Taller → preparación online → sala privada con documento validado y presupuesto, revisión SHA-256 fija, sincronización por admisión/reconexión y simulación autoritativa. Un hoyo completo con golpes/puntos, reloj, resultados, reconexión y revancha. Guardados/records oficiales y prueba local libre se mantienen separados.
+
+**Siguiente fase:** publicación persistente de creaciones y galería real, con revisiones inmutables, autoría, moderación y almacenamiento central. Antes de abrir envíos públicos, completar pruebas de carga y sesiones humanas de creaciones. Luego revisar Retroceso/Precisión con pruebas de gesto/momento y sin modificar la física por control. [COMMUNITY.md](COMMUNITY.md) detalla lo disponible y lo pendiente.
+
+## Entrega anterior — 0.15.0, alturas y rutas de riesgo
 
 La prioridad nueva del usuario adelanta contenido más variado después de cerrar las herramientas del taller. Cumbres y Mareas incorpora tres lugares y geometrías: descenso de ocho metros, faro en espiral ascendente y dos alturas con compuertas/túnel/viaductos. Se comprobaron rutas amplias y arriesgadas con física real y se equilibró el frenado para evitar esperas en una bajada válida. Los 28 hoyos previos y todos los modos/datos permanecen.
 

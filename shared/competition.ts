@@ -1,4 +1,4 @@
-import { getCircuit } from "./courses";
+import { roundCourses } from "./courses";
 import { ranking, total, type Player, type State } from "./game";
 export const pointsMatch = (state: State) =>
   state.format === "stableford" && !state.practice;
@@ -17,7 +17,7 @@ export function holePoints(strokes: number, par: number, capped = false) {
 }
 /** Only completed holes earn points, including a finished current lie. */
 export function confirmedPoints(player: Player, state: State) {
-  const courses = getCircuit(state.circuit).courses;
+  const courses = roundCourses(state);
   const score = player.scores.reduce(
     (sum, strokes, i) =>
       sum + holePoints(strokes, courses[i]?.par, player.capped.includes(i)),

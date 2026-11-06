@@ -14,6 +14,8 @@ import { reconnectGrace, shouldWithdraw } from "./disconnections";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
+import { validateRoomWorkshop } from "../shared/roomWorkshop";
+import { createHash } from "node:crypto";
 import { randomBytes } from "node:crypto";
 import { Server, type Socket } from "socket.io";
 import { gzip as gzipCallback } from "node:zlib";
@@ -50,6 +52,7 @@ const http = createServer(async (req, res) => {
         formats: ["strokes", "stableford"],
         cups: ["club", "risk", "edge"],
         concede: true,
+        workshopRooms: true,
         disconnectGraceSeconds,
         rooms: rooms.size,
         maxPlayers: capacity,
@@ -99,7 +102,7 @@ const http = createServer(async (req, res) => {
   }
 });
 const io = new Server(http, {
-  maxHttpBufferSize: 2048,
+  maxHttpBufferSize: 65536,
   cors: { origin: origins },
   allowRequest: (req, cb) =>
     cb(
@@ -111,6 +114,10 @@ const io = new Server(http, {
     ),
 });
 type Room = {
+  workshop?: {
+    hash: string;
+    document: ReturnType<typeof validateRoomWorkshop>["document"];
+  };
   cup?: CupState;
   game: Game;
   tokens: Map<string, string>;
@@ -130,13 +137,15 @@ const capacity = Math.max(
 );
 const snapshot = (r: Room) => {
   settleRoomCup(r);
-  return { ...r.game.state, ...(r.cup ? { cup: r.cup } : {}) };
+  const { courseOverride: _resolved, ...state } = r.game.state;
+  return { ...state, ...(r.cup ? { cup: r.cup } : {}) };
 };
 const fail = (socket: Socket, message: string) =>
   socket.emit("notice", message);
 io.on("connection", (socket) => {
   let room: Room | undefined;
   let pid = "";
+  let contentHash = "";
   let bucket = 20;
   const refill = setInterval(() => (bucket = Math.min(20, bucket + 10)), 1000);
   socket.on("action", (data: unknown, ack?: () => void) => {
@@ -144,6 +153,11 @@ io.on("connection", (socket) => {
     if (!data || typeof data !== "object") return;
     const d = data as Record<string, unknown>;
     try {
+      if (
+        !(d.type === "create" && d.workshop !== undefined) &&
+        new TextEncoder().encode(JSON.stringify(d)).length > 2048
+      )
+        throw Error("Acción demasiado grande");
       if (d.type === "create" || d.type === "join" || d.type === "resume") {
         if (room) throw Error("Ya estás en una sala");
         if (d.type === "create") {
@@ -156,11 +170,22 @@ io.on("connection", (socket) => {
             throw Error("Recorrido inválido");
           if (d.format !== undefined && !isMatchFormat(d.format))
             throw Error("Formato de partida inválido");
-          const game = new Game();
-          if (isCircuitId(d.circuit)) game.selectCircuit(d.circuit);
+          const custom =
+            d.workshop === undefined
+              ? undefined
+              : validateRoomWorkshop(d.workshop);
+          const hash = custom
+            ? createHash("sha256").update(custom.canonical).digest("hex")
+            : undefined;
+          const game = new Game(custom?.course, Boolean(custom));
+          if (hash) game.state.workshopHash = hash;
+          if (!custom && isCircuitId(d.circuit)) game.selectCircuit(d.circuit);
           if (isMatchFormat(d.format)) game.selectFormat(d.format);
           game.state.code = code;
           room = {
+            ...(custom
+              ? { workshop: { hash: hash!, document: custom.document } }
+              : {}),
             game,
             tokens: new Map(),
             sockets: new Map(),
@@ -214,6 +239,7 @@ io.on("connection", (socket) => {
             protocol: NETWORK_PROTOCOL,
             disconnectGraceSeconds,
           });
+          if (candidate.workshop) socket.emit("workshop", candidate.workshop);
           io.to(candidate.game.state.code).emit("state", snapshot(candidate));
         } catch (error) {
           room = undefined;
@@ -229,6 +255,11 @@ io.on("connection", (socket) => {
         revokePlayer(room!, playerId);
       };
       switch (d.type) {
+        case "content-ready":
+          if (!room.workshop || d.hash !== room.workshop.hash)
+            throw Error("La versión de la cancha no coincide");
+          contentHash = room.workshop.hash;
+          break;
         case "ping":
           if (typeof ack === "function") ack();
           return;
@@ -277,6 +308,8 @@ io.on("connection", (socket) => {
           resetRoomCup(room);
           break;
         case "ready":
+          if (room.workshop && contentHash !== room.workshop.hash)
+            throw Error("Espera a recibir y verificar la cancha");
           if (s.phase === "lobby") p.ready = !p.ready;
           break;
         case "start":
@@ -292,6 +325,8 @@ io.on("connection", (socket) => {
           startRoomMatch(room);
           break;
         case "cup":
+          if (room.workshop)
+            throw Error("Las canchas del taller se juegan en partida única");
           if (s.host !== pid) throw Error("Solo el anfitrión elige la copa");
           chooseCup(room, d.cup);
           break;
@@ -304,6 +339,8 @@ io.on("connection", (socket) => {
             throw Error("Solo puedes conceder tu hoyo con la pelota detenida");
           break;
         case "shoot":
+          if (room.workshop && contentHash !== room.workshop.hash)
+            throw Error("Espera a recibir y verificar la cancha");
           if (
             typeof d.angle !== "number" ||
             typeof d.power !== "number" ||

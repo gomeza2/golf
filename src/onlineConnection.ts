@@ -1,3 +1,9 @@
+import {
+  validateRoomWorkshop,
+  workshopFingerprint,
+} from "../shared/roomWorkshop";
+import type { WorkshopDocument } from "../shared/workshop";
+import type { Course } from "../shared/courses";
 import { io } from "socket.io-client";
 import type { State } from "../shared/game";
 import type { CircuitId } from "../shared/courses";
@@ -6,7 +12,13 @@ import { NETWORK_PROTOCOL } from "../shared/rules";
 import { readSession, saveSession, type Session } from "./storage";
 
 export type RoomEntry =
-  | { type: "create"; name: string; circuit: CircuitId; format: MatchFormat }
+  | {
+      type: "create";
+      name: string;
+      circuit: CircuitId;
+      format: MatchFormat;
+      workshop?: WorkshopDocument;
+    }
   | { type: "join"; name: string; code: string }
   | { type: "resume" };
 export type RoomSession = Session & {
@@ -40,6 +52,10 @@ export function createOnlineConnection(
   let disposed = false,
     admitted = false,
     recovering = entry.type === "resume";
+  let content: { hash: string; course: Course } | undefined;
+  let pending: State | undefined;
+  let generation = 0;
+  let contentTimer: ReturnType<typeof setTimeout> | undefined;
   let ping: ReturnType<typeof setInterval> | undefined,
     exitTimer: ReturnType<typeof setTimeout> | undefined;
   const clearPing = () => {
@@ -52,6 +68,7 @@ export function createOnlineConnection(
     admitted = false;
     clearPing();
     clearTimeout(exitTimer);
+    clearTimeout(contentTimer);
     socket.disconnect();
   };
   const leave = () => {
@@ -60,6 +77,7 @@ export function createOnlineConnection(
     disposed = true;
     admitted = false;
     clearPing();
+    clearTimeout(contentTimer);
     if (!socket.connected) {
       socket.disconnect();
       return;
@@ -74,6 +92,11 @@ export function createOnlineConnection(
   socket.on("connect", () => {
     if (disposed) return;
     admitted = false;
+    content = undefined;
+    pending = undefined;
+    clearTimeout(contentTimer);
+    contentTimer = undefined;
+    generation++;
     callbacks.onStatus("Recuperando sesión…");
     const saved = readSession();
     if (recovering && !saved) {
@@ -149,9 +172,68 @@ export function createOnlineConnection(
     measure();
     ping = setInterval(measure, 5000);
   });
-  socket.on("state", (state: State) => {
-    if (!disposed && admitted) callbacks.onState(state);
+  const receiveState = (state: State) => {
+    if (disposed || !admitted) return;
+    if (state.custom) {
+      if (
+        !state.workshopHash ||
+        !content ||
+        content.hash !== state.workshopHash
+      ) {
+        pending = state;
+        callbacks.onStatus("Recibiendo cancha…");
+        contentTimer ??= setTimeout(() => {
+          if (disposed || !admitted) return;
+          callbacks.onError(
+            "No se recibió una cancha verificable. Vuelve a entrar en la sala.",
+          );
+          callbacks.onStatus("Cancha no verificada");
+          leave();
+        }, 10000);
+        return;
+      }
+      callbacks.onState({ ...state, courseOverride: content.course });
+    } else {
+      const { courseOverride: _untrusted, ...official } = state;
+      callbacks.onState(official);
+    }
+  };
+  socket.on("workshop", async (value: unknown) => {
+    if (disposed || !admitted) return;
+    const attempt = generation;
+    try {
+      const packet = value as { hash?: unknown; document?: unknown };
+      if (
+        !packet ||
+        typeof packet.hash !== "string" ||
+        !/^[a-f0-9]{64}$/.test(packet.hash)
+      )
+        throw Error("Identidad de cancha inválida");
+      const validated = validateRoomWorkshop(packet.document);
+      const hash = await workshopFingerprint(validated.canonical);
+      if (disposed || !admitted || attempt !== generation) return;
+      if (hash !== packet.hash)
+        throw Error("La cancha recibida no coincide con su versión");
+      clearTimeout(contentTimer);
+      contentTimer = undefined;
+      content = { hash, course: validated.course };
+      socket.emit("action", { type: "content-ready", hash });
+      callbacks.onStatus("Conectado");
+      if (pending) {
+        const next = pending;
+        pending = undefined;
+        receiveState(next);
+      }
+    } catch (e) {
+      if (disposed || attempt !== generation) return;
+      callbacks.onError(
+        `No se pudo verificar la cancha: ${(e as Error).message}`,
+      );
+      callbacks.onStatus("Cancha no verificada");
+      leave();
+    }
   });
+  socket.on("state", receiveState);
   socket.on("notice", (message: unknown) => {
     if (disposed || typeof message !== "string") return;
     callbacks.onError(message);
@@ -177,6 +259,11 @@ export function createOnlineConnection(
   socket.on("disconnect", () => {
     if (!disposed) {
       admitted = false;
+      generation++;
+      clearTimeout(contentTimer);
+      contentTimer = undefined;
+      content = undefined;
+      pending = undefined;
       recovering = true;
       clearPing();
       callbacks.onLatency(null);

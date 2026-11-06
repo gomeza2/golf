@@ -131,6 +131,8 @@ export function validateLocalRound(value: unknown): value is LocalRound {
       !finite(r.aim.power, 0.03, 1) ||
       !s ||
       s.custom !== undefined ||
+      s.courseOverride !== undefined ||
+      s.workshopHash !== undefined ||
       (s.format !== undefined && !isMatchFormat(s.format)) ||
       !isCircuitId(s.circuit) ||
       !["playing", "scores"].includes(s.phase) ||
