@@ -79,6 +79,7 @@ export function recordCompletedRound(
   date = new Date().toISOString(),
 ): { history: PersonalHistory; report: RoundReport } | null {
   if (
+    state.custom ||
     state.phase !== "finished" ||
     state.practice ||
     state.format === "stableford" ||

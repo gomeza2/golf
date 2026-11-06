@@ -20,6 +20,7 @@ import {
   blockPose,
   blockRotation,
   type Block,
+  type Course,
   type CircuitId,
   type V3,
 } from "./courses";
@@ -42,6 +43,7 @@ export type Player = {
   capped: number[];
 };
 export type State = {
+  custom?: true;
   cup?: CupState;
   format?: MatchFormat;
   practice?: boolean;
@@ -106,6 +108,15 @@ export class Game {
   eventSeq = 0;
   lastBounce = -1;
   last: V3 = { x: 0, y: 0, z: 0 };
+  constructor(private readonly customCourse?: Course) {
+    if (customCourse) this.state.custom = true;
+  }
+  private course(first = false) {
+    return (
+      this.customCourse ??
+      getCourse(first ? { ...this.state, hole: 0 } : this.state)
+    );
+  }
   add(id: string, name: string) {
     if (this.state.phase !== "lobby" || this.state.players.length >= 8)
       throw Error("Sala llena o partida iniciada");
@@ -118,7 +129,7 @@ export class Game {
       strokes: 0,
       done: false,
       withdrawn: false,
-      pos: { ...getCourse({ ...this.state, hole: 0 }).start },
+      pos: { ...this.course(true).start },
       aces: 0,
       penalties: 0,
       capped: [],
@@ -141,7 +152,7 @@ export class Game {
       throw Error("El duelo por puntos necesita al menos dos jugadores");
     if (!players.length) throw Error("Faltan jugadores");
     this.state.format = format;
-    this.state.practice = false;
+    this.state.practice = Boolean(this.customCourse);
     this.state.players = players;
     this.state.hole = 0;
     this.turnOrder = this.state.players.map((_, i) => i);
@@ -157,7 +168,8 @@ export class Game {
     if (
       !Number.isInteger(hole) ||
       hole < 0 ||
-      hole >= getCircuit(this.state.circuit).courses.length
+      hole >=
+        (this.customCourse ? 1 : getCircuit(this.state.circuit).courses.length)
     )
       throw Error("Hoyo de entrenamiento inválido");
     if (this.state.players.filter((p) => !p.withdrawn).length !== 1)
@@ -172,7 +184,7 @@ export class Game {
     this.world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
     this.world.timestep = 1 / 60;
     this.bars = [];
-    const c = getCourse(this.state);
+    const c = this.course();
     this.dynamicBlocks = [];
     const box = (block: Block, restitution = 0.52) => {
       const pose = blockPose(block, this.state.time),
@@ -342,7 +354,7 @@ export class Game {
     const before = this.ball.linvel();
     this.world.step();
     if (!s.moving) {
-      if (s.time > s.deadline) {
+      if (s.time > s.deadline && !s.custom) {
         const p = s.players[s.turn];
         p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
         p.penalties++;
@@ -356,7 +368,7 @@ export class Game {
       v = this.ball.linvel(),
       pos = this.ball.translation();
     p.pos = { ...pos };
-    const c = getCourse(s);
+    const c = this.course();
     const speed = Math.hypot(v.x, v.z);
     const beforeSpeed = Math.hypot(before.x, before.z);
     if (
@@ -538,7 +550,7 @@ export class Game {
     this.state.circuit = circuit;
     for (const p of this.state.players) {
       p.ready = false;
-      p.pos = { ...getCourse({ ...this.state, hole: 0 }).start };
+      p.pos = { ...this.course(true).start };
     }
   }
   selectFormat(format: MatchFormat) {
@@ -607,7 +619,7 @@ export class Game {
       p.aces = 0;
       p.penalties = 0;
       p.capped = [];
-      p.pos = { ...getCourse(this.state).start };
+      p.pos = { ...this.course().start };
     }
   }
   dispose() {

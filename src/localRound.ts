@@ -88,6 +88,8 @@ export function captureLocalRound(
   aim = { angle: 0, power: 0.55 },
   savedAt = Date.now(),
 ): LocalRound {
+  if (game.state.custom)
+    throw Error("Las pruebas del taller no sustituyen el guardado oficial.");
   const world = game.world.takeSnapshot();
   return {
     format: 1,
@@ -128,6 +130,7 @@ export function validateLocalRound(value: unknown): value is LocalRound {
       !finite(r.aim.angle, -Math.PI * 2, Math.PI * 2) ||
       !finite(r.aim.power, 0.03, 1) ||
       !s ||
+      s.custom !== undefined ||
       (s.format !== undefined && !isMatchFormat(s.format)) ||
       !isCircuitId(s.circuit) ||
       !["playing", "scores"].includes(s.phase) ||

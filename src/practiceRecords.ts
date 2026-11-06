@@ -75,6 +75,7 @@ export function recordPractice(
   date = new Date().toISOString(),
 ): { history: PracticeHistory; report: PracticeReport } | null {
   if (
+    state.custom ||
     state.phase !== "finished" ||
     !state.practice ||
     state.format === "stableford" ||
