@@ -410,3 +410,55 @@ test("the published workshop loads its editor assets and physically holes a cust
     `PAGES WORKSHOP VERIFIED: version ${APP_VERSION}, editor imported a bounded document, real custom cup holed, no official record: ${baseURL}`,
   );
 });
+
+test("the published Cumbres course loads its high terrain and completes the real risky descent", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(120000);
+  const { adventureRiskShots } = await import("../fixtures/adventure");
+  await page.addInitScript(() => {
+    localStorage.setItem("golf-graphics-mode", "low");
+    localStorage.setItem("golf-hole-intro", "false");
+  });
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Jugar Cumbres y Mareas", exact: true })
+    .click();
+  await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.locator("canvas")).toHaveAttribute(
+    "data-scenery",
+    "glacier",
+  );
+  for (const [a, p] of adventureRiskShots[0]) {
+    await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled({
+      timeout: 15000,
+    });
+    await page
+      .getByRole("slider", { name: "Ángulo", exact: true })
+      .fill(String(Number(wrapAngle(a).toFixed(10))));
+    await page
+      .getByRole("slider", { name: "Potencia", exact: true })
+      .fill(String(p));
+    await page.getByRole("button", { name: /GOLPEAR/ }).click();
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeHidden({ timeout: 25000 });
+  }
+  await expect(
+    page.getByRole("button", { name: /Siguiente hoyo/ }),
+  ).toBeVisible();
+  const saved = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("club-local-round")!).state,
+  );
+  expect(saved.circuit).toBe("cumbres");
+  expect(saved.players[0].scores).toEqual([3]);
+  expect(saved.players[0].penalties).toBe(0);
+  await page.screenshot({ path: "work/pages-cumbres.png" });
+  console.log(
+    `PAGES CUMBRES VERIFIED: version ${APP_VERSION}, high terrain, three real strokes, no penalties: ${baseURL}`,
+  );
+});

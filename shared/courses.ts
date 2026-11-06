@@ -1,4 +1,5 @@
 import { createRiftCourses } from "./riftCourses";
+import { createAdventureCourses } from "./adventureCourses";
 import { createSkyCourses } from "./skyCourses";
 export type V3 = { x: number; y: number; z: number };
 export type Block = {
@@ -8,7 +9,7 @@ export type Block = {
   color?: string;
   moving?: boolean;
   yaw?: number;
-  motion?: "slide";
+  motion?: "slide" | "lift";
   phase?: number;
   bevel?: number;
 };
@@ -25,6 +26,9 @@ export type FloorMesh = {
   color?: string;
 };
 export type Course = {
+  solidGreenSides?: boolean;
+  ambience?: "glacier" | "lighthouse" | "aqueduct";
+  visual?: { ground: string; edge: string; background: string; accent: string };
   routeLength?: number;
   outerWalls?: false;
   floorMeshes?: FloorMesh[];
@@ -131,6 +135,7 @@ export const colors = [
 ];
 
 export type CircuitId =
+  | "cumbres"
   | "rift"
   | "rift-alt"
   | "skyruins"
@@ -533,6 +538,11 @@ export const championshipCourses = [
 ];
 export const skyCourses = createSkyCourses({ deck, rampDeck });
 export const riftCourses = createRiftCourses({ deck, rampDeck, curvedBank });
+export const adventureCourses = createAdventureCourses({
+  deck,
+  rampDeck,
+  curvedBank,
+});
 export const riftAlternateCourses = riftCourses.map((course, i) => ({
   ...course,
   cup: [
@@ -547,9 +557,17 @@ export const uniqueCourses = [
   ...aceCourses,
   ...skyCourses,
   ...riftCourses,
+  ...adventureCourses,
 ];
 // Append alternate pin layouts without renumbering any existing practice record.
-export const practiceLayouts = [...uniqueCourses, ...riftAlternateCourses];
+export const practiceLayouts = [
+  ...championshipCourses,
+  ...aceCourses,
+  ...skyCourses,
+  ...riftCourses,
+  ...riftAlternateCourses,
+  ...adventureCourses,
+];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
   Math.abs(p.z - zone.z) < zone.length / 2 + margin;
@@ -679,6 +697,17 @@ export const circuits = [
     background: "#29414b",
     accent: "#f0b373",
   },
+  {
+    id: "cumbres" as const,
+    name: "Cumbres y Mareas",
+    description:
+      "Ocho metros de descenso, un faro en espiral y válvulas bajo un viaducto. Tres lugares, tres decisiones de riesgo.",
+    courses: adventureCourses,
+    ground: "#5c947d",
+    edge: "#bccbd0",
+    background: "#658995",
+    accent: "#f1c775",
+  },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
   circuits.some((c) => c.id === value);
@@ -738,9 +767,13 @@ export function blockPose(block: Block, time: number) {
   const pos: [number, number, number] = [...block.pos];
   const phase = time * 0.8 + (block.phase || 0);
   if (block.moving && block.motion === "slide") pos[0] += Math.sin(phase) * 2.5;
+  if (block.moving && block.motion === "lift")
+    pos[1] += (1 + Math.sin(phase)) * 0.8;
   const yaw =
     (block.yaw || 0) +
-    (block.moving && block.motion !== "slide" ? Math.sin(phase) * 1.25 : 0);
+    (block.moving && block.motion !== "slide" && block.motion !== "lift"
+      ? Math.sin(phase) * 1.25
+      : 0);
   return { pos, yaw };
 }
 
@@ -766,6 +799,22 @@ export function greenArea(course: Course) {
       maxZ: course.ramp ? -4 : length / 2,
     }
   );
+}
+/** The same visible side panels can be solid on a new raised green. */
+export function greenSideSupports(course: Course): Block[] {
+  const b = greenArea(course),
+    height = course.cup.y + 1.05,
+    y = (course.cup.y - 1.05) / 2;
+  const panel = (x: number, z: number, w: number, l: number): Block => ({
+    pos: [x, y, z],
+    size: [w, height, l],
+  });
+  return [
+    panel(b.minX + 0.075, (b.minZ + b.maxZ) / 2, 0.15, b.maxZ - b.minZ),
+    panel(b.maxX - 0.075, (b.minZ + b.maxZ) / 2, 0.15, b.maxZ - b.minZ),
+    panel((b.minX + b.maxX) / 2, b.minZ + 0.075, b.maxX - b.minX, 0.15),
+    panel((b.minX + b.maxX) / 2, b.maxZ - 0.075, b.maxX - b.minX, 0.15),
+  ];
 }
 export function cupGreen(course: Course) {
   const bounds = greenArea(course);

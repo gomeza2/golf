@@ -3437,3 +3437,43 @@ button > span {
 .workshop-import::backdrop {
   background: #071e25dc;
 }
+.adventure-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 22px 0;
+  padding: 28px;
+  border: 1px solid #b9cbca;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #294d53ed, #17372ff5);
+}
+.adventure-entry small {
+  color: #d1dfd7;
+  letter-spacing: 0.1em;
+  font-size: 10px;
+}
+.adventure-entry strong {
+  display: block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 34px;
+  margin-top: 8px;
+}
+.adventure-entry p {
+  max-width: 650px;
+  color: #d0ded4;
+  line-height: 1.6;
+}
+.adventure-entry button {
+  flex-shrink: 0;
+}
+@media (max-width: 650px) {
+  .adventure-entry {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+  .adventure-entry strong {
+    font-size: 29px;
+  }
+}

@@ -15,7 +15,7 @@ process.env.PUBLIC_ONLINE_URL = target;
 export default defineConfig({
   ...base,
   testMatch: "friends.spec.ts",
-  grep: /server owns format|two browser players|public sky circuit|real friend cup|real risk course/,
+  grep: /server owns format|two browser players|public sky circuit|real friend cup|real risk course|public summit circuit/,
   webServer: undefined,
   globalSetup: "./tests/online-setup.ts",
   timeout: 180000,

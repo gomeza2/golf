@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.14.0:** 28 hoyos físicos, diez tarjetas de catálogo y once selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.15.0:** 31 hoyos físicos, once tarjetas de catálogo y doce selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -104,7 +104,6 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Compatibilidad: protocolo de red 8 separado de reglas v7. Se actualizan cliente/servidor juntos; los guardados y marcas locales no se invalidan. Física, potencia, circuitos y tres controles conservados.
 - Pendiente externo para completar Internet: crear y activar el servicio en una cuenta de hosting y verificar su URL. El propietario fue informado de la opción Free y sus límites; los amigos no necesitan cuenta. La publicación podrá probar automáticamente esa URL antes de activar el online predeterminado de Pages.
 
-
 ## Versión 0.8.0 — Ruinas del Cielo
 
 - Fases de contenido y mundo: tres trazados nuevos definidos en `shared/skyCourses.ts`, consumidos por la misma geometría del motor y del render. Par 4/4/5; pasarela segura, puente diagonal, rampas continuas, pórtico físico y mecanismos con ruta exterior. Vuelta real sin penalizaciones de 3/3/4; diagonal real de dos golpes frente a tres por la ruta segura.
@@ -112,7 +111,6 @@ No se añadieron hoyos duplicados para inflar el catálogo: se conservan los 18 
 - Compatibilidad: 21 hoyos anteriores intactos en sus mismas posiciones, vueltas de 9/18 conservadas, sin cambios a potencia/fricción/rebotes/turnos. Reglas v7, formato de guardado 1 y claves de marcas intactos. La red pasa a protocolo 9 por el catálogo nuevo.
 - Validación física: ronda segura completa, atajo, penalización única por fallo, uniones de las dos rampas, hueco físico del pórtico y recuperación idéntica fotograma a fotograma. Navegador móvil: cambio real de detalle, atajo con Eagle y recuperación. Dos clientes del servidor reciben los mismos resultados del recorrido nuevo.
 - Plan vigente en ROADMAP.md. Continúan pendientes teléfonos físicos, sesiones humanas prolongadas/carga, desafíos periódicos, torneos de varias rondas y editor; no se sustituyen por simulaciones locales presentadas como servicios compartidos.
-
 
 ## Versión 0.9.0 — cámara y Escuela del Club
 
@@ -180,3 +178,15 @@ Fase 12: ocho pruebas específicas de grupos, rotaciones, zonas, límites, histo
 Pendiente siguiente: validación y contrato de contenido compartido por servidor antes de admitir una cancha creada en salas privadas. Sin galería, enlaces duraderos, persistencia central ni garantías de jugabilidad automática. Continúan pendientes pruebas humanas en hardware físico y carga concurrente.
 
 La revisión visual de 0.14.0 detectó que el panel de inspección móvil tapaba parte del campo. El taller mide cabecera/controles con ResizeObserver y pasa márgenes explícitos a la cámara compartida; los márgenes oficiales predeterminados no cambian. Se prueba la proyección contra el espacio disponible y la posición real del campo WebGL respecto de los paneles. Total de reglas/física/cámara: 190 casos.
+
+## Entrega 0.15.0 — canchas altas y decisiones diferentes
+
+Fases 5–7: Cumbres y Mareas, tres canchas con desniveles/agua/riesgo, espiral inclinada y cruce de alturas con puentes/túnel. Compuertas verticales deterministas, colisión real y señal de paso compartida por motor/escena/mapa. Ambientes de glaciar/faro/acueducto con recursos procedurales acotados.
+
+Fases 2, 8 y 12: rutas amplias y atajos completos con el mismo golpe normal; se corrigieron uniones de rampa/plataforma y se mantuvieron las copas abiertas. La arena reduce una bajada válida de casi 18 s a unos 4,6 s, sin cambiar las físicas generales de los campos anteriores. Pruebas de altura, suelo inclinado, puertas, snapshot y tiempo de asentado. Claves de práctica antiguas/banderas cruzadas intactas; las nuevas se añaden al final.
+
+Fases 9–11: acceso nuevo desde el catálogo, entrenamiento y online, mapas con estado de puertas, calidad adaptable y faro que respeta movimiento reducido. Protocolo 12; reglas v7/guardado 1.
+
+Fase siguiente preparada en COMMUNITY.md: validar y sincronizar una creación en sala privada antes de comunidad con persistencia/autoría/revisiones. Publicación central, galería y revisión específica de Retroceso/Precisión siguen pendientes, además de pruebas humanas en dispositivos físicos y carga concurrente.
+
+Validación local de 0.15.0: 199 pruebas de reglas/física/cámara, incluida la colisión de los laterales visibles del green elevado. Se conservan las rutas amplias y el as oblicuo después de ese ajuste. La entrega exige además ronda completa en navegador, prueba móvil, duelo real con dos sockets y compilación de producción bajo `/golf/`.

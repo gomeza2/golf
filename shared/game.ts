@@ -12,6 +12,7 @@ import {
   getCourse,
   geometry,
   cupGreen,
+  greenSideSupports,
   cupWalls,
   courseSize,
   inZone,
@@ -221,6 +222,8 @@ export class Game {
     };
     const shape = geometry(c);
     shape.surfaces.forEach((block) => box(block, 0));
+    if (c.solidGreenSides)
+      greenSideSupports(c).forEach((block) => box(block, 0));
     [...shape.walls, ...c.blocks].forEach((block) => box(block, 0.52));
     cupWalls(c).forEach((block) => box(block, 0.08));
     for (const mesh of shape.meshes)

@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.14.0, construir con precisión y revisar en 3D
+## Entrega actual — 0.15.0, alturas y rutas de riesgo
+
+La prioridad nueva del usuario adelanta contenido más variado después de cerrar las herramientas del taller. Cumbres y Mareas incorpora tres lugares y geometrías: descenso de ocho metros, faro en espiral ascendente y dos alturas con compuertas/túnel/viaductos. Se comprobaron rutas amplias y arriesgadas con física real y se equilibró el frenado para evitar esperas en una bajada válida. Los 28 hoyos previos y todos los modos/datos permanecen.
+
+El nuevo mecanismo vertical usa la misma pose en servidor, escena y mapa. El contenido eleva el protocolo a 12; reglas v7 y guardados formato 1 se conservan, sin renumerar prácticas de banderas cruzadas. El catálogo y entrenamiento permiten jugarlo individualmente o con amigos en las salas existentes.
+
+**Siguiente fase:** contenido creado por jugadores en una sala privada, validado y fijado por el servidor; luego comunidad con almacenamiento central, revisiones/autoría y publicación real. [COMMUNITY.md](COMMUNITY.md) define el trabajo y los servicios pendientes. Después revisar Retroceso y Precisión sin perder sus diferencias, con pruebas táctiles/teclado y sin alterar la física por esquema. La galería no se simulará con localStorage. Faltan ensayos humanos, hardware físico y pruebas de carga.
+
+## Entrega anterior — 0.14.0, construir con precisión y revisar en 3D
 
 Se implementan selección y transformaciones de grupos, arrastre sin deformación, ajuste de cuadrícula, atajos y un paso de historial por operación. Se extraen transformaciones puras e importador/selección en módulos propios. La inspección usa la cámara existente y bloquea el tiro, sin cambiar puntería ni física. Los avisos de suelo son aproximados y no se confunden con una certificación de jugabilidad.
 
@@ -30,16 +38,16 @@ Verificación: rondas completas con rutas amplias y atajos en ambos perfiles, pe
 
 Se revisaron las definiciones y geometrías, Rapier y reglas de partido, entradas y tres controles, cámara y efectos, guardado/recuperación, récords, lobby y servidor Socket.IO, configuración Render/Pages y pruebas.
 
-| Área existente | Resultado y decisión |
-| --- | --- |
-| React/TypeScript/R3F | Separación útil entre motor e interfaz. `main.tsx` concentra conexión y navegación; extraerlas antes de añadir más modos. Conservar el catálogo único. |
-| Física | Rapier a 60 Hz, golpe normal horizontal, superficies compartidas, copa abierta, recuperación y energía limitada. No recalibrar distancias sin una regresión física completa. |
-| Contenido | 21 hoyos únicos, ocho selecciones, vueltas de 9/18 y tres ases comprobados. Ampliar al final de las listas para conservar las claves de práctica. |
-| Juego | Local 1–8, online 2–8, golpes y Stableford, honores, entrenamiento y tres controles. No duplicar salas ni competición. |
-| Datos locales | Snapshot Rapier, reglas v7, formato 1, récords/prácticas separados. Mantener claves y geometrías antiguas. |
-| Online público | Render y Pages ya configurados; la publicación de 0.7.0 pasó dos pruebas públicas contra Render y la comprobación de Pages. No confundir este resultado con disponibilidad permanente o una prueba de carga. |
-| Renderizado | Calidad automática y suspensión en segundo plano existentes. Árboles individuales y muchas piezas pequeñas de reflejos son candidatos a agrupar. La nueva decoración sustituye a la anterior. |
-| Validación | 122 pruebas de reglas, 37 de navegador y cuatro de producción previas. Casos de controles, tacto, rondas completas, reconexión y guardado ya existentes. |
+| Área existente       | Resultado y decisión                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| React/TypeScript/R3F | Separación útil entre motor e interfaz. `main.tsx` concentra conexión y navegación; extraerlas antes de añadir más modos. Conservar el catálogo único.                                                       |
+| Física               | Rapier a 60 Hz, golpe normal horizontal, superficies compartidas, copa abierta, recuperación y energía limitada. No recalibrar distancias sin una regresión física completa.                                 |
+| Contenido            | 21 hoyos únicos, ocho selecciones, vueltas de 9/18 y tres ases comprobados. Ampliar al final de las listas para conservar las claves de práctica.                                                            |
+| Juego                | Local 1–8, online 2–8, golpes y Stableford, honores, entrenamiento y tres controles. No duplicar salas ni competición.                                                                                       |
+| Datos locales        | Snapshot Rapier, reglas v7, formato 1, récords/prácticas separados. Mantener claves y geometrías antiguas.                                                                                                   |
+| Online público       | Render y Pages ya configurados; la publicación de 0.7.0 pasó dos pruebas públicas contra Render y la comprobación de Pages. No confundir este resultado con disponibilidad permanente o una prueba de carga. |
+| Renderizado          | Calidad automática y suspensión en segundo plano existentes. Árboles individuales y muchas piezas pequeñas de reflejos son candidatos a agrupar. La nueva decoración sustituye a la anterior.                |
+| Validación           | 122 pruebas de reglas, 37 de navegador y cuatro de producción previas. Casos de controles, tacto, rondas completas, reconexión y guardado ya existentes.                                                     |
 
 ## Entrega 0.8.0 — mundos con decisiones
 
@@ -60,7 +68,6 @@ La verificación de publicación incluye ahora tres pruebas públicas: dos anter
 5. **Mundos y progresión.** Ciudad en miniatura, industria, cascadas y movimientos nuevos con colisiones compartidas; medallas, historial y cosméticos sin ventajas. Incorporar cada mundo solo después de completar sus rutas reales.
 
 No hay botones anticipados para funciones pendientes. Cada entrega exige compilación, reglas, ronda física, navegador, producción, revisión visual y prueba pública cuando afecta al online. Antes de escalar: teléfonos iOS/Android físicos, sesiones humanas largas y carga de varias salas. El número de llamadas de dibujo reducido no equivale a una mejora de FPS ya medida en esos equipos.
-
 
 ## Base de 0.9.0, completada en 0.10.0
 

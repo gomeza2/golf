@@ -89,12 +89,25 @@ export function HoleMap({ s }: { s: State }) {
           return (
             <rect
               key={i}
+              aria-label={
+                b.motion === "lift"
+                  ? `Compuerta ${pose.pos[1] - b.pos[1] > 0.55 ? "abierta" : "cerrada"}`
+                  : undefined
+              }
               x={-b.size[0] / 2}
               y={-b.size[2] / 2}
               width={b.size[0]}
               height={b.size[2]}
               transform={`translate(${pose.pos[0]} ${pose.pos[2]}) rotate(${(-pose.yaw * 180) / Math.PI})`}
-              fill={b.moving ? "#f5cc77" : "#c4d4be"}
+              fill={
+                b.motion === "lift"
+                  ? pose.pos[1] - b.pos[1] > 0.55
+                    ? "#9ac9b5"
+                    : "#efb374"
+                  : b.moving
+                    ? "#f5cc77"
+                    : "#c4d4be"
+              }
             />
           );
         })}

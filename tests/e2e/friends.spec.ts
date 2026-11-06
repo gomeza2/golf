@@ -697,3 +697,49 @@ test("the real risk course rewards a narrow shortcut against a wide route on the
     b.disconnect();
   }
 });
+
+test("the public summit circuit shares real height, route choices and authoritative scores", async () => {
+  test.setTimeout(180000);
+  const { adventureRiskShots, adventureSafeShots } =
+    await import("../fixtures/adventure");
+  const a = await open(),
+    b = await open();
+  try {
+    const host = await enter(a, {
+      type: "create",
+      name: "Ana",
+      circuit: "cumbres",
+    });
+    await enter(b, { type: "join", name: "Luis", code: host.code });
+    await ready(a, b);
+    let update = state(a, (s) => s.phase === "playing");
+    a.emit("action", { type: "start" });
+    let current = await update;
+    expect(current.players.map((p) => p.pos.y)).toEqual([8.24, 8.24]);
+    const routes = [adventureRiskShots[0], adventureSafeShots[0]],
+      taken = [0, 0];
+    while (current.phase === "playing") {
+      const p = current.players[current.turn],
+        i = p.id === host.id ? 0 : 1,
+        sender = i === 0 ? a : b,
+        shot = routes[i][taken[i]++];
+      expect(shot).toBeDefined();
+      const before = p.strokes;
+      update = state(
+        sender,
+        (s) =>
+          !s.moving &&
+          (s.phase !== "playing" ||
+            s.players.find((v) => v.id === p.id)!.strokes === before + 1),
+      );
+      sender.emit("action", { type: "shoot", angle: shot[0], power: shot[1] });
+      current = await update;
+    }
+    expect(current.circuit).toBe("cumbres");
+    expect(current.players.map((p) => p.scores)).toEqual([[3], [4]]);
+    expect(current.players.map((p) => p.penalties)).toEqual([0, 0]);
+  } finally {
+    a.disconnect();
+    b.disconnect();
+  }
+});

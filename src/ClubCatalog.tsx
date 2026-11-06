@@ -90,8 +90,9 @@ export function ClubCatalog({
         </div>
         <div className="catalog-feature">
           <p>
-            {uniqueCourses.length} hoyos distintos. Nuevo Al Filo: horquilla,
-            diagonal, órbita y balcones. Clásicos y vueltas de 9/18 conservados.
+            {uniqueCourses.length} hoyos distintos. Cumbres y Mareas suma
+            alturas, una espiral y compuertas. Al Filo conserva sus cuatro
+            huellas. Clásicos y vueltas de 9/18 conservados.
             <br />
             Elige el recorrido, tu forma de golpear y con quién jugar.
           </p>
@@ -118,6 +119,26 @@ export function ClubCatalog({
           {activities}
         </details>
       )}
+      <div className="adventure-entry">
+        <div>
+          <small>NUEVO RECORRIDO · CUMBRES Y MAREAS</small>
+          <strong>Abajo hay agua. Arriba, otra ruta.</strong>
+          <p>
+            Glaciar de ocho metros, faro en espiral y túneles bajo los puentes.
+            Tres hoyos con rutas amplias y atajos.
+          </p>
+        </div>
+        <button
+          className="primary"
+          disabled={!ready}
+          onClick={() => {
+            setCircuit("cumbres");
+            onLocal();
+          }}
+        >
+          Jugar Cumbres y Mareas
+        </button>
+      </div>
       <div className="workshop-entry">
         <div>
           <small>CREATIVIDAD DEL CLUB</small>
