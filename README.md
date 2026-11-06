@@ -6,7 +6,7 @@ Versión **0.15.0** de minigolf 3D competitivo, en español. React + TypeScript 
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.
 
-Pages sirve el juego local completo para 1–8 personas y once opciones de recorrido, con dos perfiles de bandera en Al Filo. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
+Pages sirve el juego local completo para 1–8 personas y doce opciones de recorrido, con dos perfiles de bandera en Al Filo. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
@@ -32,7 +32,7 @@ QA física: vueltas amplias de **4/8/7** golpes y atajos de **3/1/4**, completos
 
 La comunidad de creaciones queda como la siguiente fase: primero partidas privadas con contenido validado por servidor y después publicación persistente/galería. [COMMUNITY.md](COMMUNITY.md) define el contrato, límites y almacenamiento necesarios. Todavía se comparten archivos del taller; no hay galería ni publicación central conectada. La revisión específica de Retroceso y Precisión queda en una fase posterior, como solicitó el usuario.
 
-## Taller de precisión e inspección — 0.14.0
+## Taller de precisión e inspección — entrega 0.14.0
 
 El taller permite trabajar con **varias piezas a la vez**. Activa **Selección múltiple** (también disponible en móvil) o usa Shift al seleccionar. Apaga ese modo para arrastrar el grupo; sus distancias internas se conservan. Puedes mover, girar 90° alrededor de su centro, alinear centros X/Z, duplicar o eliminar el grupo. Cada operación ocupa un solo paso de deshacer. Las zonas de agua/arena/rough intercambian ancho/largo al girar, sin introducir rotaciones incompatibles con las físicas.
 
@@ -42,7 +42,7 @@ En **Probar en 3D → Inspeccionar cancha**, gira, inclina y acerca/aleja la cá
 
 **Revisar el diseño** avisa de zonas de arena/rough que no coinciden con suelo a su altura, islas separadas y falta de conexión de suelo entre salida/copa. Usa una cuadrícula aproximada de 0,5 m y la altura superior; no tiene en cuenta paredes, saltos, pasos inferiores ni resuelve tiros. **No bloquea** rutas con saltos y no certifica que una cancha se pueda completar. Los errores estructurales anteriores sí siguen bloqueando la prueba. Se conserva el mismo compilador y la misma física.
 
-El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1, protocolo 11.
+El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 12.
 
 Código nuevo: `shared/workshopTools.ts` (transformaciones), `shared/workshopDiagnostics.ts` (avisos), `src/WorkshopSelection.tsx` y `src/WorkshopImport.tsx`. Pruebas de herramientas/diagnóstico en `tests/workshop-tools.test.ts`; los casos de navegador comprueban grupos, historial, foco, cámara táctil y embocado después de inspeccionar.
 
@@ -58,13 +58,13 @@ Las plataformas se recortan físicamente alrededor de la copa gris, incluida su 
 
 Formato de documento v1: hasta 80 piezas, nombre de 48 caracteres, par 2–8, alturas 0–4 m, tamaños/posiciones/rotaciones acotados y archivos de hasta 60 KB. No admite código, URL de modelos, mallas arbitrarias ni IDs reservados/duplicados. El compilador produce un `Course` local; `Scene` recibe esa misma geometría explícitamente. El modo de prueba se marca como personalizado y se rechaza en récords, práctica oficial, desafíos y guardado de recuperación oficial. Una prueba del taller no reemplaza una partida local guardada.
 
-**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo 11. No se agrega un circuito falso al registro oficial ni se renumeran récords.
+**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 12. No se agrega un circuito falso al registro oficial ni se renumeran récords.
 
-**Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos, selección múltiple, túneles y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
+**Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
 
 Código: `shared/workshop.ts` (documento, validación y compilación), `src/Workshop.tsx` (editor), `src/WorkshopPlay.tsx` (prueba con motor/escena existentes), `src/workshopStorage.ts` (borrador/biblioteca/historial). Pruebas específicas en `tests/workshop.test.ts`, `tests/e2e/workshop.spec.ts` y `tests/pages/published.spec.ts`.
 
-## Al Filo — 0.12.0
+## Al Filo — entrega 0.12.0
 
 La nueva entrada principal prioriza canchas con decisiones reales. **Jugar Al Filo** prepara una ronda de cuatro hoyos; puedes añadir amigos locales o seleccionar el mismo recorrido en una sala online. Son **28 hoyos físicos distintos**: se conservan los 24 anteriores y sus vueltas de 9/18, geometrías, controles, récords y guardados. El catálogo reúne diez tarjetas; Al Filo tiene dos perfiles y por eso el registro técnico contiene once selecciones.
 
@@ -79,7 +79,7 @@ La nueva entrada principal prioriza canchas con decisiones reales. **Jugar Al Fi
 
 No hay suelo ni paredes rectangulares invisibles cerrando las pistas nuevas. Los vacíos son reales y el agua aplica la penalización habitual. El anillo utiliza la misma malla cerrada en Three.js, Rapier y el mapa; las rampas diagonales comparten un cuaternión para representación y colisión. La distancia anunciada es la ruta amplia, no la dimensión de la caja usada para cámara/límites. Los tiros siguen siendo normales: no se añade impulso vertical ni aumenta la potencia de reglas v7.
 
-En **Online → Crear sala → Tipo de encuentro**, la **Copa Al Filo** enlaza Abiertas y Cruzadas: ocho hoyos jugados sobre cuatro huellas, actas acumuladas por servidor, golpes o puntos, reconexión y revancha. Las copas anteriores se conservan. Cliente y servidor requieren protocolo 11; las salas siguen en memoria y se pierden al reiniciar/desplegar el servidor.
+En **Online → Crear sala → Tipo de encuentro**, la **Copa Al Filo** enlaza Abiertas y Cruzadas: ocho hoyos jugados sobre cuatro huellas, actas acumuladas por servidor, golpes o puntos, reconexión y revancha. Las copas anteriores se conservan. En esa entrega se introdujo el protocolo 11; el protocolo vigente es 12. las salas siguen en memoria y se pierden al reiniciar/desplegar el servidor.
 
 Comprobaciones físicas reproducibles: rutas amplias de **5/6/7/4** golpes frente a atajos **3/2/1/2**, y Cruzadas **5/6/8/4** frente a **3/3/2/3**. El as del anillo se prueba en una ventana concreta del mecanismo. Son recorridos de QA, no ayudas visibles ni garantías para cualquier momento de una partida. Se prueban también fallos de puente, puerta cerrada, soporte del anillo, rampa diagonal, recuperación durante un golpe y registros independientes sin renumerar claves antiguas. `tests/fixtures/rift.ts` solo se importa desde pruebas.
 
@@ -272,7 +272,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (8), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (12), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 
