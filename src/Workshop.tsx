@@ -338,10 +338,15 @@ export function Workshop({
             <input
               aria-label="Nombre del diseño"
               maxLength={48}
-              value={doc.name}
-              onChange={(e) => {
+              key={doc.name}
+              defaultValue={doc.name}
+              onBlur={(e) => {
                 if (e.target.value.trim())
                   edit({ ...doc, name: e.target.value });
+                else e.target.value = doc.name;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
               }}
             />
           </label>

@@ -32,6 +32,21 @@ test("workshop builds, edits, undoes, saves, exports and validates imported data
 }) => {
   await page.goto("/");
   await open(page);
+  const title = page.getByRole("textbox", {
+    name: "Nombre del diseño",
+    exact: true,
+  });
+  await title.fill("");
+  await title.pressSequentially("Puente de amigos");
+  await title.press("Enter");
+  await expect(title).toHaveValue("Puente de amigos");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => JSON.parse(localStorage.getItem("club-workshop-draft-v1")!).name,
+      ),
+    )
+    .toBe("Puente de amigos");
   await page.getByRole("button", { name: "Pared", exact: true }).click();
   const svg = page.getByRole("img", {
     name: "Plano editable de la cancha",
