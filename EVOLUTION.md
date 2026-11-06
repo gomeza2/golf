@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.12.0:** 28 hoyos físicos, diez tarjetas de catálogo y once selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.13.0:** 28 hoyos físicos, diez tarjetas de catálogo y once selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -156,3 +156,13 @@ Fase 12: rondas amplias y arriesgadas completas en ambos perfiles sin recolocar 
 Fase 13: equilibrio humano con amigos, teléfonos físicos, cargas de muchas salas y taller de hoyos continúan pendientes. Las salas no sobreviven reinicios.
 
 Cierre de regresión de 0.12.0: 173 pruebas de reglas/física y 53 de navegador pasaron localmente; GitHub Actions repitió ambas y completó siete casos de producción bajo `/golf/`. La revisión visual detectó parpadeo en cruces coplanares: se corrige solo la prioridad de profundidad de las superficies nuevas, sin mover mallas ni colisiones; se repite la ronda nueva y la comprobación de producción después del ajuste. La prueba pública espera la versión desplegada para tolerar la propagación de Pages.
+
+## Entrega 0.13.0 — creatividad con el mismo motor
+
+Fases 5–6 y taller: documento versionado y validado, plano editable, plataformas/rampas/barreras/compuertas/superficies, salida y copa, tamaños, alturas y rotaciones. Recorte real del green, validación previa y prueba 3D con el mismo motor y escena. La validación no garantiza que todas las rutas sean jugables.
+
+Fases 9–11: acceso desde catálogo, editor adaptable, ratón/tacto, propiedades, deshacer/rehacer, borrador y biblioteca local separados, importación/exportación `.golf.json`, errores de archivo y almacenamiento visibles. Sin datos ficticios ni enlace/galería inexistentes.
+
+Fases 8 y 12: sandbox personalizado sin penalización por reloj, con golpe normal y límite de golpes; resultados excluidos de récords, desafíos y recuperación oficial. Ocho pruebas específicas de validación/copa/física/snapshot/historial/almacenamiento/reloj. Tres de navegador de edición/guardado/exportación, embocado real conservando el guardado oficial y móvil. Conservados todos los recorridos, controles, modos y protocolo 11/reglas v7/formato 1.
+
+Pendientes: cooperación/multijugador de creaciones, validación de contenido por servidor, galería/enlaces duraderos, inspección 3D avanzada, selección múltiple y sesiones en hardware físico. Las salas y copas oficiales siguen en memoria.

@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Prioridad actual — 0.12.0, canchas que cambien la decisión
+## Entrega actual — 0.13.0, taller local con prueba real
+
+El siguiente paso tras las canchas Al Filo es permitir construir otras decisiones sin duplicar el juego. Se implementa documento v1 validado/acotado, compilación a `Course`, editor de piezas y marcadores, arrastre, propiedades, historial, borrador/biblioteca local y archivo `.golf.json`. El mismo Game/Rapier/Scene prueba el diseño y su copa físicamente abierta; los resultados de prueba se aíslan de los datos oficiales.
+
+Se conserva íntegro el contenido oficial y el online. Las creaciones no entran en las salas todavía: compartir ahora consiste en exportar/importar archivos. No se implementa una galería ficticia ni un ranking local presentado como global. No se puede certificar la jugabilidad solo con validación de campos.
+
+**Siguiente fase:** ampliar el taller con inspección 3D y herramientas de precisión/selección múltiple, reforzar comprobaciones geométricas y preparar un protocolo de contenido validado antes de permitir partidas privadas de creaciones. Conservar la separación entre documentos y snapshots, limitar carga/tamaño por servidor y probar rondas reales compartidas. La galería y enlaces duraderos requieren persistencia central real. Continuar el equilibrio humano de Al Filo y ensayos en teléfonos físicos/concurrencia.
+
+## Prioridad anterior — 0.12.0, canchas que cambien la decisión
 
 La revisión de 0.11.0 encontró que muchas pistas conservaban un perímetro rectangular con una línea de ataque demasiado parecida. La prioridad solicitada pasa a ser el diseño del campo antes del taller. Se preservan los 24 hoyos anteriores por compatibilidad y se crea una entrada principal distinta: **Al Filo**, cuatro huellas sobre agua, rutas amplias y atajos estrechos, anillo físico y descenso diagonal.
 

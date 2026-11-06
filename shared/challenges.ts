@@ -107,6 +107,7 @@ export function assessChallenge(
 ): ChallengeResult | null {
   if (
     control !== "classic" ||
+    state.custom ||
     state.phase !== "finished" ||
     state.practice ||
     state.hole !== c.holes - 1 ||

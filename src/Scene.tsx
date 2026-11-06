@@ -278,6 +278,7 @@ function Ball({
 }
 function Camera({
   s,
+  courseOverride,
   overview,
   angle,
   focusId,
@@ -285,6 +286,7 @@ function Camera({
 }: {
   cameraLook: CameraLook;
   s: State;
+  courseOverride?: ReturnType<typeof getCourse>;
   overview: boolean;
   angle: number;
   focusId?: string;
@@ -298,7 +300,7 @@ function Camera({
   const projectedPoint = useRef(new THREE.Vector3()),
     projectionTime = useRef(0);
   const active = s.players.find((p) => p.id === focusId) || s.players[s.turn];
-  const course = getCourse(s),
+  const course = courseOverride ?? getCourse(s),
     inMatch = s.phase === "playing";
   const overviewTarget = useMemo(
     () => overviewPose(course, size.width, size.height, cameraLook, inMatch),
@@ -323,7 +325,7 @@ function Camera({
     gl.domElement.dataset.focusPlayer = active?.id || "";
   }, [overview, active?.id, gl]);
   useFrame((_, dt) => {
-    const p = active?.pos || getCourse(s).start;
+    const p = active?.pos || course.start;
     if (
       active?.id === s.players[s.turn]?.id &&
       (!s.moving || !wasMoving.current)
@@ -413,6 +415,7 @@ function NoGraphics() {
 }
 function World({
   s,
+  courseOverride,
   angle,
   cameraAngle,
   cameraLook,
@@ -430,6 +433,7 @@ function World({
   trainingTarget,
 }: {
   s: State;
+  courseOverride?: ReturnType<typeof getCourse>;
   angle: number;
   cameraAngle: number;
   cameraLook: CameraLook;
@@ -446,7 +450,7 @@ function World({
   rendering: RenderProfile;
   trainingTarget?: { x: number; y: number; z: number; radius: number };
 }) {
-  const c = getCourse(s),
+  const c = courseOverride ?? getCourse(s),
     theme = getCircuit(s.circuit);
   const shape = useMemo(() => geometry(c), [c]);
   const dimensions = useMemo(() => courseSize(c), [c]);
@@ -530,6 +534,7 @@ function World({
       />
       <Camera
         s={s}
+        courseOverride={courseOverride}
         overview={overview}
         angle={cameraAngle}
         focusId={focusId}

@@ -335,3 +335,57 @@ test("the published challenge link starts its fixed Classic round and accepts a 
     `PAGES CHALLENGE VERIFIED: version ${APP_VERSION}, fixed link and real ace: ${baseURL}`,
   );
 });
+
+test("the published workshop loads its editor assets and physically holes a custom cup", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(120000);
+  const { newWorkshop, exportWorkshop } = await import("../../shared/workshop");
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.addInitScript(() =>
+    localStorage.setItem("golf-graphics-mode", "low"),
+  );
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
+    .click();
+  const doc = newWorkshop();
+  doc.name = "Taller publicado";
+  doc.start = { x: 0, z: 0 };
+  doc.cup = { x: 0, z: -3, height: 0 };
+  await page
+    .getByRole("button", { name: "Importar diseño", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "JSON del diseño", exact: true })
+    .fill(exportWorkshop(doc));
+  await page
+    .getByRole("button", { name: "Abrir diseño importado", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Probar en 3D", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Golpear prueba", exact: true }),
+  ).toBeEnabled({ timeout: 15000 });
+  await page
+    .getByRole("slider", { name: "Potencia de prueba", exact: true })
+    .fill("0.145");
+  await page
+    .getByRole("button", { name: "Golpear prueba", exact: true })
+    .click();
+  await expect(
+    page.getByText("Embocado en 1 golpe", { exact: true }),
+  ).toBeVisible({ timeout: 25000 });
+  await page.screenshot({ path: "work/pages-workshop.png" });
+  expect(errors).toEqual([]);
+  await page
+    .getByRole("button", { name: "Volver al diseño", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Nombre del diseño", exact: true }),
+  ).toHaveValue("Taller publicado");
+  console.log(
+    `PAGES WORKSHOP VERIFIED: version ${APP_VERSION}, editor imported a bounded document, real custom cup holed, no official record: ${baseURL}`,
+  );
+});

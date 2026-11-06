@@ -54,6 +54,7 @@ export function ClubCatalog({
   schoolProgress,
   onLearn,
   activities,
+  onWorkshop,
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
@@ -70,6 +71,7 @@ export function ClubCatalog({
   schoolProgress: SchoolProgress;
   onLearn: () => void;
   activities?: React.ReactNode;
+  onWorkshop: () => void;
 }) {
   const catalog = [
     circuits.find((c) => c.id === "rift")!,
@@ -116,6 +118,19 @@ export function ClubCatalog({
           {activities}
         </details>
       )}
+      <div className="workshop-entry">
+        <div>
+          <small>CREATIVIDAD DEL CLUB</small>
+          <strong>Tu cancha. Tus decisiones.</strong>
+          <p>
+            Plataformas, rampas y obstáculos. Crea, guarda y prueba con físicas
+            reales.
+          </p>
+        </div>
+        <button disabled={!ready} onClick={onWorkshop}>
+          Abrir taller de hoyos
+        </button>
+      </div>
       <div className="catalog-layout">
         <div
           className="course-catalog"

@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.13.0
+
+- Taller local con colocación y arrastre, selección de salida/copa, plataformas, rampas, paredes, compuertas, agua, arena y césped alto; propiedades numéricas de posición/tamaño/altura/rotación, par y nombre.
+- Deshacer/rehacer de 60 pasos; arrastre confirmado una vez y cancelación de puntero sin commit. Borrador recuperable, biblioteca de 12 diseños, duplicación de piezas y exportación/importación real `.golf.json` validada.
+- Documento v1 acotado (80 piezas/60 KB), compilación al mismo `Course` y validación previa de salida, copa, pendientes/límites. Recorte de plataformas alrededor de la copa para no tapar el agujero.
+- Prueba 3D individual con el mismo Rapier, escena y golpe normal Clásico; vuelta al editor, repetición, mecanismos y penalizaciones reales, sin reloj de turno. Rechazo de resultados personalizados en récords/desafíos/guardado oficial.
+- Conservados los 28 hoyos y todos los modos, controles, perfiles, copas, salas, récords y snapshots. Reglas v7/formato 1/protocolo 11 intactos. Diseños personalizados todavía fuera del online; sin galería ni enlaces duraderos.
+- Ocho pruebas específicas de documento/física/almacenamiento/aislamiento y tres de navegador con edición, persistencia, exportación, importación, móvil y embocado real. Comprobación del taller en producción y en la URL pública.
+
 ## 0.12.0
 
 - Al Filo: cuatro canchas con huellas propias y vacíos físicos sobre agua. Horquilla con puente fino, serpiente/diagonal, anillo de 270° con compuerta y balcones con descenso diagonal. Rutas amplias frente a atajos comprobados; no se añaden rectángulos recoloreados.

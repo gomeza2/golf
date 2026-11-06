@@ -2,7 +2,7 @@ import { CupDialog } from "./CupPanels";
 import { getCupPlan } from "../shared/cups";
 import { TURN_SECONDS } from "../shared/rules";
 import { APP_VERSION, GAME_NAME } from "./release";
-import React, { useEffect, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   createOnlineConnection,
@@ -98,11 +98,14 @@ const invalidChallengeLink =
   new URLSearchParams(location.search).has("challenge") &&
   !new URLSearchParams(location.search).has("room") &&
   !sharedChallenge;
+const Workshop = lazy(() =>
+  import("./Workshop").then((m) => ({ default: m.Workshop })),
+);
 function App() {
   const [s, setS] = useState<State>(initial),
-    [screen, setScreen] = useState<"home" | "local" | "online" | "game">(
-      "home",
-    ),
+    [screen, setScreen] = useState<
+      "home" | "local" | "online" | "game" | "workshop"
+    >("home"),
     [serverUrl, setServerUrl] = useState(
       new URLSearchParams(location.search).get("server") ||
         readLocal("golf-server-url") ||
@@ -706,39 +709,41 @@ function App() {
       }
     >
       <div className={"scene " + (screen === "game" ? "" : "hero-scene")}>
-        <Scene
-          graphicsMode={graphicsMode}
-          s={screen === "game" ? s : { ...initial, circuit }}
-          angle={angle}
-          cameraAngle={controls.cameraAngle}
-          lookMode={screen === "game" && lookMode}
-          cameraLook={cameraLook}
-          onLook={adjustCamera}
-          canShoot={canShoot}
-          controlMode={activeControl}
-          shotInput={controls}
-          power={power}
-          onPower={(p) => {
-            if (canShoot) setPower(p);
-          }}
-          overview={
-            screen !== "game" ||
-            s.phase !== "playing" ||
-            overview ||
-            intro.active
-          }
-          trainingTarget={
-            school.session?.lesson === 0 &&
-            school.session.phase === "playing" &&
-            screen === "game"
-              ? schoolTarget
-              : undefined
-          }
-          focusId={focusId}
-          onAim={(a) => {
-            if (canShoot) setAngle(a);
-          }}
-        />
+        {screen !== "workshop" && (
+          <Scene
+            graphicsMode={graphicsMode}
+            s={screen === "game" ? s : { ...initial, circuit }}
+            angle={angle}
+            cameraAngle={controls.cameraAngle}
+            lookMode={screen === "game" && lookMode}
+            cameraLook={cameraLook}
+            onLook={adjustCamera}
+            canShoot={canShoot}
+            controlMode={activeControl}
+            shotInput={controls}
+            power={power}
+            onPower={(p) => {
+              if (canShoot) setPower(p);
+            }}
+            overview={
+              screen !== "game" ||
+              s.phase !== "playing" ||
+              overview ||
+              intro.active
+            }
+            trainingTarget={
+              school.session?.lesson === 0 &&
+              school.session.phase === "playing" &&
+              screen === "game"
+                ? schoolTarget
+                : undefined
+            }
+            focusId={focusId}
+            onAim={(a) => {
+              if (canShoot) setAngle(a);
+            }}
+          />
+        )}
       </div>
       <header>
         <button
@@ -805,7 +810,22 @@ function App() {
           }
           schoolProgress={school.progress}
           onLearn={() => practiceStart(0, "sunset", 0)}
+          onWorkshop={() => setScreen("workshop")}
         />
+      )}
+      {screen === "workshop" && (
+        <Suspense
+          fallback={
+            <div className="workshop">
+              <p role="status">Preparando el taller…</p>
+            </div>
+          }
+        >
+          <Workshop
+            graphicsMode={graphicsMode}
+            onClose={() => setScreen("home")}
+          />
+        </Suspense>
       )}
       {controls.active && controls.pointer && (
         <svg className="gesture-layer" aria-hidden="true">
