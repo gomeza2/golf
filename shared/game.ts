@@ -22,6 +22,7 @@ import {
   blockRotation,
   type Block,
   type Course,
+  roundCourses,
   type CircuitId,
   type V3,
 } from "./courses";
@@ -45,6 +46,9 @@ export type Player = {
 };
 export type State = {
   custom?: true;
+  workshopHash?: string;
+  /** Resolved content; excluded from server snapshots. */
+  courseOverride?: Course;
   cup?: CupState;
   format?: MatchFormat;
   practice?: boolean;
@@ -109,8 +113,13 @@ export class Game {
   eventSeq = 0;
   lastBounce = -1;
   last: V3 = { x: 0, y: 0, z: 0 };
-  constructor(private readonly customCourse?: Course) {
+  constructor(
+    private readonly customCourse?: Course,
+    private readonly competitiveCustom = false,
+  ) {
     if (customCourse) this.state.custom = true;
+    if (customCourse && competitiveCustom)
+      this.state.courseOverride = customCourse;
   }
   private course(first = false) {
     return (
@@ -153,7 +162,7 @@ export class Game {
       throw Error("El duelo por puntos necesita al menos dos jugadores");
     if (!players.length) throw Error("Faltan jugadores");
     this.state.format = format;
-    this.state.practice = Boolean(this.customCourse);
+    this.state.practice = Boolean(this.customCourse) && !this.competitiveCustom;
     this.state.players = players;
     this.state.hole = 0;
     this.turnOrder = this.state.players.map((_, i) => i);
@@ -357,7 +366,7 @@ export class Game {
     const before = this.ball.linvel();
     this.world.step();
     if (!s.moving) {
-      if (s.time > s.deadline && !s.custom) {
+      if (s.time > s.deadline && (!s.custom || this.competitiveCustom)) {
         const p = s.players[s.turn];
         p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
         p.penalties++;
@@ -519,7 +528,9 @@ export class Game {
         p.strokes = 0;
       }
       s.phase =
-        s.practice || s.hole === getCircuit(s.circuit).courses.length - 1
+        this.customCourse ||
+        s.practice ||
+        s.hole === getCircuit(s.circuit).courses.length - 1
           ? "finished"
           : "scores";
       return;
@@ -548,6 +559,8 @@ export class Game {
     }
   }
   selectCircuit(circuit: CircuitId) {
+    if (this.customCourse)
+      throw Error("La cancha del taller está fijada para esta sala");
     if (this.state.phase !== "lobby")
       throw Error("El recorrido se elige en la sala");
     this.state.circuit = circuit;
@@ -595,7 +608,7 @@ export class Game {
     }
     if (s.players.every((p) => p.withdrawn)) {
       for (const p of s.players) {
-        while (p.scores.length < getCircuit(s.circuit).courses.length)
+        while (p.scores.length < roundCourses(s).length)
           p.scores.push(MAX_STROKES);
         p.strokes = 0;
       }

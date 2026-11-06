@@ -1,3 +1,4 @@
+import { validateRoomWorkshop } from "../shared/roomWorkshop";
 import { WorkshopImport } from "./WorkshopImport";
 import { diagnoseWorkshop } from "../shared/workshopDiagnostics";
 import {
@@ -91,9 +92,11 @@ function Numeric({
 export function Workshop({
   onClose,
   graphicsMode,
+  onPlayOnline,
 }: {
   onClose: () => void;
   graphicsMode: GraphicsMode;
+  onPlayOnline?: (document: WorkshopDocument) => void;
 }) {
   const [history, setHistory] = useState<WorkshopHistory>(() => ({
     past: [],
@@ -406,6 +409,20 @@ export function Workshop({
         >
           Probar en 3D
         </button>
+        {onPlayOnline && (
+          <button
+            disabled={!!issues.length}
+            onClick={() => {
+              try {
+                onPlayOnline(validateRoomWorkshop(history.present).document);
+              } catch (e) {
+                setNotice((e as Error).message);
+              }
+            }}
+          >
+            Jugar con amigos online
+          </button>
+        )}
       </div>
       <p className="workshop-status" role="status">
         {notice ||

@@ -1,5 +1,13 @@
 # Hoyo en Uno · Golf Club
 
+## 0.16.0 — Canchas privadas del taller
+
+- Crear una sala con una creación, compartirla por invitación y jugar el mismo diseño sin importar archivos por invitado.
+- Validación/compilación y presupuesto en servidor; documento fijo y SHA-256, recepción/reconexión separada de snapshots de movimiento.
+- Partida competitiva de un hoyo con reloj, golpes o puntos, par real, clasificación, retirada y revancha. Práctica local del taller sin cambios.
+- Separación de datos privados/oficiales y rechazo de geometría privada en recuperación oficial. Protocolo 13; reglas 7, guardado 1 y documento 1.
+- Galería/persistencia comunitaria pendientes; las salas siguen en memoria.
+
 ## 0.15.0
 
 - Cumbres y Mareas: tres huellas nuevas con rutas amplias/atajos, ocho metros de descenso entre cornisas, espiral ascendente real de 270° y cruce de carriles bajo puentes. Total: 31 hoyos físicos, once tarjetas/doce selecciones; contenido anterior conservado.

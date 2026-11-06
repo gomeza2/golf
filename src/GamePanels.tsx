@@ -120,7 +120,13 @@ export function GamePanels({
   }, [chargeActive]);
   const fullscreen = useFullscreen(setError);
   const current = s.players[s.turn],
-    circuit = getCircuit(s.circuit),
+    circuit = s.courseOverride
+      ? {
+          ...getCircuit(s.circuit),
+          name: "Taller privado",
+          courses: [s.courseOverride],
+        }
+      : getCircuit(s.circuit),
     courses = circuit.courses;
   const scoreColumns = s.practice
     ? [{ hole: s.hole, score: 0 }]
@@ -184,17 +190,30 @@ export function GamePanels({
             <span data-testid="room-code">{s.code}</span>
             <small>COPIAR INVITACIÓN →</small>
           </button>
-          <CupPicker
-            state={s}
-            disabled={!isHost || status !== "Conectado"}
-            onChange={(id) => action("cup", id)}
-          />
-          {!s.cup && (
+          {!s.custom && (
+            <CupPicker
+              state={s}
+              disabled={!isHost || status !== "Conectado"}
+              onChange={(id) => action("cup", id)}
+            />
+          )}
+          {!s.cup && !s.custom && (
             <CircuitPicker
               value={s.circuit}
               onChange={(id) => action("circuit", id)}
               disabled={!isHost || status !== "Conectado"}
             />
+          )}
+          {s.custom && (
+            <div className="private-course-summary">
+              <strong>{courses[0].name}</strong>
+              <p>Cancha del taller · Par {courses[0].par} · Un hoyo</p>
+              <p>
+                Creación privada, sin certificación de recorrido. El diseño
+                queda fijo en esta sala. Sin récords oficiales. Puedes jugar una
+                revancha al terminar.
+              </p>
+            </div>
           )}
           <MatchFormatPicker
             value={s.format ?? "strokes"}
@@ -277,9 +296,10 @@ export function GamePanels({
             </h2>
             <p>
               PAR {courses[s.hole].par} <span>·</span>{" "}
-              {courseDistance(courses[s.hole])} m
-              {courses[s.hole].routeLength ? " ruta amplia" : ""} <span>·</span>{" "}
-              {courses[s.hole].subtitle}
+              {s.custom
+                ? `${Math.hypot(courses[s.hole].cup.x - courses[s.hole].start.x, courses[s.hole].cup.z - courses[s.hole].start.z).toFixed(1)} m salida–copa`
+                : `${courseDistance(courses[s.hole])} m${courses[s.hole].routeLength ? " ruta amplia" : ""}`}{" "}
+              <span>·</span> {courses[s.hole].subtitle}
             </p>
           </div>
           {s.cup ? (
@@ -869,7 +889,11 @@ export function GamePanels({
             !s.practice &&
             s.cup?.phase !== "playing" && (
               <button className="secondary" onClick={() => action("lobby")}>
-                {s.cup ? "Preparar otra partida" : "Elegir otro recorrido"}
+                {s.custom
+                  ? "Volver a la sala"
+                  : s.cup
+                    ? "Preparar otra partida"
+                    : "Elegir otro recorrido"}
               </button>
             )}
           <button className="text-button" onClick={leave}>

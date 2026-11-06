@@ -217,7 +217,13 @@ function GreenSupport({ course }: { course: ReturnType<typeof getCourse> }) {
           receiveShadow
         >
           <boxGeometry args={b.size as [number, number, number]} />
-          <meshStandardMaterial color="#51746b" roughness={0.95} />
+          <meshStandardMaterial
+            color="#51746b"
+            roughness={0.95}
+            polygonOffset
+            polygonOffsetFactor={1}
+            polygonOffsetUnits={1}
+          />
         </mesh>
       ))}
     </group>

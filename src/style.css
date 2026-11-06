@@ -3477,3 +3477,24 @@ button > span {
     font-size: 29px;
   }
 }
+
+.private-course-summary {
+  padding: 1rem;
+  border: 1px solid #638875;
+  border-radius: 12px;
+  background: #173b31;
+  color: #f5ecd1;
+  margin: 0.8rem 0;
+}
+.private-course-summary strong {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.6rem;
+}
+.private-course-summary p {
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+.private-course-summary .text-button {
+  display: inline-block;
+  margin-right: 1rem;
+}

@@ -712,8 +712,18 @@ export const circuits = [
 export const isCircuitId = (value: unknown): value is CircuitId =>
   circuits.some((c) => c.id === value);
 export const getCircuit = (id: CircuitId) => circuits.find((c) => c.id === id)!;
-export const getCourse = (state: { circuit: CircuitId; hole: number }) =>
-  getCircuit(state.circuit).courses[state.hole];
+export type CourseState = {
+  circuit: CircuitId;
+  hole: number;
+  courseOverride?: Course;
+};
+// Resolved locally from a validated room document, never accepted in shot messages.
+export const roundCourses = (state: CourseState) =>
+  state.courseOverride
+    ? [state.courseOverride]
+    : getCircuit(state.circuit).courses;
+export const getCourse = (state: CourseState) =>
+  roundCourses(state)[state.hole];
 // The renderer and Rapier consume exactly the same dimensions and rotations.
 export function geometry(course: Course): {
   surfaces: Block[];

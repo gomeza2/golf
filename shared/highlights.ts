@@ -1,4 +1,4 @@
-import { getCircuit } from "./courses";
+import { roundCourses } from "./courses";
 import type { State } from "./game";
 export type Highlight = {
   id: string;
@@ -8,7 +8,7 @@ export type Highlight = {
 };
 export function roundHighlights(state: State): Highlight[] {
   if (state.phase !== "finished" || state.practice) return [];
-  const courses = getCircuit(state.circuit).courses;
+  const courses = roundCourses(state);
   const players = state.players.filter(
     (p) =>
       !p.withdrawn &&

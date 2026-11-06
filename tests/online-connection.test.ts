@@ -186,3 +186,60 @@ it("clears expired recovery, closes a missing session and reports genuine connec
     "Servidor no disponible. Reintentando…",
   );
 });
+
+it("buffers private states until its bounded document and SHA-256 are verified, and resolves the course without repeating it in wire snapshots", async () => {
+  vi.useRealTimers();
+  const { privateWorkshop } = await import("./fixtures/workshop");
+  const { validateRoomWorkshop, workshopFingerprint } =
+    await import("../shared/roomWorkshop");
+  const { connection, callbacks } = connect();
+  fake.fire("connect");
+  fake.fire("session", session);
+  const doc = privateWorkshop(),
+    hash = await workshopFingerprint(validateRoomWorkshop(doc).canonical);
+  const state = {
+    phase: "lobby",
+    custom: true,
+    workshopHash: hash,
+    players: [],
+    circuit: "sunset",
+    hole: 0,
+  };
+  fake.fire("state", state);
+  expect(callbacks.onState).not.toHaveBeenCalled();
+  fake.fire("workshop", { document: doc, hash });
+  await vi.waitFor(() => expect(callbacks.onState).toHaveBeenCalled());
+  expect(callbacks.onState.mock.calls[0][0].courseOverride.name).toBe(doc.name);
+  expect(
+    fake.sent.some(
+      (e) => e.args[0]?.type === "content-ready" && e.args[0].hash === hash,
+    ),
+  ).toBe(true);
+  expect(connection.connected).toBe(true);
+});
+it("rejects a forged document fingerprint without exposing a playable private state", async () => {
+  vi.useRealTimers();
+  const { privateWorkshop } = await import("./fixtures/workshop");
+  const { connection, callbacks } = connect();
+  fake.fire("connect");
+  fake.fire("session", session);
+  fake.fire("workshop", { document: privateWorkshop(), hash: "0".repeat(64) });
+  await vi.waitFor(() =>
+    expect(callbacks.onError).toHaveBeenCalledWith(
+      expect.stringContaining("no coincide"),
+    ),
+  );
+  expect(connection.connected).toBe(false);
+  expect(callbacks.onState).not.toHaveBeenCalled();
+});
+it("ends a session visibly if its custom content never arrives", () => {
+  const { connection, callbacks } = connect();
+  fake.fire("connect");
+  fake.fire("session", session);
+  fake.fire("state", { custom: true, workshopHash: "a".repeat(64) });
+  vi.advanceTimersByTime(10001);
+  expect(callbacks.onError).toHaveBeenCalledWith(
+    expect.stringContaining("No se recibió"),
+  );
+  expect(connection.connected).toBe(false);
+});
