@@ -3,7 +3,7 @@ import { Game, type State } from "../shared/game";
 import { compileWorkshop, type WorkshopDocument } from "../shared/workshop";
 import { Scene } from "./Scene";
 import { useShotControls } from "./useShotControls";
-import { defaultLook } from "./camera";
+import { changeLook, defaultLook, type CameraMargins } from "./camera";
 import type { GraphicsMode } from "./graphics";
 export function WorkshopPlay({
   doc,
@@ -16,11 +16,48 @@ export function WorkshopPlay({
 }) {
   const [course] = useState(() => compileWorkshop(doc));
   const game = useRef<Game | null>(null);
+  const header = useRef<HTMLDivElement>(null),
+    panel = useRef<HTMLDivElement>(null);
+  const [margins, setMargins] = useState<CameraMargins>({
+    left: 16,
+    right: 16,
+    top: 150,
+    bottom: 250,
+  });
+  useEffect(() => {
+    const measure = () => {
+      const next = {
+        left: 16,
+        right: 16,
+        top:
+          Math.ceil(header.current?.getBoundingClientRect().bottom ?? 130) + 12,
+        bottom:
+          Math.ceil(
+            innerHeight -
+              (panel.current?.getBoundingClientRect().top ?? innerHeight - 230),
+          ) + 12,
+      };
+      setMargins((v) =>
+        JSON.stringify(v) === JSON.stringify(next) ? v : next,
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    if (header.current) observer.observe(header.current);
+    if (panel.current) observer.observe(panel.current);
+    window.addEventListener("resize", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
   const [s, setS] = useState<State | null>(null),
     [angle, setAngle] = useState(0),
     [power, setPower] = useState(0.55),
-    [overview, setOverview] = useState(false);
-  const canShoot = !!s && s.phase === "playing" && !s.moving;
+    [overview, setOverview] = useState(false),
+    [inspecting, setInspecting] = useState(false),
+    [look, setLook] = useState(defaultLook);
+  const canShoot = !inspecting && !!s && s.phase === "playing" && !s.moving;
   useEffect(() => {
     const g = new Game(course);
     g.add("workshop", "Diseñador");
@@ -73,12 +110,13 @@ export function WorkshopPlay({
         <Scene
           graphicsMode={graphicsMode}
           courseOverride={course}
+          cameraMargins={margins}
           s={s}
           angle={angle}
           cameraAngle={angle}
-          cameraLook={defaultLook}
-          lookMode={false}
-          onLook={() => {}}
+          cameraLook={look}
+          lookMode={inspecting}
+          onLook={(delta) => setLook((v) => changeLook(v, delta))}
           controlMode="classic"
           canShoot={canShoot}
           shotInput={controls}
@@ -88,7 +126,7 @@ export function WorkshopPlay({
           overview={overview}
         />
       )}
-      <div className="workshop-test-top">
+      <div ref={header} className="workshop-test-top">
         <div>
           <small>TALLER · PRUEBA LOCAL</small>
           <h1>{course.name}</h1>
@@ -103,7 +141,62 @@ export function WorkshopPlay({
           {overview ? "Seguir pelota" : "Ver campo"}
         </button>
       </div>
-      <div className="workshop-test-controls">
+      <div ref={panel} className="workshop-test-controls">
+        <button
+          aria-pressed={inspecting}
+          disabled={!!s?.moving}
+          onClick={() => {
+            setInspecting((v) => !v);
+            setOverview(!inspecting);
+          }}
+        >
+          Inspeccionar cancha
+        </button>
+        {inspecting && (
+          <div
+            className="workshop-inspection"
+            aria-label="Inspección del taller"
+          >
+            <p>
+              Arrastra para girar e inclinar. El tiro está bloqueado durante la
+              inspección.
+            </p>
+            {[
+              {
+                label: "Girar inspección a la izquierda",
+                delta: { yaw: -0.2 },
+              },
+              { label: "Girar inspección a la derecha", delta: { yaw: 0.2 } },
+              { label: "Subir vista de inspección", delta: { pitch: 0.08 } },
+              { label: "Bajar vista de inspección", delta: { pitch: -0.08 } },
+              { label: "Acercar inspección", delta: { zoom: -0.1 } },
+              { label: "Alejar inspección", delta: { zoom: 0.1 } },
+            ].map(({ label, delta }) => (
+              <button
+                key={label}
+                aria-label={label}
+                onClick={() => setLook((v) => changeLook(v, delta))}
+              >
+                {
+                  (
+                    {
+                      "Girar inspección a la izquierda": "← Girar",
+                      "Girar inspección a la derecha": "Girar →",
+                      "Subir vista de inspección": "↑ Vista",
+                      "Bajar vista de inspección": "↓ Vista",
+                      "Acercar inspección": "+ Acercar",
+                      "Alejar inspección": "− Alejar",
+                    } as Record<string, string>
+                  )[label]
+                }
+              </button>
+            ))}
+            <button onClick={() => setLook(defaultLook)}>
+              Restablecer inspección
+            </button>
+          </div>
+        )}
+
         {s?.phase === "finished" ? (
           <>
             <strong>

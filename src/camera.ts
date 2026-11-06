@@ -1,15 +1,28 @@
 import { courseSize, type Course, type V3 } from "../shared/courses";
 
-export function overviewFrame(width: number, height: number, inMatch = true) {
+export type CameraMargins = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+export function overviewFrame(
+  width: number,
+  height: number,
+  inMatch = true,
+  custom?: CameraMargins,
+) {
   const portrait = width / height < 0.8;
   const short = height < 500;
-  const margins = !inMatch
-    ? [24, 24, 24, 24]
-    : portrait
-      ? [16, 16, Math.min(210, height * 0.28), Math.min(164, height * 0.24)]
-      : short
-        ? [Math.min(240, width * 0.25), 154, 65, 126]
-        : [Math.min(300, width * 0.22), Math.min(210, width * 0.16), 70, 154];
+  const margins = custom
+    ? [custom.left, custom.right, custom.top, custom.bottom]
+    : !inMatch
+      ? [24, 24, 24, 24]
+      : portrait
+        ? [16, 16, Math.min(210, height * 0.28), Math.min(164, height * 0.24)]
+        : short
+          ? [Math.min(240, width * 0.25), 154, 65, 126]
+          : [Math.min(300, width * 0.22), Math.min(210, width * 0.16), 70, 154];
   const [left, right, top, bottom] = margins;
   return {
     width: Math.max(100, width - left - right),
@@ -40,8 +53,9 @@ export function overviewPose(
   height: number,
   look: CameraLook = defaultLook,
   inMatch = true,
+  margins?: CameraMargins,
 ) {
-  const frame = overviewFrame(width, height, inMatch),
+  const frame = overviewFrame(width, height, inMatch, margins),
     bounds = overviewBounds(course);
   const azimuth = (width / height < 0.8 ? 0.16 : 0.63) + look.yaw;
   const elevation = Math.max(

@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.13.0:** 28 hoyos físicos, diez tarjetas de catálogo y once selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.14.0:** 28 hoyos físicos, diez tarjetas de catálogo y once selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 
@@ -168,3 +168,15 @@ Fases 8 y 12: sandbox personalizado sin penalización por reloj, con golpe norma
 Pendientes: cooperación/multijugador de creaciones, validación de contenido por servidor, galería/enlaces duraderos, inspección 3D avanzada, selección múltiple y sesiones en hardware físico. Las salas y copas oficiales siguen en memoria.
 
 Cierre de validación de 0.13.0: 181 pruebas de reglas/física y 56 de navegador pasaron localmente; GitHub Actions repitió ambas y completó ocho de producción. La revisión del formulario detectó que normalizar el nombre en cada tecla impedía escribir espacios con naturalidad: ahora se confirma al salir del campo o pulsar Enter, se comprueba escritura carácter por carácter y se conserva el rechazo de nombres vacíos. Después del ajuste se repiten los tres casos del taller y la compilación/producción.
+
+## Entrega 0.14.0 — herramientas, inspección y diagnóstico
+
+Fases 5–7 y taller: selección múltiple, transformaciones rígidas de grupos, alineación/copia/eliminación, cuadrícula y atajos; inspección con la cámara existente y tiro bloqueado. Transformaciones puras antes de aplicarlas al historial; no se deforma un grupo al llegar a un límite.
+
+Fases 9–11: controles de selección táctil, importador nativo con foco/fondo inactivo/Escape y errores de archivo; componentes de importación/selección separados. Mantiene documento v1 y todos los datos/módulos anteriores.
+
+Fase 12: ocho pruebas específicas de grupos, rotaciones, zonas, límites, historial y diagnósticos. Avisos de suelo desconectado/superficies sin apoyo, aproximados y sin bloquear saltos. Navegador comprueba transformaciones reales del documento, deshacer, copias, foco, gesto táctil sobre la cámara y embocado posterior sin alterar puntería. La producción repite cámara/bloqueo y copa real.
+
+Pendiente siguiente: validación y contrato de contenido compartido por servidor antes de admitir una cancha creada en salas privadas. Sin galería, enlaces duraderos, persistencia central ni garantías de jugabilidad automática. Continúan pendientes pruebas humanas en hardware físico y carga concurrente.
+
+La revisión visual de 0.14.0 detectó que el panel de inspección móvil tapaba parte del campo. El taller mide cabecera/controles con ResizeObserver y pasa márgenes explícitos a la cámara compartida; los márgenes oficiales predeterminados no cambian. Se prueba la proyección contra el espacio disponible y la posición real del campo WebGL respecto de los paneles. Total de reglas/física/cámara: 190 casos.
