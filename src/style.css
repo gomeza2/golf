@@ -3383,3 +3383,57 @@ button > span {
 .workshop {
   margin-top: 18px;
 }
+
+.workshop select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #6b8a75;
+  border-radius: 7px;
+  background: #183e35;
+  color: #f6efdc;
+  padding: 8px;
+}
+.workshop-selection {
+  display: grid;
+  gap: 6px;
+}
+.workshop-selection h3 {
+  margin: 6px 0;
+}
+.workshop-selection p {
+  margin-top: 0;
+}
+.workshop-diagnostics {
+  padding: 10px;
+  border: 1px solid #ad9864;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.workshop-diagnostics h3 {
+  font-size: 15px;
+  margin: 0;
+}
+.workshop-diagnostics ul {
+  padding-left: 18px;
+}
+.workshop-inspection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+.workshop-inspection p {
+  grid-column: 1/-1;
+}
+.workshop-test-controls:has(.workshop-inspection) {
+  max-height: 45dvh;
+  overflow-y: auto;
+}
+.workshop-import {
+  margin: 0;
+  color: #f7f1df;
+  box-shadow: 0 16px 50px #00181466;
+}
+.workshop-import::backdrop {
+  background: #071e25dc;
+}

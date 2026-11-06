@@ -1,9 +1,16 @@
+import { WorkshopImport } from "./WorkshopImport";
+import { diagnoseWorkshop } from "../shared/workshopDiagnostics";
+import {
+  moveWorkshopPieces,
+  transformWorkshopSelection,
+  type SelectionAction,
+} from "../shared/workshopTools";
+import { WorkshopSelection } from "./WorkshopSelection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compileWorkshop,
   exportWorkshop,
   importWorkshop,
-  MAX_WORKSHOP_BYTES,
   newWorkshop,
   pieceKinds,
   workshopIssues,
@@ -96,6 +103,9 @@ export function Workshop({
   const [library, setLibrary] = useState(readWorkshopLibrary),
     [saveId, setSaveId] = useState<string | null>(null),
     [selected, setSelected] = useState<string | null>(null),
+    [groupIds, setGroupIds] = useState<string[]>([]),
+    [multiSelect, setMultiSelect] = useState(false),
+    [gridStep, setGridStep] = useState(0.5),
     [tool, setTool] = useState<"select" | "start" | "cup" | PieceKind>(
       "select",
     ),
@@ -106,6 +116,8 @@ export function Workshop({
   const [dragDoc, setDragDoc] = useState<WorkshopDocument | null>(null);
   const drag = useRef<{
     id: string;
+    ids: string[];
+    pointer: number;
     from: { x: number; z: number };
     doc: WorkshopDocument;
     moved: boolean;
@@ -114,6 +126,66 @@ export function Workshop({
     course = useMemo(() => compileWorkshop(doc), [doc]),
     issues = useMemo(() => workshopIssues(doc), [doc]);
   const piece = doc.pieces.find((p) => p.id === selected);
+  const selection = groupIds.filter((id) =>
+    doc.pieces.some((p) => p.id === id),
+  );
+  const diagnostics = useMemo(
+    () => diagnoseWorkshop(history.present),
+    [history.present],
+  );
+  function groupAction(action: SelectionAction, step = gridStep) {
+    try {
+      const result = transformWorkshopSelection(
+        history.present,
+        selection,
+        action,
+        step,
+      );
+      edit(result.doc);
+      setGroupIds(result.ids);
+      setSelected(result.ids[0] ?? null);
+    } catch (e) {
+      setNotice(`No se aplicó el grupo: ${(e as Error).message}`);
+    }
+  }
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (
+        testing ||
+        json !== null ||
+        drag.current ||
+        (e.target as HTMLElement).closest(
+          "input,textarea,select,[contenteditable=true]",
+        )
+      )
+        return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        setHistory(e.shiftKey ? workshopRedo : workshopUndo);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        setHistory(workshopRedo);
+        return;
+      }
+      if (!selection.length || e.ctrlKey || e.metaKey || e.altKey) return;
+      const keys: Record<string, SelectionAction> = {
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        ArrowUp: "up",
+        ArrowDown: "down",
+        Delete: "delete",
+        Backspace: "delete",
+      };
+      if (keys[e.key]) {
+        e.preventDefault();
+        groupAction(keys[e.key], e.shiftKey ? 0.1 : gridStep);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [history, groupIds, gridStep, testing, json]);
   useEffect(() => {
     setDraftStored(saveWorkshopDraft(history.present));
   }, [history.present]);
@@ -137,8 +209,8 @@ export function Workshop({
     const matrix = svg.getScreenCTM();
     const q = matrix ? p.matrixTransform(matrix.inverse()) : p;
     return {
-      x: Math.max(-11, Math.min(11, Math.round(q.x * 2) / 2)),
-      z: Math.max(-23, Math.min(23, Math.round(q.y * 2) / 2)),
+      x: Math.max(-11, Math.min(11, Math.round(q.x / gridStep) * gridStep)),
+      z: Math.max(-23, Math.min(23, Math.round(q.y / gridStep) * gridStep)),
     };
   }
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
@@ -148,10 +220,31 @@ export function Workshop({
       .closest("[data-piece]")
       ?.getAttribute("data-piece");
     if (tool === "select") {
+      if (
+        target &&
+        doc.pieces.some((v) => v.id === target) &&
+        (e.shiftKey || multiSelect)
+      ) {
+        const ids = selection.includes(target)
+          ? selection.filter((id) => id !== target)
+          : [...selection, target];
+        setGroupIds(ids);
+        setSelected(ids[0] ?? null);
+        return;
+      }
+      const ids =
+        target && doc.pieces.some((v) => v.id === target)
+          ? selection.includes(target)
+            ? selection
+            : [target]
+          : [];
+      setGroupIds(ids);
       setSelected(target ?? null);
       if (target) {
         drag.current = {
           id: target,
+          ids,
+          pointer: e.pointerId,
           from: p,
           doc: history.present,
           moved: false,
@@ -160,6 +253,7 @@ export function Workshop({
       }
       return;
     }
+    setGroupIds([]);
     if (tool === "start") {
       edit({ ...doc, start: p });
       setSelected("start");
@@ -184,12 +278,13 @@ export function Workshop({
       };
       edit({ ...doc, pieces: [...doc.pieces, next] });
       setSelected(id);
+      setGroupIds([id]);
     }
     setTool("select");
   }
   function pointerMove(e: React.PointerEvent<SVGSVGElement>) {
     const active = drag.current;
-    if (!active || !e.isPrimary) return;
+    if (!active || !e.isPrimary || active.pointer !== e.pointerId) return;
     const p = point(e),
       dx = p.x - active.from.x,
       dz = p.z - active.from.z;
@@ -199,19 +294,21 @@ export function Workshop({
     });
     active.moved ||= dx !== 0 || dz !== 0;
     const d = active.doc;
-    setDragDoc(
-      active.id === "start"
-        ? { ...d, start: move(d.start) }
-        : active.id === "cup"
-          ? { ...d, cup: { ...d.cup, ...move(d.cup) } }
-          : {
-              ...d,
-              pieces: d.pieces.map((v) =>
-                v.id === active.id ? { ...v, ...move(v) } : v,
-              ),
-            },
-    );
+    try {
+      setDragDoc(
+        active.id === "start"
+          ? { ...d, start: move(d.start) }
+          : active.id === "cup"
+            ? { ...d, cup: { ...d.cup, ...move(d.cup) } }
+            : moveWorkshopPieces(d, active.ids, dx, dz),
+      );
+    } catch {
+      setNotice(
+        "El grupo no puede salir de los límites. Su tamaño y separación se conservan.",
+      );
+    }
   }
+
   function finishDrag(cancel = false) {
     if (drag.current?.moved && dragDoc && !cancel) edit(dragDoc);
     drag.current = null;
@@ -254,6 +351,7 @@ export function Workshop({
       edit(d);
       setSaveId(null);
       setSelected(null);
+      setGroupIds([]);
       setJson(null);
       setNotice("Diseño importado. Comprueba las advertencias y pruébalo.");
     } catch (e) {
@@ -293,7 +391,14 @@ export function Workshop({
         </button>
         <button onClick={save}>Guardar diseño</button>
         <button onClick={download}>Exportar archivo</button>
-        <button onClick={() => setJson("")}>Importar diseño</button>
+        <button
+          onClick={() => {
+            setNotice("");
+            setJson("");
+          }}
+        >
+          Importar diseño
+        </button>
         <button
           className="primary"
           disabled={!!issues.length}
@@ -311,6 +416,36 @@ export function Workshop({
       <div className="workshop-layout">
         <aside className="workshop-tools">
           <h2>Construir</h2>
+          <label>
+            Ajuste de cuadrícula
+            <select
+              aria-label="Ajuste de cuadrícula"
+              value={gridStep}
+              onChange={(e) => setGridStep(Number(e.target.value))}
+            >
+              <option value={0.1}>0,1 m · fino</option>
+              <option value={0.5}>0,5 m · normal</option>
+              <option value={1}>1 m · rápido</option>
+            </select>
+          </label>
+          <button
+            aria-pressed={multiSelect}
+            onClick={() => {
+              setMultiSelect((v) => !v);
+              setTool("select");
+            }}
+          >
+            Selección múltiple
+          </button>
+          <button
+            onClick={() => {
+              setGroupIds(doc.pieces.map((p) => p.id));
+              setSelected(doc.pieces[0]?.id ?? null);
+              setTool("select");
+            }}
+          >
+            Seleccionar todas las piezas
+          </button>
           <div className="workshop-palette">
             {(["select", "start", "cup", ...pieceKinds] as const).map((k) => (
               <button
@@ -330,7 +465,7 @@ export function Workshop({
           </div>
           <p>
             {tool === "select"
-              ? "Toca una pieza para editarla; arrastra para moverla. Cuadrícula de 0,5 m."
+              ? `Toca una pieza para editarla; arrastra para moverla. Cuadrícula de ${gridStep} m. Shift o Selección múltiple para agrupar.`
               : "Toca el mapa para colocar. Después puedes ajustar su tamaño y posición."}
           </p>
           <label>
@@ -363,6 +498,7 @@ export function Workshop({
               edit(newWorkshop());
               setSaveId(null);
               setSelected(null);
+              setGroupIds([]);
             }}
           >
             Nuevo borrador
@@ -377,6 +513,7 @@ export function Workshop({
                     edit(s.doc);
                     setSaveId(s.id);
                     setSelected(null);
+                    setGroupIds([]);
                   }}
                 >
                   {s.doc.name}
@@ -410,9 +547,15 @@ export function Workshop({
             viewBox="-12 -24 24 48"
             onPointerDown={pointerDown}
             onPointerMove={pointerMove}
-            onPointerUp={() => finishDrag()}
-            onPointerCancel={() => finishDrag(true)}
-            onLostPointerCapture={() => finishDrag(true)}
+            onPointerUp={(e) => {
+              if (drag.current?.pointer === e.pointerId) finishDrag();
+            }}
+            onPointerCancel={(e) => {
+              if (drag.current?.pointer === e.pointerId) finishDrag(true);
+            }}
+            onLostPointerCapture={(e) => {
+              if (drag.current?.pointer === e.pointerId) finishDrag(true);
+            }}
           >
             <defs>
               <pattern
@@ -461,9 +604,9 @@ export function Workshop({
                       : colors[p.kind]
                   }
                   fillOpacity={0.8}
-                  stroke={selected === p.id ? "#ffe19a" : "#b4c6a5"}
-                  strokeOpacity={selected === p.id ? 1 : 0.5}
-                  strokeWidth={selected === p.id ? 0.14 : 0.035}
+                  stroke={selection.includes(p.id) ? "#ffe19a" : "#b4c6a5"}
+                  strokeOpacity={selection.includes(p.id) ? 1 : 0.5}
+                  strokeWidth={selection.includes(p.id) ? 0.14 : 0.035}
                 />
                 {p.kind === "ramp" && (
                   <path
@@ -525,15 +668,24 @@ export function Workshop({
         </div>
         <aside className="workshop-properties">
           <h2>
-            {selected === "start"
-              ? "Salida"
-              : selected === "cup"
-                ? "Copa"
-                : piece
-                  ? names[piece.kind]
-                  : "Propiedades"}
+            {selection.length > 1
+              ? "Grupo"
+              : selected === "start"
+                ? "Salida"
+                : selected === "cup"
+                  ? "Copa"
+                  : piece
+                    ? names[piece.kind]
+                    : "Propiedades"}
           </h2>
-          {piece ? (
+          {selection.length > 1 ? (
+            <WorkshopSelection
+              count={selection.length}
+              step={gridStep}
+              onAction={groupAction}
+              canDuplicate={doc.pieces.length + selection.length <= 80}
+            />
+          ) : piece ? (
             <>
               <Numeric
                 label="Posición X"
@@ -608,6 +760,7 @@ export function Workshop({
                     pieces: doc.pieces.filter((p) => p.id !== selected),
                   });
                   setSelected(null);
+                  setGroupIds([]);
                 }}
               >
                 Eliminar pieza
@@ -623,6 +776,7 @@ export function Workshop({
                   };
                   edit({ ...doc, pieces: [...doc.pieces, copy] });
                   setSelected(copy.id);
+                  setGroupIds([copy.id]);
                 }}
               >
                 Duplicar pieza
@@ -664,6 +818,20 @@ export function Workshop({
             <p>Selecciona una pieza, la salida o la copa en el mapa.</p>
           )}
           <h2>Antes de probar</h2>
+          {diagnostics.length > 0 && (
+            <div className="workshop-diagnostics">
+              <h3>Revisar el diseño</h3>
+              <ul>
+                {diagnostics.map((v, i) => (
+                  <li key={i}>{v.message}</li>
+                ))}
+              </ul>
+              <small>
+                Son avisos aproximados: no consideran paredes ni resuelven
+                tiros. No bloquean las rutas con saltos.
+              </small>
+            </div>
+          )}
           {issues.length ? (
             <ul>
               {issues.map((v) => (
@@ -686,44 +854,14 @@ export function Workshop({
         </aside>
       </div>
       {json !== null && (
-        <div
-          className="workshop-import"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Importar diseño"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setJson(null);
-          }}
-        >
-          <h2>Importar cancha</h2>
-          <p>
-            Archivo .golf.json del taller, hasta 60 KB. Se valida antes de
-            abrir.
-          </p>
-          <input
-            aria-label="Archivo de diseño"
-            type="file"
-            accept=".json,application/json"
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (!f) return;
-              if (f.size > MAX_WORKSHOP_BYTES) {
-                setNotice("El archivo supera 60 KB.");
-                return;
-              }
-              loadText(await f.text());
-            }}
-          />
-          <textarea
-            aria-label="JSON del diseño"
-            maxLength={MAX_WORKSHOP_BYTES}
-            value={json}
-            onChange={(e) => setJson(e.target.value)}
-          />
-          {notice && <p role="alert">{notice}</p>}
-          <button onClick={() => loadText(json)}>Abrir diseño importado</button>
-          <button onClick={() => setJson(null)}>Cancelar importación</button>
-        </div>
+        <WorkshopImport
+          text={json}
+          onText={setJson}
+          onImport={loadText}
+          onClose={() => setJson(null)}
+          error={notice}
+          onError={setNotice}
+        />
       )}
     </section>
   );

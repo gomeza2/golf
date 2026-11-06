@@ -102,7 +102,7 @@ test("workshop builds, edits, undoes, saves, exports and validates imported data
   await page
     .getByRole("button", { name: "Abrir diseño importado", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Diseño inválido");
+  await expect(page.getByRole("alert")).toContainText("Diseño inválido");
   await page
     .getByRole("button", { name: "Cancelar importación", exact: true })
     .click();
@@ -227,4 +227,191 @@ test("mobile workshop moves a piece by touch-sized pointer drag, recovers the dr
   await expect(
     page.getByRole("button", { name: "Probar en 3D", exact: true }),
   ).toBeDisabled();
+});
+
+test("multiple selection transforms whole groups with precision, keyboard undo, copies and a real modal", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await open(page);
+  const d = newWorkshop();
+  d.pieces.push(
+    ...[-2, 2].map((x, i) => ({
+      id: `wall-${i}`,
+      kind: "wall" as const,
+      x,
+      z: 1,
+      width: 2,
+      length: 0.6,
+      height: 0,
+      endHeight: 0,
+      angle: 0,
+    })),
+  );
+  await page
+    .getByRole("button", { name: "Importar diseño", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "JSON del diseño", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: "Importar diseño", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Importar diseño", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "JSON del diseño", exact: true })
+    .fill(exportWorkshop(d));
+  await page
+    .getByRole("button", { name: "Abrir diseño importado", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Selección múltiple", exact: true })
+    .click();
+  const svg = page.getByRole("img", {
+    name: "Plano editable de la cancha",
+    exact: true,
+  });
+  for (const id of ["wall-0", "wall-1"])
+    await svg.locator(`[data-piece="${id}"]`).click();
+  await expect(
+    page.getByText("2 piezas seleccionadas", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Mover grupo a la derecha", exact: true })
+    .click();
+  const xs = () =>
+    page.evaluate(() =>
+      JSON.parse(localStorage.getItem("club-workshop-draft-v1")!)
+        .pieces.filter((p: any) => p.kind === "wall")
+        .map((p: any) => p.x),
+    );
+  await expect.poll(xs).toEqual([-1.5, 2.5]);
+  await page.keyboard.press("Shift+ArrowRight");
+  await expect.poll(xs).toEqual([-1.4, 2.6]);
+  await page.keyboard.press("Control+z");
+  await expect.poll(xs).toEqual([-1.5, 2.5]);
+  await page
+    .getByRole("button", { name: "Girar grupo 90°", exact: true })
+    .click();
+  await expect.poll(xs).toEqual([0.5, 0.5]);
+  await page
+    .getByRole("button", { name: "Duplicar grupo", exact: true })
+    .click();
+  await expect(svg.locator("[data-piece]")).toHaveCount(7);
+  await page
+    .getByRole("button", { name: "Eliminar grupo", exact: true })
+    .click();
+  await expect(svg.locator("[data-piece]")).toHaveCount(5);
+  await page.getByRole("button", { name: "Deshacer", exact: true }).click();
+  await expect(svg.locator("[data-piece]")).toHaveCount(7);
+  await page.screenshot({ path: "work/workshop-group.png", fullPage: true });
+});
+
+test("mobile inspection moves the real camera with touch, blocks shots and keeps the custom game intact", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  try {
+    await page.addInitScript(() =>
+      localStorage.setItem("golf-graphics-mode", "low"),
+    );
+    await page.goto("/");
+    await open(page);
+    await imported(page);
+    await page
+      .getByRole("button", { name: "Probar en 3D", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Golpear prueba", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Inspeccionar cancha", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Golpear prueba", exact: true }),
+    ).toBeDisabled();
+    const canvas = page.locator(".workshop-test canvas");
+    await expect(canvas).toHaveAttribute("data-camera-mode", "overview");
+    await expect
+      .poll(async () => Number(await canvas.getAttribute("data-look-yaw")))
+      .toBe(0);
+    await page
+      .getByRole("button", {
+        name: "Girar inspección a la derecha",
+        exact: true,
+      })
+      .click();
+    await expect
+      .poll(async () => Number(await canvas.getAttribute("data-look-yaw")))
+      .toBeGreaterThan(0.1);
+    const cdp = await context.newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: 190, y: 300 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: 250, y: 330 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await cdp.detach();
+    await expect
+      .poll(async () => Number(await canvas.getAttribute("data-look-yaw")))
+      .toBeLessThan(0);
+    await expect
+      .poll(
+        async () => {
+          const rect = await canvas.getAttribute("data-field-rect");
+          if (!rect) return false;
+          const r = JSON.parse(rect);
+          const header = await page.locator(".workshop-test-top").boundingBox(),
+            panel = await page.locator(".workshop-test-controls").boundingBox();
+          return (
+            !!header &&
+            !!panel &&
+            r.top >= header.y + header.height &&
+            r.bottom <= panel.y &&
+            r.left >= 0 &&
+            r.right <= 390
+          );
+        },
+        { timeout: 15000 },
+      )
+      .toBe(true);
+    await expect(page.getByRole("status")).toHaveText(
+      "Prueba tu recorrido con el golpe normal",
+    );
+    await expect(page.locator(".workshop-test-top p")).toContainText(
+      "0 golpes",
+    );
+    await page.screenshot({ path: "work/workshop-inspection-mobile.png" });
+    await page
+      .getByRole("button", { name: "Inspeccionar cancha", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Golpear prueba", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("slider", { name: "Potencia de prueba", exact: true })
+      .fill("0.145");
+    await page
+      .getByRole("button", { name: "Golpear prueba", exact: true })
+      .click();
+    await expect(
+      page.getByText("Embocado en 1 golpe", { exact: true }),
+    ).toBeVisible({ timeout: 25000 });
+  } finally {
+    await context.close();
+  }
 });

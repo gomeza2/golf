@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.13.0, taller local con prueba real
+## Entrega actual — 0.14.0, construir con precisión y revisar en 3D
+
+Se implementan selección y transformaciones de grupos, arrastre sin deformación, ajuste de cuadrícula, atajos y un paso de historial por operación. Se extraen transformaciones puras e importador/selección en módulos propios. La inspección usa la cámara existente y bloquea el tiro, sin cambiar puntería ni física. Los avisos de suelo son aproximados y no se confunden con una certificación de jugabilidad.
+
+Conservados documentos/guardados, todos los recorridos y modos, y las salas oficiales. No se admiten diseños personalizados online todavía. El formato v1 no cambia: las herramientas producen el mismo documento validado, listo para la siguiente fase.
+
+**Siguiente fase:** contrato de contenido para partidas privadas de creaciones: validar documento completo, límites/versión y geometría en el servidor; fijar el contenido antes de empezar, sincronizarlo con la sala y comprobar turnos, reconexión, límites y resultados sin aceptar snapshots/puntuaciones del cliente. Primero una sola cancha privada, después recorridos. Enlaces duraderos/galería requieren persistencia central. Mantener pendientes ensayos humanos de Al Filo, hardware móvil y muchas salas.
+
+## Entrega anterior — 0.13.0, taller local con prueba real
 
 El siguiente paso tras las canchas Al Filo es permitir construir otras decisiones sin duplicar el juego. Se implementa documento v1 validado/acotado, compilación a `Course`, editor de piezas y marcadores, arrastre, propiedades, historial, borrador/biblioteca local y archivo `.golf.json`. El mismo Game/Rapier/Scene prueba el diseño y su copa físicamente abierta; los resultados de prueba se aíslan de los datos oficiales.
 

@@ -98,3 +98,31 @@ it("inspection limits pitch and zoom and wraps horizontal rotation", async () =>
     Math.abs(changeLook(defaultLook, { yaw: 100 }).yaw),
   ).toBeLessThanOrEqual(Math.PI);
 });
+it("fits workshop geometry between its measured header and inspection controls", () => {
+  const course = uniqueCourses[0],
+    w = 390,
+    h = 844,
+    margins = { left: 16, right: 16, top: 165, bottom: 390 };
+  const pose = overviewPose(
+      course,
+      w,
+      h,
+      { yaw: 0.4, pitch: 0.2, zoom: 1 },
+      true,
+      margins,
+    ),
+    frame = overviewFrame(w, h, true, margins),
+    bounds = overviewBounds(course);
+  const camera = new PerspectiveCamera(43, w / h, 0.1, 1000);
+  camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+  camera.lookAt(new Vector3(pose.target.x, pose.target.y, pose.target.z));
+  camera.setViewOffset(w, h, frame.offsetX, frame.offsetY, w, h);
+  camera.updateMatrixWorld();
+  for (const x of [-bounds.width / 2, bounds.width / 2])
+    for (const y of [0, bounds.height])
+      for (const z of [-bounds.length / 2, bounds.length / 2]) {
+        const p = new Vector3(x, y, z).project(camera);
+        expect(((1 - p.y) * h) / 2).toBeGreaterThanOrEqual(margins.top);
+        expect(((1 - p.y) * h) / 2).toBeLessThanOrEqual(h - margins.bottom);
+      }
+});

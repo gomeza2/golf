@@ -369,6 +369,27 @@ test("the published workshop loads its editor assets and physically holes a cust
     page.getByRole("button", { name: "Golpear prueba", exact: true }),
   ).toBeEnabled({ timeout: 15000 });
   await page
+    .getByRole("button", { name: "Inspeccionar cancha", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Golpear prueba", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Girar inspección a la derecha", exact: true })
+    .click();
+  await expect
+    .poll(async () =>
+      Number(
+        await page
+          .locator(".workshop-test canvas")
+          .getAttribute("data-look-yaw"),
+      ),
+    )
+    .toBeGreaterThan(0.1);
+  await page
+    .getByRole("button", { name: "Inspeccionar cancha", exact: true })
+    .click();
+  await page
     .getByRole("slider", { name: "Potencia de prueba", exact: true })
     .fill("0.145");
   await page

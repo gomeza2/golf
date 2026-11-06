@@ -33,6 +33,7 @@ import {
   overviewBounds,
   turnAngle,
   type CameraLook,
+  type CameraMargins,
 } from "./camera";
 import {
   renderProfile,
@@ -279,6 +280,7 @@ function Ball({
 function Camera({
   s,
   courseOverride,
+  cameraMargins,
   overview,
   angle,
   focusId,
@@ -287,6 +289,7 @@ function Camera({
   cameraLook: CameraLook;
   s: State;
   courseOverride?: ReturnType<typeof getCourse>;
+  cameraMargins?: CameraMargins;
   overview: boolean;
   angle: number;
   focusId?: string;
@@ -303,13 +306,26 @@ function Camera({
   const course = courseOverride ?? getCourse(s),
     inMatch = s.phase === "playing";
   const overviewTarget = useMemo(
-    () => overviewPose(course, size.width, size.height, cameraLook, inMatch),
-    [course, size.width, size.height, cameraLook, inMatch],
+    () =>
+      overviewPose(
+        course,
+        size.width,
+        size.height,
+        cameraLook,
+        inMatch,
+        cameraMargins,
+      ),
+    [course, size.width, size.height, cameraLook, inMatch, cameraMargins],
   );
   useEffect(() => {
     const perspective = camera as THREE.PerspectiveCamera;
     if (overview) {
-      const frame = overviewFrame(size.width, size.height, inMatch);
+      const frame = overviewFrame(
+        size.width,
+        size.height,
+        inMatch,
+        cameraMargins,
+      );
       perspective.setViewOffset(
         size.width,
         size.height,
@@ -319,7 +335,7 @@ function Camera({
         size.height,
       );
     } else perspective.clearViewOffset();
-  }, [camera, overview, size.width, size.height, inMatch]);
+  }, [camera, overview, size.width, size.height, inMatch, cameraMargins]);
   useEffect(() => {
     gl.domElement.dataset.cameraMode = overview ? "overview" : "follow";
     gl.domElement.dataset.focusPlayer = active?.id || "";
@@ -416,6 +432,7 @@ function NoGraphics() {
 function World({
   s,
   courseOverride,
+  cameraMargins,
   angle,
   cameraAngle,
   cameraLook,
@@ -434,6 +451,7 @@ function World({
 }: {
   s: State;
   courseOverride?: ReturnType<typeof getCourse>;
+  cameraMargins?: CameraMargins;
   angle: number;
   cameraAngle: number;
   cameraLook: CameraLook;
@@ -535,6 +553,7 @@ function World({
       <Camera
         s={s}
         courseOverride={courseOverride}
+        cameraMargins={cameraMargins}
         overview={overview}
         angle={cameraAngle}
         focusId={focusId}

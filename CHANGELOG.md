@@ -1,5 +1,15 @@
 # Hoyo en Uno · Golf Club
 
+## 0.14.0
+
+- Selección múltiple por Shift o botón táctil, arrastre rígido, traslación, giro de 90°, alineación de centros, copia y eliminación de grupos. Una operación/un paso de deshacer; límites y capacidad comprobados antes de aplicar cambios.
+- Cuadrícula de 0,1/0,5/1 m y atajos de movimiento fino, borrar, deshacer/rehacer, aislados de formularios y pruebas.
+- Inspección 3D con giro/inclinación/zoom por botones y arrastre, tiro bloqueado y puntería conservada. Encuadre según el tamaño real de sus paneles, comprobado por proyección; la cámara oficial conserva sus márgenes.
+- Avisos aproximados de conectividad e islas y superficies sin suelo a su altura. No bloquean saltos ni certifican jugabilidad; se conservan las validaciones previas.
+- Importador en diálogo nativo con foco, fondo inactivo, Escape y errores de lectura de archivos. Selección y operaciones separadas de los documentos versionados.
+- Nueve pruebas nuevas de transformaciones/diagnóstico/encuadre y dos casos nuevos de navegador para grupos/teclado/foco e inspección táctil seguida de embocado real; producción comprueba también cámara y bloqueo del tiro.
+- Conservados los 28 hoyos, controles, modos, copas, salas y datos. Documento v1/reglas v7/guardado 1/protocolo 11. Creaciones online, galería y persistencia central siguen pendientes.
+
 ## 0.13.0
 
 - Taller local con colocación y arrastre, selección de salida/copa, plataformas, rampas, paredes, compuertas, agua, arena y césped alto; propiedades numéricas de posición/tamaño/altura/rotación, par y nombre.
