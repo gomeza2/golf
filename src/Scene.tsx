@@ -1,12 +1,13 @@
+import { AdventureScenery } from "./AdventureScenery";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   getCourse,
+  greenSideSupports,
   getCircuit,
   geometry,
   cupGreen,
-  greenArea,
   courseSize,
   CUP_RADIUS,
   CUP_DEPTH,
@@ -79,7 +80,13 @@ function Box({
     >
       <primitive object={box} attach="geometry" />
       <meshStandardMaterial
-        color={b.color || "#dbc89f"}
+        color={
+          b.motion === "lift"
+            ? pose.pos[1] - b.pos[1] > 0.55
+              ? "#8bc2a8"
+              : "#dbac75"
+            : b.color || "#dbc89f"
+        }
         roughness={0.8}
         map={grass}
         // Coplanar crossings keep their physical height; only depth priority changes.
@@ -201,29 +208,9 @@ function CupLiner() {
   );
 }
 function GreenSupport({ course }: { course: ReturnType<typeof getCourse> }) {
-  const b = greenArea(course),
-    height = course.cup.y + 1.05,
-    y = (course.cup.y - 1.05) / 2;
   return (
     <group>
-      {[
-        {
-          pos: [b.minX + 0.075, y, (b.minZ + b.maxZ) / 2],
-          size: [0.15, height, b.maxZ - b.minZ],
-        },
-        {
-          pos: [b.maxX - 0.075, y, (b.minZ + b.maxZ) / 2],
-          size: [0.15, height, b.maxZ - b.minZ],
-        },
-        {
-          pos: [(b.minX + b.maxX) / 2, y, b.minZ + 0.075],
-          size: [b.maxX - b.minX, height, 0.15],
-        },
-        {
-          pos: [(b.minX + b.maxX) / 2, y, b.maxZ - 0.075],
-          size: [b.maxX - b.minX, height, 0.15],
-        },
-      ].map((b, i) => (
+      {greenSideSupports(course).map((b, i) => (
         <mesh
           key={i}
           position={b.pos as [number, number, number]}
@@ -469,7 +456,7 @@ function World({
   trainingTarget?: { x: number; y: number; z: number; radius: number };
 }) {
   const c = courseOverride ?? getCourse(s),
-    theme = getCircuit(s.circuit);
+    theme = { ...getCircuit(s.circuit), ...c.visual };
   const shape = useMemo(() => geometry(c), [c]);
   const dimensions = useMemo(() => courseSize(c), [c]);
   const grass = useGrassTexture();
@@ -583,7 +570,15 @@ function World({
       )}
       <CourseWater course={c} detail={rendering.detail} />
       <ImpactEffect event={s.event} time={s.time} detail={rendering.detail} />
-      <CourseScenery course={c} circuit={s.circuit} detail={rendering.detail} />
+      {c.ambience ? (
+        <AdventureScenery course={c} detail={rendering.detail} />
+      ) : (
+        <CourseScenery
+          course={c}
+          circuit={s.circuit}
+          detail={rendering.detail}
+        />
+      )}
       {s.circuit !== "skyruins" && c.outerWalls !== false && (
         <mesh position={[0, -1.7, 0]} receiveShadow>
           <boxGeometry

@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.15.0
+
+- Cumbres y Mareas: tres huellas nuevas con rutas amplias/atajos, ocho metros de descenso entre cornisas, espiral ascendente real de 270° y cruce de carriles bajo puentes. Total: 31 hoyos físicos, once tarjetas/doce selecciones; contenido anterior conservado.
+- Compuertas que suben en ciclos deterministas, con pose/colisiones/colores de paso compartidos por servidor, escena y mapa. Techo del viaducto y apoyos con geometría física real.
+- Ambientaciones de glaciar, faro nocturno y acueducto; decoración instanciada fuera del límite, calidad adaptable y faro respetuoso con movimiento reducido. Cámara incluye altura de las mallas del suelo.
+- Arena de frenado equilibrada: el atajo de la cornisa mantiene tres golpes y un buen primer tiro pasa de casi 18 s a unos 4,6 s. Golpe normal, potencia y reglas generales v7 conservados.
+- Rondas físicas completas de 4/8/7 y 3/1/4 golpes, ventanas de puertas, abertura real de copa, soporte inclinado, snapshot, inicio recto sin as automático y claves antiguas de práctica intactas. Nuevo duelo autoritativo y ronda de navegador; publicación exige el recorrido nuevo.
+- Protocolo online 12, guardado formato 1. Comunidad y revisión de Retroceso/Precisión siguen pendientes; COMMUNITY.md prepara contrato y persistencia real sin una galería ficticia.
+
 ## 0.14.0
 
 - Selección múltiple por Shift o botón táctil, arrastre rígido, traslación, giro de 90°, alineación de centros, copia y eliminación de grupos. Una operación/un paso de deshacer; límites y capacidad comprobados antes de aplicar cambios.

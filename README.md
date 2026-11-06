@@ -1,16 +1,38 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.14.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.15.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
 
 ## Jugar desde GitHub Pages
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.
 
-Pages sirve el juego local completo para 1–8 personas y diez opciones de recorrido, con dos perfiles de bandera en Al Filo. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
+Pages sirve el juego local completo para 1–8 personas y doce opciones de recorrido, con dos perfiles de bandera en Al Filo. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
-## Taller de precisión e inspección — 0.14.0
+## Cumbres y Mareas — 0.15.0
+
+**Jugar Cumbres y Mareas** prepara tres canchas nuevas, también seleccionables en las salas online. El club alcanza **31 hoyos físicos distintos, once tarjetas y doce selecciones** (Al Filo conserva sus dos perfiles). Las vueltas de 9/18 mantienen su contenido y puntuación anteriores.
+
+| Lugar                  | Decisión                                                                     | Mecánica real                                                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| La cornisa del glaciar | Bajada amplia entre terrazas o diagonal de 1,2 m sin barandas                | Ocho metros de altura, gravedad, agua y arena de frenado en dos niveles. Ruta amplia de unos 52 m.                             |
+| El faro de las nubes   | Subir por una espiral de 270° o intentar la rampa oblicua hacia el hoyo alto | Malla inclinada continua con colisión real, green a 3,6 m y un as difícil que exige ángulo y fuerza. Ruta amplia de unos 62 m. |
+| Bajo las válvulas      | Zigzag ancho con compuertas o puentes estrechos sobre los carriles           | Tres compuertas que suben, túnel bajo el viaducto, cambio de dirección arriba y descenso al green. Ruta amplia de unos 70 m.   |
+
+Los nuevos lugares tienen paletas y ambientación propias: cumbres rocosas, un faro nocturno y pilares de acueducto. La decoración está fuera del límite de recuperación; los obstáculos jugables están definidos en `Course` y tienen colisiones. Ahorro usa cuatro decoraciones, más detalle añade instancias; el haz del faro se detiene con movimiento reducido. No hay modelos, claves o fuentes remotas nuevas.
+
+Las compuertas verticales comparten `blockPose` entre servidor, escena y mapa. Su ciclo es predecible y el color indica la ventana de paso. El mapa conserva su huella y cambia el estado abierto/cerrado. No se aleatorizan resultados. Los puentes superiores dejan altura libre sobre esas puertas y funcionan también como techo del carril inferior.
+
+Se conservan el golpe normal y las físicas generales de reglas v7; los desniveles y los saltos resultan de la geometría y gravedad. Las potencias/control Clásico, Retroceso y Precisión mantienen sus reglas. El atajo de la cornisa se equilibró con una zona de arena visible: un golpe bueno termina en unos 4,6 s y evita una curva, sin convertir la rampa en una espera larga.
+
+QA física: vueltas amplias de **4/8/7** golpes y atajos de **3/1/4**, completos sin recolocaciones ni penalizaciones. Para las puertas se espera una ventana real dentro del tiempo de turno; el as oblicuo no se obtiene tirando recto con máxima potencia. Estos son recorridos de prueba, no una guía visible de tiros. La geometría elevada, la espiral y el mundo guardado se verifican con Rapier; la escena usa los mismos datos.
+
+**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. **Protocolo online 12:** actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
+
+La comunidad de creaciones queda como la siguiente fase: primero partidas privadas con contenido validado por servidor y después publicación persistente/galería. [COMMUNITY.md](COMMUNITY.md) define el contrato, límites y almacenamiento necesarios. Todavía se comparten archivos del taller; no hay galería ni publicación central conectada. La revisión específica de Retroceso y Precisión queda en una fase posterior, como solicitó el usuario.
+
+## Taller de precisión e inspección — entrega 0.14.0
 
 El taller permite trabajar con **varias piezas a la vez**. Activa **Selección múltiple** (también disponible en móvil) o usa Shift al seleccionar. Apaga ese modo para arrastrar el grupo; sus distancias internas se conservan. Puedes mover, girar 90° alrededor de su centro, alinear centros X/Z, duplicar o eliminar el grupo. Cada operación ocupa un solo paso de deshacer. Las zonas de agua/arena/rough intercambian ancho/largo al girar, sin introducir rotaciones incompatibles con las físicas.
 
@@ -20,7 +42,7 @@ En **Probar en 3D → Inspeccionar cancha**, gira, inclina y acerca/aleja la cá
 
 **Revisar el diseño** avisa de zonas de arena/rough que no coinciden con suelo a su altura, islas separadas y falta de conexión de suelo entre salida/copa. Usa una cuadrícula aproximada de 0,5 m y la altura superior; no tiene en cuenta paredes, saltos, pasos inferiores ni resuelve tiros. **No bloquea** rutas con saltos y no certifica que una cancha se pueda completar. Los errores estructurales anteriores sí siguen bloqueando la prueba. Se conserva el mismo compilador y la misma física.
 
-El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1, protocolo 11.
+El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 12.
 
 Código nuevo: `shared/workshopTools.ts` (transformaciones), `shared/workshopDiagnostics.ts` (avisos), `src/WorkshopSelection.tsx` y `src/WorkshopImport.tsx`. Pruebas de herramientas/diagnóstico en `tests/workshop-tools.test.ts`; los casos de navegador comprueban grupos, historial, foco, cámara táctil y embocado después de inspeccionar.
 
@@ -36,28 +58,28 @@ Las plataformas se recortan físicamente alrededor de la copa gris, incluida su 
 
 Formato de documento v1: hasta 80 piezas, nombre de 48 caracteres, par 2–8, alturas 0–4 m, tamaños/posiciones/rotaciones acotados y archivos de hasta 60 KB. No admite código, URL de modelos, mallas arbitrarias ni IDs reservados/duplicados. El compilador produce un `Course` local; `Scene` recibe esa misma geometría explícitamente. El modo de prueba se marca como personalizado y se rechaza en récords, práctica oficial, desafíos y guardado de recuperación oficial. Una prueba del taller no reemplaza una partida local guardada.
 
-**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo 11. No se agrega un circuito falso al registro oficial ni se renumeran récords.
+**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 12. No se agrega un circuito falso al registro oficial ni se renumeran récords.
 
-**Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos, selección múltiple, túneles y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
+**Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
 
 Código: `shared/workshop.ts` (documento, validación y compilación), `src/Workshop.tsx` (editor), `src/WorkshopPlay.tsx` (prueba con motor/escena existentes), `src/workshopStorage.ts` (borrador/biblioteca/historial). Pruebas específicas en `tests/workshop.test.ts`, `tests/e2e/workshop.spec.ts` y `tests/pages/published.spec.ts`.
 
-## Al Filo — 0.12.0
+## Al Filo — entrega 0.12.0
 
 La nueva entrada principal prioriza canchas con decisiones reales. **Jugar Al Filo** prepara una ronda de cuatro hoyos; puedes añadir amigos locales o seleccionar el mismo recorrido en una sala online. Son **28 hoyos físicos distintos**: se conservan los 24 anteriores y sus vueltas de 9/18, geometrías, controles, récords y guardados. El catálogo reúne diez tarjetas; Al Filo tiene dos perfiles y por eso el registro técnico contiene once selecciones.
 
-| Hoyo nuevo | Ruta amplia | Atajo y coste del fallo |
-| --- | --- | --- |
-| La horquilla del vértigo | U de 82 m, con bandas exteriores | Puente de 1,15 m sobre agua; la línea directa entre salida y copa no tiene suelo. |
-| El hilo de la aguja | Serpiente de 72 m, rough y arena | Diagonal estrecha con isla intermedia; hay que frenar y volver a alinear. |
-| La órbita rota | Anillo físico de 270° y 66 m de recorrido | Radio estrecho y compuerta deslizante: un as es posible con la ventana adecuada; el exceso de fuerza sale del green. |
-| El balcón partido | Bajada ancha, arena de frenado y giro, 47 m | Diagonal sin barandillas con tres metros de descenso; la gravedad importa. |
+| Hoyo nuevo               | Ruta amplia                                 | Atajo y coste del fallo                                                                                              |
+| ------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| La horquilla del vértigo | U de 82 m, con bandas exteriores            | Puente de 1,15 m sobre agua; la línea directa entre salida y copa no tiene suelo.                                    |
+| El hilo de la aguja      | Serpiente de 72 m, rough y arena            | Diagonal estrecha con isla intermedia; hay que frenar y volver a alinear.                                            |
+| La órbita rota           | Anillo físico de 270° y 66 m de recorrido   | Radio estrecho y compuerta deslizante: un as es posible con la ventana adecuada; el exceso de fuerza sale del green. |
+| El balcón partido        | Bajada ancha, arena de frenado y giro, 47 m | Diagonal sin barandillas con tres metros de descenso; la gravedad importa.                                           |
 
 **Abiertas / Cruzadas** se elige antes de empezar. Cruzadas desplaza las cuatro copas, conserva las huellas y exige otras aproximaciones; no hay azar que decida la trayectoria. Cada perfil mantiene sus propios récords de ronda y práctica. Se recuerda el último recorrido elegido, sin sustituir la recuperación de una partida anterior. **Mapa** muestra el suelo real y notas de ruta amplia/riesgo, sin resolver ángulos, potencias o rebotes.
 
 No hay suelo ni paredes rectangulares invisibles cerrando las pistas nuevas. Los vacíos son reales y el agua aplica la penalización habitual. El anillo utiliza la misma malla cerrada en Three.js, Rapier y el mapa; las rampas diagonales comparten un cuaternión para representación y colisión. La distancia anunciada es la ruta amplia, no la dimensión de la caja usada para cámara/límites. Los tiros siguen siendo normales: no se añade impulso vertical ni aumenta la potencia de reglas v7.
 
-En **Online → Crear sala → Tipo de encuentro**, la **Copa Al Filo** enlaza Abiertas y Cruzadas: ocho hoyos jugados sobre cuatro huellas, actas acumuladas por servidor, golpes o puntos, reconexión y revancha. Las copas anteriores se conservan. Cliente y servidor requieren protocolo 11; las salas siguen en memoria y se pierden al reiniciar/desplegar el servidor.
+En **Online → Crear sala → Tipo de encuentro**, la **Copa Al Filo** enlaza Abiertas y Cruzadas: ocho hoyos jugados sobre cuatro huellas, actas acumuladas por servidor, golpes o puntos, reconexión y revancha. Las copas anteriores se conservan. En esa entrega se introdujo el protocolo 11; el protocolo vigente es 12. las salas siguen en memoria y se pierden al reiniciar/desplegar el servidor.
 
 Comprobaciones físicas reproducibles: rutas amplias de **5/6/7/4** golpes frente a atajos **3/2/1/2**, y Cruzadas **5/6/8/4** frente a **3/3/2/3**. El as del anillo se prueba en una ventana concreta del mecanismo. Son recorridos de QA, no ayudas visibles ni garantías para cualquier momento de una partida. Se prueban también fallos de puente, puerta cerrada, soporte del anillo, rampa diagonal, recuperación durante un golpe y registros independientes sin renumerar claves antiguas. `tests/fixtures/rift.ts` solo se importa desde pruebas.
 
@@ -180,7 +202,7 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 
 ## Recorridos y reglas
 
-**28 hoyos distintos y diez tarjetas de recorrido, con dos perfiles de banderas en Al Filo**. **Club del As** incorpora tres pistas con agua, un puente diagonal, carambola y compuerta. Los tres permiten un hoyo en uno comprobado con las físicas reales; también se verifica una vuelta completa sin penalizaciones. Las rondas de 9/18 conservan sus hoyos originales. Club del atardecer y Jardín lunar tienen tres hoyos/par 11; Gran Parque, tres/par 15; Riviera Salvaje, cuatro/par 26; Desafío Maestro, cinco/par 31. **Vuelta completa** enlaza esos 18 hoyos en una única partida y clasificación (par 94). Las canchas crecen desde 12 × 24 m hasta 22 × 72 m. **Vuelta de 9** ofrece los primeros nueve hoyos, con par 37 y puntuación independiente. El catálogo no cuenta dos veces esos hoyos. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
+**31 hoyos distintos y once tarjetas de recorrido, con dos perfiles de banderas en Al Filo**. **Club del As** incorpora tres pistas con agua, un puente diagonal, carambola y compuerta. Los tres permiten un hoyo en uno comprobado con las físicas reales; también se verifica una vuelta completa sin penalizaciones. Las rondas de 9/18 conservan sus hoyos originales. Club del atardecer y Jardín lunar tienen tres hoyos/par 11; Gran Parque, tres/par 15; Riviera Salvaje, cuatro/par 26; Desafío Maestro, cinco/par 31. **Vuelta completa** enlaza esos 18 hoyos en una única partida y clasificación (par 94). Las canchas crecen desde 12 × 24 m hasta 22 × 72 m. **Vuelta de 9** ofrece los primeros nueve hoyos, con par 37 y puntuación independiente. El catálogo no cuenta dos veces esos hoyos. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
 
 | Recorrido          | Hoyo                   | Diseño                                                  | Par |
 | ------------------ | ---------------------- | ------------------------------------------------------- | --- |
@@ -231,11 +253,11 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 190 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
+`npm test`: 199 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
 
-`npm run test:e2e`: 58 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Cuatro casos de amigos comprueban dos navegadores/sockets online, reglas del lobby y retiro tras vencer la reconexión; diez pruebas nuevas cubren elección de formato, plazos, podio y reconocimientos. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets comprueba que el cliente no puede cambiar el formato mediante un campo en el comando de inicio. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 61 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Cuatro casos de amigos comprueban dos navegadores/sockets online, reglas del lobby y retiro tras vencer la reconexión; diez pruebas nuevas cubren elección de formato, plazos, podio y reconocimientos. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets comprueba que el cliente no puede cambiar el formato mediante un campo en el comando de inicio. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
 
-`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus ocho pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública se juega un duelo por puntos real, se cambia la calidad y se recuperan turno y formato tras recargar; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
+`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus nueve pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública se juega un duelo por puntos real, se cambia la calidad y se recuperan turno y formato tras recargar; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
 `npm run build`: comprobación TypeScript, cliente en `dist/` y servidor en `dist-server/`. La CI ejecuta los tres comandos. WebGL con renderizado por software permite automatizar estas comprobaciones; no sustituye pruebas de rendimiento en teléfonos físicos.
 
@@ -250,7 +272,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (8), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (12), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 
@@ -297,7 +319,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye diez tarjetas de recorrido (28 hoyos distintos, vueltas de 9/18 y perfil alternativo de banderas), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade competición local y online con reglas Stableford y las mismas físicas. El final multijugador muestra un podio y reconocimientos calculados a partir de los hoyos completados: ases, hoyos bajo par y vueltas sin penalizaciones ni límites. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
+Incluye once tarjetas de recorrido (31 hoyos distintos, vueltas de 9/18 y perfil alternativo de banderas), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade competición local y online con reglas Stableford y las mismas físicas. El final multijugador muestra un podio y reconocimientos calculados a partir de los hoyos completados: ases, hoyos bajo par y vueltas sin penalizaciones ni límites. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
 
 El motor mantiene un solo hoyo visible y una pelota física activa. La calidad automática adapta resolución y sombras; Ahorro las desactiva y Alta permite DPR 2 con sombras de 2048. La geometría fija de cada pista se reutiliza entre actualizaciones y el renderizado se detiene en segundo plano. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 
@@ -340,11 +362,11 @@ El contenedor usa Node 22, usuario sin privilegios y `/health`. La receta del co
 
 ## Avance por fases
 
-- Base y partidas locales: implementadas, con 28 hoyos, clasificación, revancha y guardado con recuperación tras recargar.
+- Base y partidas locales: implementadas, con 31 hoyos, clasificación, revancha y guardado con recuperación tras recargar.
 - Multijugador: salas privadas autoritativas, 2–8 clientes, reconexión, latencia, invitación con servidor y controles de versión. Servidor público en Render, con comprobación de clientes reales antes de publicar Pages. Las salas siguen siendo efímeras.
 - Experiencia visual y controles: cámara de seguimiento, carga real, césped procedural, agua animada, impactos, guía corta de dirección, Clásico, Retroceso y Precisión.
 - Variedad: rampas, puentes, canales, islas, arena, barreras móviles y elecciones entre ruta segura y salto.
-- Pulido: pruebas automáticas de los 28 hoyos, recuperación y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
+- Pulido: pruebas automáticas de los 31 hoyos, recuperación y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
 
 ## Récords y objetivos de un jugador
 
@@ -406,7 +428,6 @@ Los tres hoyos tienen un hoyo en uno verificado desde su salida con física real
 
 El máximo pasa de 15,8 a **16,2** de velocidad (+2,5 %); la referencia de rodamiento máximo medida pasa de 25,06 a 25,91 m. Se recalibran los porcentajes para conservar la progresión gradual. Cliente, servidor y marcas usan reglas/protocolo **7**, manteniendo almacenadas las claves anteriores. Las preferencias de nombre, volumen y control se conservan.
 
-
 ## 0.8.0 · Ruinas del Cielo
 
 Selecciona **Ruinas del Cielo** en el catálogo: tres hoyos de 36–44 m, par 13, disponibles en local, entrenamiento y salas online. Se añaden a los 21 existentes; no sustituyen las vueltas de 9/18. El claustro ofrece una pasarela amplia y una diagonal difícil que ahorra un golpe; el templo tiene dos rampas y un pórtico con colisiones; el reloj combina mecanismos y una ruta exterior con rough.
@@ -416,7 +437,6 @@ La vegetación y las columnas se agrupan en tres llamadas de dibujo y permanecen
 Reglas v7, guardados formato 1 y marcas anteriores conservados. Protocolo de red **9**: actualiza también el servidor y recarga los clientes después de desplegar. `npm run test:online` incluye una comprobación real del nuevo recorrido con dos clientes y puntuación autoritativa. El workflow de Pages la exige antes de publicar.
 
 Auditoría, siguiente entrega y límites: [ROADMAP.md](ROADMAP.md). Al cerrar 0.8.0, el editor, los desafíos periódicos y las copas de varias rondas estaban pendientes. Los desafíos individuales periódicos se incorporan en 0.10.0; el editor y las series online continúan pendientes.
-
 
 ## 0.9.0 · Ver el campo y aprender jugando
 

@@ -36,6 +36,9 @@ export function overviewBounds(course: Course) {
   const height = Math.max(
     course.cup.y + 2.7,
     course.start.y + 1,
+    ...(course.floorMeshes || []).flatMap((mesh) =>
+      mesh.vertices.filter((_, i) => i % 3 === 1),
+    ),
     ...(course.terrain || []).map(
       (b) =>
         b.pos[1] +
