@@ -45,7 +45,7 @@ Probar con 5–8 jugadores nuevos y un grupo de amigos, observar sin indicar pot
 - Compilación TypeScript/Vite/servidor: correcta.
 - Reglas, física y datos: 210 pruebas aprobadas.
 - Bienvenida, escuela y disponibilidad real: 7 casos Playwright aprobados (flujo completo y disposición adaptable), con dos primeros hoyos en escritorio y móvil y arrastre táctil real en la escuela.
-- PostgreSQL y API/autorización: 17 pruebas aprobadas.
+- PostgreSQL y API/autorización: 18 pruebas aprobadas.
 - Comunidad y salas: 4 casos Playwright aprobados, incluido el flujo completo de publicación/revisión/versiones y dos participantes reales.
 - Reinicio adicional del contenedor PostgreSQL de pruebas: documento/revisión/checksum idénticos tras reiniciar, con volumen persistente. No se usó una base de producción.
 - Regresión completa y publicación pública: consultar los jobs de GitHub Actions de esta entrega; no sustituir su resultado por estos ensayos locales.
@@ -53,3 +53,5 @@ Probar con 5–8 jugadores nuevos y un grupo de amigos, observar sin indicar pot
 Se añadió una comprobación de teléfono pequeño, horizontal y tablet tras detectar que los botones salían de la primera vista en horizontal.
 
 La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.
+
+Se reprodujo y corrigió un error no manejado al cerrar PostgreSQL una conexión inactiva. La prueba termina una conexión real del pool y comprueba que puede reconectar; una caída de la base opcional no debe terminar el proceso de las salas.

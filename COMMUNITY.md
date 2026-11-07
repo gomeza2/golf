@@ -138,3 +138,5 @@ La suite de navegador usa un proveedor OIDC **exclusivamente de pruebas**, con P
 ## Lo que aún falta
 
 Provisionar la base y el proveedor de identidad de producción y configurar las variables anteriores para activar el servicio público. No se afirma que estén conectados si `/config` dice lo contrario. También quedan ensayos humanos de moderación y dificultad, carga concurrente, copias de seguridad operativas del proveedor y futuras colecciones comunitarias de varios hoyos. La revisión de Retroceso/Precisión y nuevos recursos del taller siguen en el roadmap del juego.
+
+Las conexiones PostgreSQL inactivas cerradas por el servidor se descartan sin terminar el proceso del juego. Las consultas fallidas siguen mostrando indisponibilidad real; el pool reconecta en solicitudes posteriores. La suite termina una conexión real para comprobar este caso.

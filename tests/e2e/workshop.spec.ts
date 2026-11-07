@@ -84,7 +84,9 @@ test("workshop builds, edits, undoes, saves, exports and validates imported data
   await page
     .getByRole("button", { name: "Guardar diseño", exact: true })
     .click();
-  await expect(page.getByRole("status")).toContainText("Diseño guardado");
+  await expect(page.locator(".workshop-status")).toContainText(
+    "Diseño guardado",
+  );
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Exportar archivo", exact: true }).click(),

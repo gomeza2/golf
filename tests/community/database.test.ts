@@ -314,3 +314,19 @@ it("enforces publication quotas under concurrent requests using the real databas
     reason: { status: 429 },
   });
 });
+it("survives termination of an idle PostgreSQL connection and reconnects", async () => {
+  const pool = communityPool(databaseUrl());
+  const admin = communityPool(databaseUrl());
+  try {
+    const client = await pool.connect();
+    const result = await client.query("SELECT pg_backend_pid() AS pid");
+    client.release();
+    await admin.query("SELECT pg_terminate_backend($1)", [result.rows[0].pid]);
+    // Do not attach a test error listener: the application's listener must keep
+    // the server alive when PostgreSQL closes a released connection.
+    await expect.poll(() => pool.totalCount).toBe(0);
+    expect(await new CommunityDatabase(pool).ready()).toBe(true);
+  } finally {
+    await Promise.all([pool.end(), admin.end()]);
+  }
+});
