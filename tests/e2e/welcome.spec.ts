@@ -155,3 +155,34 @@ test("online is visible on entry and opens real room preparation without replaci
     page.getByRole("button", { name: /Unirme a la sala/ }),
   ).toBeVisible();
 });
+test("entry actions fit compact phones, landscape and tablets without horizontal overflow", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("#boot-screen")).toHaveCount(0, { timeout: 60000 });
+  for (const [label, width, height] of [
+    ["compact", 320, 568],
+    ["landscape", 844, 390],
+    ["tablet", 768, 1024],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await expect(
+      page.getByRole("button", { name: "Jugar ahora →", exact: true }),
+    ).toBeInViewport();
+    await expect(
+      page.getByRole("button", {
+        name: "Jugar online con amigos",
+        exact: true,
+      }),
+    ).toBeInViewport();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `work/welcome-${label}.png`,
+      animations: "disabled",
+    });
+  }
+});

@@ -3876,3 +3876,64 @@ button > span {
     }
   }
 }
+/* Short screens keep the invitation and both ways to play in the first view. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .welcome-hero.catalog-intro {
+    display: block;
+    min-height: unset;
+    padding: 0 0 14px;
+  }
+  .welcome-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px 18px;
+    padding: 12px;
+  }
+  .welcome-copy .eyebrow {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 8px;
+  }
+  .welcome-hero h1 {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: clamp(32px, 5vw, 44px);
+    margin: 4px 0;
+  }
+  .welcome-hero p,
+  .welcome-window {
+    display: none;
+  }
+  .welcome-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 100%;
+  }
+  .welcome-actions button {
+    font-size: 12px;
+    padding: 12px;
+    min-height: 48px;
+  }
+  .welcome-caption {
+    grid-column: 2;
+    font-size: 9px;
+    margin: 0;
+  }
+  .welcome-links {
+    grid-column: 1;
+    grid-row: 3 / span 2;
+    align-self: center;
+    margin: 0;
+    gap: 10px;
+  }
+  .welcome-links a,
+  .welcome-links button {
+    font-size: 10px;
+  }
+  .welcome-footnote {
+    margin: 8px 12px 0;
+    padding: 0;
+    font-size: 9px;
+  }
+}
