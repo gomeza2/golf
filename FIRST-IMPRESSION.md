@@ -49,3 +49,5 @@ Probar con 5–8 jugadores nuevos y un grupo de amigos, observar sin indicar pot
 - Comunidad y salas: 4 casos Playwright aprobados, incluido el flujo completo de publicación/revisión/versiones y dos participantes reales.
 - Reinicio adicional del contenedor PostgreSQL de pruebas: documento/revisión/checksum idénticos tras reiniciar, con volumen persistente. No se usó una base de producción.
 - Regresión completa y publicación pública: consultar los jobs de GitHub Actions de esta entrega; no sustituir su resultado por estos ensayos locales.
+
+La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.

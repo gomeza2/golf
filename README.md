@@ -8,6 +8,8 @@ Versión **0.17.0** de minigolf 3D competitivo, en español. React + TypeScript 
 
 Se renovaron jerarquía visual, guía móvil, feedback, transitorios de sonido y continuidad inicial. [FIRST-IMPRESSION.md](FIRST-IMPRESSION.md) recoge la auditoría crítica, las pruebas y lo que necesita evaluación con personas. No se afirma que las capturas o la compilación demuestren diversión.
 
+La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.
+
 ## Jugar desde GitHub Pages
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.

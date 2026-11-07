@@ -94,9 +94,20 @@ for (const mobile of [false, true])
         animations: "disabled",
         path: `work/welcome-graduation-${mobile ? "mobile" : "desktop"}.png`,
       });
-      await page
-        .getByRole("button", { name: /Jugar mi primera vuelta/ })
-        .click();
+      if (mobile) {
+        await page.getByRole("button", { name: /Terminar escuela/ }).click();
+        await expect(page.locator(".welcome-caption").first()).toContainText(
+          "Vuelta de tres hoyos",
+        );
+        await page
+          .getByRole("button", { name: "Jugar ahora →", exact: true })
+          .click();
+        await expect(page.locator(".school-coach")).toHaveCount(0);
+      } else {
+        await page
+          .getByRole("button", { name: /Jugar mi primera vuelta/ })
+          .click();
+      }
       // Actual rounds retain the introduction, rules, scorecard and next-hole flow.
       if (await page.getByRole("button", { name: /Omitir vista/ }).isVisible())
         await page.getByRole("button", { name: /Omitir vista/ }).click();

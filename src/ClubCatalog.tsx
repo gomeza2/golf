@@ -58,6 +58,7 @@ export function ClubCatalog({
   onCommunity,
   onQuickPlay,
   hasSavedRound,
+  learned,
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
@@ -78,6 +79,7 @@ export function ClubCatalog({
   onCommunity: () => void;
   onQuickPlay: () => void;
   hasSavedRound: boolean;
+  learned: boolean;
 }) {
   const catalog = [
     circuits.find((c) => c.id === "rift")!,
@@ -124,7 +126,9 @@ export function ClubCatalog({
           <small className="welcome-caption">
             {hasSavedRound
               ? "Tu partida guardada sigue aquí. Puedes continuarla."
-              : "Sin cuenta · Aprende con tiros reales · A tu ritmo"}
+              : learned
+                ? "Sin cuenta · Vuelta de tres hoyos · Tu control elegido"
+                : "Sin cuenta · Aprende con tiros reales · A tu ritmo"}
           </small>
           <small className="welcome-caption">
             {onlineAvailable

@@ -2,6 +2,8 @@
 
 ## 0.17.0 — Bienvenida y comunidad persistente
 
+- La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.
+
 - Auditoría de primera impresión, portada renovada, online visible y entrada directa a la escuela real sin sustituir un guardado recuperable.
 - Guía visual, respuesta específica por objetivo, potencia inicial suave y continuación inmediata a una ronda de tres hoyos.
 - Contacto y salpicaduras Web Audio con textura, liberación de nodos y feedback breve respetuoso de movimiento reducido.

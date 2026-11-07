@@ -600,6 +600,16 @@ function App() {
     setOverview(false);
     setError("");
   }
+  function startWelcomeRound(control: ControlMode) {
+    const g = new Game();
+    g.selectCircuit("sunset");
+    g.add("0", names[0]);
+    g.start("strokes");
+    school.close();
+    challenges.close();
+    setCircuit("sunset");
+    mountLocalGame(g, control);
+  }
   function localStart() {
     const g = new Game();
     g.selectCircuit(circuit);
@@ -932,9 +942,18 @@ function App() {
           practiceHistory={practiceHistory}
           onPractice={practiceStart}
           hasSavedRound={recovery.save.kind === "saved"}
+          learned={[0, 1, 2].every((n) =>
+            school.progress[controlMode]?.includes(n),
+          )}
           onQuickPlay={() => {
             if (recovery.save.kind === "saved") resumeLocal();
-            else practiceStart(0, "sunset", 0);
+            else {
+              const next = [0, 1, 2].find(
+                (n) => !school.progress[controlMode]?.includes(n),
+              );
+              if (next === undefined) startWelcomeRound(controlMode);
+              else practiceStart(0, "sunset", next);
+            }
           }}
           circuit={circuit}
           setCircuit={setCircuit}
@@ -1409,16 +1428,7 @@ function App() {
                   )
                 : leave()
             }
-            onPlayRound={() => {
-              const g = new Game();
-              g.selectCircuit("sunset");
-              g.add("0", names[0]);
-              g.start("strokes");
-              school.close();
-              challenges.close();
-              setCircuit("sunset");
-              mountLocalGame(g, activeControl);
-            }}
+            onPlayRound={() => startWelcomeRound(activeControl)}
             onClose={school.close}
           />
         )}

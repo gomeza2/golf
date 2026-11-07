@@ -157,7 +157,10 @@ export function SchoolCoach({
         </div>
       )}
       {passed ? (
-        <button className="primary" onClick={onNext}>
+        <button
+          className={session.lesson === 2 ? "text-button" : "primary"}
+          onClick={onNext}
+        >
           {session.lesson === 2 ? "Terminar escuela" : "Siguiente ejercicio"} →
         </button>
       ) : (
