@@ -134,7 +134,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   const response = await page.goto(baseURL!);
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle(/Hoyo en Uno/);
-  await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Un buen golpe/ }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /Vuelta completa/ }),
   ).toBeVisible();
@@ -197,7 +199,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeInViewport();
   await page.screenshot({ path: "work/pages-mobile.png" });
   await page.getByRole("button", { name: "Salir", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Un buen golpe/ }),
+  ).toBeVisible();
   await page.screenshot({ path: "work/pages-catalogue-mobile.png" });
   await page.reload();
   await expect(
