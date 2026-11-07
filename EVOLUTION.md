@@ -1,6 +1,6 @@
 # Evolución del club — golpe normal
 
-**Estado actual 0.15.0:** 31 hoyos físicos, once tarjetas de catálogo y doce selecciones (Al Filo tiene dos perfiles) y servidor público Render configurado. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.18.0:** 31 hoyos físicos, doce selecciones (Al Filo tiene dos perfiles), escuela, taller, comunidad configurable y servidor público Render. La entrega actual refina Retroceso y Precisión sin cambiar física, reglas ni datos guardados. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 

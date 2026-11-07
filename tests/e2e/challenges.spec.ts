@@ -104,6 +104,24 @@ test("shared daily challenge completes a real round, recovers its locked attempt
       const x = Number(await ball.getAttribute("cx")),
         z = Number(await ball.getAttribute("cy")),
         cup = getCourse({ circuit: "aces", hole }).cup;
+      if (hole === 2 && z > 1) {
+        // The failed CI trace showed eight identical, immediate retries bouncing
+        // off the gate. Read its visible position and wait for the opening on
+        // the ball's side, as a player would, rather than changing the physics
+        // or spending more strokes. Beyond the gate, no timing is necessary.
+        const side = x < 0 ? -1 : 1;
+        await expect
+          .poll(
+            async () => {
+              const transform = await page
+                .locator('.hole-map svg rect[fill="#f5cc77"]')
+                .getAttribute("transform");
+              return Number(transform?.match(/translate\(([-\d.e]+)/)?.[1]) * side;
+            },
+            { timeout: 10000, intervals: [50] },
+          )
+          .toBeLessThan(-2.4);
+      }
       await page
         .getByRole("button", { name: "Cerrar mapa", exact: true })
         .click();

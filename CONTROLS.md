@@ -34,5 +34,6 @@ Clásico, online Clásico, circuitos, entrenamiento, escuela, editor, comunidad 
 - Playwright: volver al centro y cancelar, putt fino físico, referencia acotada, desvío en vivo, suelta única, marca temporal nativa, pérdida real de captura y arrastre fino mediante eventos táctiles.
 - Los casos anteriores de teclado, cancelación, multidedo, escuela y bloqueo del esquema se siguen ejecutando.
 - Capturas de controles en `work/controls-*.png`, conservadas como artefacto de CI junto con la primera partida.
+- La revisión de CI detectó una estrategia frágil en el desafío diario: repetía tiros contra la compuerta sin observar su apertura. La prueba ahora espera su posición visible antes de corregir; conserva el límite de ocho correcciones y la física real. Tres rondas completas consecutivas pasaron localmente, incluyendo recuperación, medallas y revancha.
 
 Faltan ensayos con personas en teléfonos físicos, ratón, trackpad y teclados: precisión a bajas potencias, comprensión de referencia frente a resultado, fatiga del arrastre, ventanas de suelta y legibilidad en horizontal. Las pruebas automáticas no demuestran diversión ni comodidad para todas las personas.
