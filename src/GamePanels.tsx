@@ -1,3 +1,5 @@
+import { ShotControlFeedback } from "./ShotControlFeedback";
+import type { ShotReview } from "./shotControls";
 import { CupPicker, CupTable, CupLiveBoard } from "./CupPanels";
 import { cupWinnerLabel } from "../shared/cups";
 import {
@@ -60,8 +62,13 @@ type Props = {
   controlMode: ControlMode;
   chargeActive: boolean;
   referencePower: number;
-  startCharge: () => void;
-  releaseCharge: () => void;
+  referenceAngle: number;
+  chargeArmed: boolean;
+  pullFine: boolean;
+  togglePullFine: () => void;
+  shotReview: ShotReview | null;
+  startCharge: (stamp?: number) => void;
+  releaseCharge: (stamp?: number) => void;
   cancelCharge: () => void;
   overview: boolean;
   transitioning: boolean;
@@ -97,6 +104,11 @@ export function GamePanels({
   controlMode,
   chargeActive,
   referencePower,
+  referenceAngle,
+  chargeArmed,
+  pullFine,
+  togglePullFine,
+  shotReview,
   startCharge,
   releaseCharge,
   cancelCharge,
@@ -116,7 +128,13 @@ export function GamePanels({
   const [conceding, setConceding] = useState(false);
   useEffect(() => setConceding(false), [s.turn, s.hole, s.phase, s.moving]);
   useEffect(() => setExpanded(false), [s.turn, s.hole, s.moving]);
+  useEffect(() => {
+    if (chargeActive) setExpanded(false);
+  }, [chargeActive]);
   const chargePointer = useRef<number | null>(null);
+  const releaseClick = useRef<{ x: number; y: number; until: number } | null>(
+    null,
+  );
   useEffect(() => {
     if (!chargeActive) chargePointer.current = null;
   }, [chargeActive]);
@@ -443,6 +461,25 @@ export function GamePanels({
           )}
           <section
             hidden={lookMode}
+            onPointerDownCapture={() => {
+              releaseClick.current = null;
+            }}
+            onClickCapture={(e) => {
+              const released = releaseClick.current;
+              releaseClick.current = null;
+              if (
+                released &&
+                e.detail > 0 &&
+                performance.now() <= released.until &&
+                Math.hypot(e.clientX - released.x, e.clientY - released.y) < 12
+              ) {
+                // A touch compatibility click can target the pause row after
+                // the moving-ball HUD shrinks. A new pointerdown always clears
+                // this guard, so deliberate pause/cancel clicks still work.
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
             className="shot-panel"
             data-control-mode={controlMode}
             data-expanded={expanded}
@@ -464,6 +501,7 @@ export function GamePanels({
               <button
                 className="text-button expand-shot"
                 aria-expanded={expanded}
+                disabled={chargeActive}
                 onClick={() => setExpanded((v) => !v)}
               >
                 {expanded ? "Menos ajustes" : "Más ajustes"}
@@ -527,7 +565,7 @@ export function GamePanels({
                   aria-label="Potencia"
                   type="range"
                   min=".03"
-                  max="1"
+                  max={controlMode === "pull" && pullFine ? 0.35 : 1}
                   step="any"
                   value={power}
                   disabled={!canShoot || chargeActive}
@@ -551,13 +589,24 @@ export function GamePanels({
                     if (chargePointer.current !== null) return;
                     chargePointer.current = e.pointerId;
                     e.currentTarget.setPointerCapture(e.pointerId);
-                    startCharge();
+                    startCharge(e.timeStamp);
                   }}
                   onPointerUp={(e) => {
                     e.preventDefault();
                     if (chargePointer.current !== e.pointerId) return;
                     chargePointer.current = null;
-                    releaseCharge();
+                    releaseClick.current = {
+                      x: e.clientX,
+                      y: e.clientY,
+                      until: performance.now() + 750,
+                    };
+                    releaseCharge(e.timeStamp);
+                  }}
+                  onLostPointerCapture={(e) => {
+                    if (chargePointer.current === e.pointerId) {
+                      chargePointer.current = null;
+                      cancelCharge();
+                    }
                   }}
                   onPointerCancel={(e) => {
                     if (chargePointer.current === e.pointerId) {
@@ -568,13 +617,13 @@ export function GamePanels({
                   onKeyDown={(e) => {
                     if ([" ", "Enter"].includes(e.key)) {
                       e.preventDefault();
-                      if (!e.repeat) startCharge();
+                      if (!e.repeat) startCharge(e.timeStamp);
                     }
                   }}
                   onKeyUp={(e) => {
                     if ([" ", "Enter"].includes(e.key)) {
                       e.preventDefault();
-                      releaseCharge();
+                      releaseCharge(e.timeStamp);
                     }
                   }}
                 >
@@ -584,17 +633,36 @@ export function GamePanels({
                 <div className="pull-instruction">
                   <strong>
                     {chargeActive
-                      ? `${Math.round(power * 100)}% · SUELTA PARA TIRAR`
+                      ? chargeArmed
+                        ? `${Math.round(power * 100)}% · SUELTA PARA TIRAR`
+                        : "SUELTA PARA CANCELAR"
                       : s.moving
                         ? "PELOTA EN JUEGO"
                         : !canShoot
                           ? "ESPERA TU TURNO"
                           : "TIRA HACIA ATRÁS"}
                   </strong>
-                  <small>Mantén sobre el campo y arrastra</small>
+                  <small>
+                    {chargeActive
+                      ? "Vuelve al círculo para cancelar"
+                      : "Mantén sobre el campo y arrastra"}
+                  </small>
                 </div>
               )}
             </div>
+            {controlMode === "pull" && (
+              <button
+                className="pull-fine-toggle"
+                aria-pressed={pullFine}
+                disabled={!canShoot || chargeActive}
+                onClick={togglePullFine}
+              >
+                Arrastre fino{" "}
+                <span>
+                  {pullFine ? "ACTIVO · máx. 35%" : "Para golpes cortos"}
+                </span>
+              </button>
+            )}
             {controlMode !== "classic" && (
               <div
                 className={`charge-track ${controlMode}`}
@@ -616,12 +684,25 @@ export function GamePanels({
                 />
               </div>
             )}
+            <ShotControlFeedback
+              mode={controlMode}
+              active={chargeActive}
+              armed={chargeArmed}
+              power={power}
+              angle={angle}
+              referencePower={referencePower}
+              referenceAngle={referenceAngle}
+              review={shotReview}
+            />
             <div
               className="power-presets"
               role="group"
               aria-label="Potencia rápida"
             >
-              {[0.25, 0.5, 0.75, 1].map((value) => (
+              {(controlMode === "pull" && pullFine
+                ? [0.03, 0.1, 0.2, 0.35]
+                : [0.25, 0.5, 0.75, 1]
+              ).map((value) => (
                 <button
                   key={value}
                   disabled={!canShoot || chargeActive}

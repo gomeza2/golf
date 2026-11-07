@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.17.0, bienvenida y comunidad persistente
+## Entrega actual — 0.18.0, dominio de Retroceso y Precisión
+
+La siguiente fase se centra en controles antes de ampliar campos. Se corrige la imposibilidad práctica de preparar putts inferiores a 6,7 % en el arrastre normal mediante una sensibilidad fina opcional de 3–35 %. La zona de cancelación refleja el estado real, y Más ajustes revela dirección/referencia en los tres esquemas. Precisión incorpora lectura de desvío, referencia elegida y análisis de la suelta, manteniendo sus dos oscilaciones y dificultad.
+
+Los eventos de entrada proporcionan la marca temporal de preparación/suelta, con fallback para relojes incompatibles. Perder captura cancela; las lecturas se limpian al cambiar turno/hoyo/ronda. El arrastre fino es una sensibilidad, no un cambio de esquema. Física, fuerza máxima normal, 31 hoyos, editor, comunidad, modos y datos previos conservados. Reglas 7 y protocolo 14 permanecen. [CONTROLS.md](CONTROLS.md) recoge límites y verificación.
+
+**Siguiente fase:** observar puntería, cancelaciones, tiros cortos y ventanas de suelta con personas y teléfonos físicos. Ajustar sensibilidad/cámara con esos resultados antes de endurecer las curvas o agregar escenarios. La activación pública de comunidad sigue requiriendo PostgreSQL, identidad y moderación del propietario.
+
+## Entrega anterior — 0.17.0, bienvenida y comunidad persistente
 
 La auditoría de primera impresión adelanta accesibilidad al juego frente a más contenido. Portada con entrada rápida/online, guía visual basada en la escuela existente, potencia inicial suave, feedback de contacto y paso directo a una vuelta de tres hoyos. Partidas recuperables, todos los campos/modos y las funciones previas se conservan. [FIRST-IMPRESSION.md](FIRST-IMPRESSION.md) documenta hallazgos y límites de las pruebas.
 

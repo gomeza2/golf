@@ -214,3 +214,7 @@ Pendientes: activación de servicios de producción, pruebas humanas y de carga,
 ## Renovación de primera impresión — 0.17.0
 
 Auditoría de v0.16 en escritorio y móvil: el catálogo y los anuncios ocultaban el online y la entrada principal elegía una pista de 82 m antes de enseñar. Se priorizan entrada rápida a la escuela existente, invitación online visible y continuación a una vuelta de tres hoyos. Guía visual compacta, fuerza inicial suave, feedback de contacto y reparación de la superposición entre tabla de práctica y graduación. Se mantienen campos, modos, datos y comunidad en desarrollo. FIRST-IMPRESSION.md registra método, hallazgos, pruebas reproducibles y evaluación humana pendiente.
+
+## Entrega 0.18.0 — controles y putts cortos
+
+Se revisan Retroceso y Precisión conservando la física y sus curvas normales. La zona muerta de 12 px impedía acceder a potencias inferiores a 6,7 % en Retroceso; una sensibilidad fina opcional permite 3–35 % sin aumentar la fuerza máxima. Los ajustes ocultos por CSS se vuelven accesibles al expandir, y la lectura separa referencia y suelta. Precisión usa marcas temporales de entrada y cancela ante pérdida de captura. CONTROLS.md documenta comportamiento, compatibilidad, pruebas y evaluación humana pendiente.

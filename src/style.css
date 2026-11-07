@@ -3937,3 +3937,107 @@ button > span {
     font-size: 9px;
   }
 }
+/* Measured input feedback; this describes the gesture, never a predicted path. */
+.control-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 28px;
+  margin-top: 6px;
+  color: #d5ded5;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.control-feedback small {
+  display: block;
+  font-size: 9px;
+  color: #f4ce82;
+}
+.control-feedback p {
+  margin: 0;
+}
+.control-feedback b {
+  color: #f4ce82;
+  margin-right: 4px;
+}
+.direction-meter {
+  width: 84px;
+  height: 22px;
+  flex: 0 0 84px;
+  color: #f4ce82;
+}
+.control-in-window,
+.control-in-window small,
+.control-in-window .direction-meter {
+  color: #a5edc4;
+}
+.gesture-layer.gesture-safe circle {
+  fill: #bfead422;
+  stroke: #cef5df;
+}
+.gesture-layer.gesture-safe line {
+  stroke: #cef5df;
+  opacity: 0.45;
+}
+.gesture-layer.gesture-safe text {
+  font-size: 14px;
+}
+@media (max-width: 700px) {
+  .control-feedback {
+    font-size: 9px;
+    gap: 6px;
+  }
+  .direction-meter {
+    width: 66px;
+    flex-basis: 66px;
+  }
+}
+.pull-fine-toggle {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: 10px;
+  margin-top: 5px;
+  background: #173e35;
+}
+.pull-fine-toggle span {
+  opacity: 0.8;
+  font-size: 9px;
+}
+.pull-fine-toggle[aria-pressed="true"] {
+  color: #c7f3d7;
+  border-color: #94d9af;
+}
+.shot-panel[data-moving="true"] .pull-fine-toggle {
+  display: none;
+}
+.shot-panel[data-expanded="true"][data-control-mode="pull"] .shot-controls,
+.shot-panel[data-expanded="true"][data-control-mode="pulse"] .shot-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 130px;
+}
+.shot-panel[data-expanded="true"][data-control-mode="pull"]
+  .shot-controls
+  label,
+.shot-panel[data-expanded="true"][data-control-mode="pulse"]
+  .shot-controls
+  label {
+  display: block;
+}
+.shot-panel[data-expanded="true"][data-control-mode="pull"] .power-presets {
+  display: flex;
+}
+@media (max-width: 700px) {
+  .shot-panel[data-expanded="true"][data-control-mode="pull"] .shot-controls,
+  .shot-panel[data-expanded="true"][data-control-mode="pulse"] .shot-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .shot-panel[data-expanded="true"][data-control-mode="pull"] .pull-instruction,
+  .shot-panel[data-expanded="true"][data-control-mode="pulse"] .pulse-trigger {
+    grid-column: 1/-1;
+  }
+}

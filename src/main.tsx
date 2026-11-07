@@ -527,7 +527,7 @@ function App() {
   const controls = useShotControls({
     mode: activeControl,
     canShoot,
-    turnKey,
+    turnKey: turnKey ? `${roundId}:${turnKey}` : null,
     angle,
     power,
     setAngle,
@@ -548,7 +548,8 @@ function App() {
         e.preventDefault();
         if (e.key === " ") {
           if (controlsRef.current.controlMode === "pulse") {
-            if (!e.repeat) controlsRef.current.controls.start();
+            if (!e.repeat)
+              controlsRef.current.controls.start(0, 0, e.timeStamp);
           } else if (!controlsRef.current.controls.active) shotRef.current();
         } else if (e.key === "ArrowLeft")
           setAngle((a) => wrapAngle(a - (e.shiftKey ? 0.005 : 0.04)));
@@ -557,7 +558,10 @@ function App() {
         else
           setPower((p) =>
             Math.min(
-              1,
+              controlsRef.current.controlMode === "pull" &&
+                controlsRef.current.controls.fine
+                ? 0.35
+                : 1,
               Math.max(
                 0.03,
                 p + (e.key === "ArrowUp" ? 1 : -1) * (e.shiftKey ? 0.01 : 0.03),
@@ -568,7 +572,7 @@ function App() {
     };
     const release = (e: KeyboardEvent) => {
       if (e.key === " " && controlsRef.current.controlMode === "pulse")
-        controlsRef.current.controls.release();
+        controlsRef.current.controls.release(e.timeStamp);
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", release);
@@ -1054,8 +1058,11 @@ function App() {
         </Suspense>
       )}
       {controls.active && controls.pointer && (
-        <svg className="gesture-layer" aria-hidden="true">
-          <circle cx={controls.pointer.ox} cy={controls.pointer.oy} r="22" />
+        <svg
+          className={`gesture-layer ${controls.armed ? "gesture-armed" : "gesture-safe"}`}
+          aria-hidden="true"
+        >
+          <circle cx={controls.pointer.ox} cy={controls.pointer.oy} r="12" />
           <line
             x1={controls.pointer.ox}
             y1={controls.pointer.oy}
@@ -1063,10 +1070,15 @@ function App() {
             y2={controls.pointer.y}
           />
           <text
-            x={Math.min(innerWidth - 60, Math.max(20, controls.pointer.x + 16))}
+            x={Math.min(
+              innerWidth - (controls.armed ? 60 : 155),
+              Math.max(16, controls.pointer.x + 16),
+            )}
             y={Math.max(30, controls.pointer.y - 20)}
           >
-            {Math.round(power * 100)}%
+            {controls.armed
+              ? `${Math.round(power * 100)}%`
+              : "Suelta para cancelar"}
           </text>
         </svg>
       )}
@@ -1344,8 +1356,13 @@ function App() {
           id={id}
           controlMode={activeControl}
           referencePower={controls.targetPower}
+          referenceAngle={controls.cameraAngle}
+          chargeArmed={controls.armed}
+          pullFine={controls.fine}
+          togglePullFine={controls.toggleFine}
+          shotReview={controls.review}
           chargeActive={controls.active}
-          startCharge={() => controls.start()}
+          startCharge={(stamp) => controls.start(0, 0, stamp)}
           releaseCharge={controls.release}
           cancelCharge={controls.cancel}
           canShoot={canShoot}
