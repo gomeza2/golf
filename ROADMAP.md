@@ -1,6 +1,16 @@
 # Evolución total del club
 
-## Entrega actual — 0.16.0, jugar creaciones con amigos
+## Entrega actual — 0.17.0, bienvenida y comunidad persistente
+
+La auditoría de primera impresión adelanta accesibilidad al juego frente a más contenido. Portada con entrada rápida/online, guía visual basada en la escuela existente, potencia inicial suave, feedback de contacto y paso directo a una vuelta de tres hoyos. Partidas recuperables, todos los campos/modos y las funciones previas se conservan. [FIRST-IMPRESSION.md](FIRST-IMPRESSION.md) documenta hallazgos y límites de las pruebas.
+
+Implementado PostgreSQL con migración versionada, autoría ligada a OIDC, publicación pendiente, revisiones inmutables, galería/filtros/paginación y enlaces permanentes. Juego individual y salas por referencia de revisión que reutilizan motor/documentos y mantienen la geometría fija. Denuncias y decisiones registradas, retirada/restauración y modos explícitos sin configuración o solo lectura. Documento 1, guardado 1 y reglas 7; protocolo 14.
+
+Las suites de PostgreSQL y OIDC/navegador usan servicios reales locales y se añaden a CI. No hay base o identidad de producción provisionadas en el repositorio: activar requiere variables y migración, detalladas en [COMMUNITY.md](COMMUNITY.md). El producto no presenta publicación o datos comunitarios ficticios cuando falta esa configuración.
+
+**Siguiente fase:** activar la infraestructura real del propietario y ensayar moderación/balance con personas; medir carga y respaldos. Después ampliar recursos y colecciones del taller sin romper documentos v1, y revisar Retroceso/Precisión con controles táctiles/teclado y física compartida. El caso anterior de pausa comprueba ahora un tiro distinto para ajustes, evitando exigir movimiento a una pelota ya detenida. La prioridad siguiente es observar jugadores nuevos y un grupo de amigos antes de ampliar contenido.
+
+## Entrega anterior — 0.16.0, jugar creaciones con amigos
 
 Taller → preparación online → sala privada con documento validado y presupuesto, revisión SHA-256 fija, sincronización por admisión/reconexión y simulación autoritativa. Un hoyo completo con golpes/puntos, reloj, resultados, reconexión y revancha. Guardados/records oficiales y prueba local libre se mantienen separados.
 

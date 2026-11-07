@@ -200,3 +200,17 @@ El cliente resuelve la geometría validada para escena/mapa/cámara/HUD y clasif
 Pruebas cubren coste, formato, SHA, recepción/fallo de contenido, par/puntos, reloj/sandbox y aislamiento de guardados; sockets reales comprueban permisos, recepción, reconexión, embocados y revancha. Dos navegadores incluyen móvil y recarga, con el mismo diseño y sin marcas oficiales. La producción comprueba el traspaso taller/preparación y borrador. Pendientes: publicación/galería persistente, autoría/moderación, ensayos humanos y carga concurrente.
 
 Revisión visual de 0.16.0: el HUD de creaciones muestra la distancia recta salida–copa, etiquetada, en lugar del tamaño genérico del mapa; el soporte del green usa prioridad de profundidad para reducir superficies coplanares. La creación pendiente se limpia al volver al modo oficial. Validación local: 207 casos de reglas/física/datos, siete de taller y salas y repetición visual del duelo móvil tras el ajuste.
+
+## Entrega 0.17.0 — creaciones públicas, versiones y moderación
+
+La base de salas del taller evoluciona con persistencia PostgreSQL y revisiones inmutables. Identidad OIDC con PKCE en navegador y JWT/JWKS en servidor; la autoría y los permisos no proceden de nombres o roles enviados por el cliente. Publicación pendiente y revisión explícita; galería anónima, búsqueda/filtros/planos, página por creación y revisión. Denuncias únicas por cuenta/revisión, cola y decisiones auditadas.
+
+Se reutilizan documento v1, validación/presupuesto, compilación, Game/Rapier/Scene y salas. Las referencias públicas se resuelven en el servidor; una revisión retirada no admite nuevas salas, y las ya admitidas conservan su mundo. Se resuelven carreras de entrada y desconexión durante consulta. Juego individual público separado de récords oficiales. El taller preserva el borrador anterior al editar una versión y permite continuar tras recargar.
+
+Migración manual, indicadores reales de disponibilidad, lectura pública sin identidad y publicación desactivada si falta base/identidad/moderación. Configuración/credenciales no se inventan; la infraestructura pública necesita provisionarse por el propietario. Protocolo 14, reglas 7, guardado 1 y documento 1. Pruebas independientes con PostgreSQL, firmas RSA, flujo OIDC PKCE y navegadores, además de la regresión existente.
+
+Pendientes: activación de servicios de producción, pruebas humanas y de carga, respaldos operativos, colecciones comunitarias multihoyo y revisión de Retroceso/Precisión. La validación geométrica no se presenta como prueba de que todas las rutas se puedan completar.
+
+## Renovación de primera impresión — 0.17.0
+
+Auditoría de v0.16 en escritorio y móvil: el catálogo y los anuncios ocultaban el online y la entrada principal elegía una pista de 82 m antes de enseñar. Se priorizan entrada rápida a la escuela existente, invitación online visible y continuación a una vuelta de tres hoyos. Guía visual compacta, fuerza inicial suave, feedback de contacto y reparación de la superposición entre tabla de práctica y graduación. Se mantienen campos, modos, datos y comunidad en desarrollo. FIRST-IMPRESSION.md registra método, hallazgos, pruebas reproducibles y evaluación humana pendiente.

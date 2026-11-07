@@ -47,6 +47,7 @@ export type Player = {
 export type State = {
   custom?: true;
   workshopHash?: string;
+  publication?: { id: string; revision: number };
   /** Resolved content; excluded from server snapshots. */
   courseOverride?: Course;
   cup?: CupState;

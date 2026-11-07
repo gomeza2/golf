@@ -1,3 +1,4 @@
+import type { PublicationTarget } from "./CommunityPublisher";
 import { validateRoomWorkshop } from "../shared/roomWorkshop";
 import { WorkshopImport } from "./WorkshopImport";
 import { diagnoseWorkshop } from "../shared/workshopDiagnostics";
@@ -93,10 +94,20 @@ export function Workshop({
   onClose,
   graphicsMode,
   onPlayOnline,
+  onPublish,
+  versionTarget,
+  onDetachPublication,
+  publicationStatus,
+  onRefreshPublication,
 }: {
   onClose: () => void;
   graphicsMode: GraphicsMode;
   onPlayOnline?: (document: WorkshopDocument) => void;
+  onPublish?: (document: WorkshopDocument) => void;
+  versionTarget?: PublicationTarget;
+  onDetachPublication?: () => void;
+  publicationStatus?: string;
+  onRefreshPublication?: () => void;
 }) {
   const [history, setHistory] = useState<WorkshopHistory>(() => ({
     past: [],
@@ -379,6 +390,20 @@ export function Workshop({
         </div>
         <button onClick={onClose}>Volver al club</button>
       </div>
+      {versionTarget && (
+        <div className="private-course-summary">
+          <strong>
+            Nueva revisión {versionTarget.expectedVersion + 1} de tu creación
+          </strong>
+          <p>
+            El borrador se enviará como una versión adicional; la publicada
+            permanece intacta.
+          </p>
+          <button onClick={onDetachPublication}>
+            Publicar como creación nueva
+          </button>
+        </div>
+      )}
       <div className="workshop-actions">
         <button
           onClick={() => setHistory(workshopUndo)}
@@ -409,6 +434,26 @@ export function Workshop({
         >
           Probar en 3D
         </button>
+        {!onPublish && publicationStatus && (
+          <div className="publication-service-status">
+            <small role="status">{publicationStatus}</small>
+            <button onClick={onRefreshPublication}>Comprobar comunidad</button>
+          </div>
+        )}
+        {onPublish && (
+          <button
+            disabled={!!issues.length}
+            onClick={() => {
+              try {
+                onPublish(validateRoomWorkshop(history.present).document);
+              } catch (e) {
+                setNotice((e as Error).message);
+              }
+            }}
+          >
+            Publicar en la comunidad
+          </button>
+        )}
         {onPlayOnline && (
           <button
             disabled={!!issues.length}
@@ -512,6 +557,7 @@ export function Workshop({
           <h2>Biblioteca local</h2>
           <button
             onClick={() => {
+              onDetachPublication?.();
               edit(newWorkshop());
               setSaveId(null);
               setSelected(null);

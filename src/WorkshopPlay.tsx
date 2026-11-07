@@ -9,10 +9,18 @@ export function WorkshopPlay({
   doc,
   graphicsMode,
   onBack,
+  label,
+  playerName = "Diseñador",
+  backLabel = "Volver al diseño",
+  context = "workshop",
 }: {
   doc: WorkshopDocument;
   graphicsMode: GraphicsMode;
   onBack: () => void;
+  label?: string;
+  playerName?: string;
+  backLabel?: string;
+  context?: "workshop" | "community";
 }) {
   const [course] = useState(() => compileWorkshop(doc));
   const game = useRef<Game | null>(null);
@@ -60,7 +68,7 @@ export function WorkshopPlay({
   const canShoot = !inspecting && !!s && s.phase === "playing" && !s.moving;
   useEffect(() => {
     const g = new Game(course);
-    g.add("workshop", "Diseñador");
+    g.add("workshop", playerName);
     g.startPractice(0);
     game.current = g;
     setS(structuredClone(g.state));
@@ -105,7 +113,14 @@ export function WorkshopPlay({
   });
   const p = s?.players[0];
   return (
-    <section className="workshop-test" aria-label="Prueba física del taller">
+    <section
+      className="workshop-test"
+      aria-label={
+        context === "community"
+          ? "Partida individual de comunidad"
+          : "Prueba física del taller"
+      }
+    >
       {s && (
         <Scene
           graphicsMode={graphicsMode}
@@ -128,7 +143,7 @@ export function WorkshopPlay({
       )}
       <div ref={header} className="workshop-test-top">
         <div>
-          <small>TALLER · PRUEBA LOCAL</small>
+          <small>{label || "TALLER · PRUEBA LOCAL"}</small>
           <h1>{course.name}</h1>
           <p>
             Par {course.par} ·{" "}
@@ -136,7 +151,7 @@ export function WorkshopPlay({
             · {p?.penalties ?? 0} penalizaciones
           </p>
         </div>
-        <button onClick={onBack}>Volver al diseño</button>
+        <button onClick={onBack}>{backLabel}</button>
         <button onClick={() => setOverview((v) => !v)}>
           {overview ? "Seguir pelota" : "Ver campo"}
         </button>
@@ -202,11 +217,14 @@ export function WorkshopPlay({
             <strong>
               {p?.capped.length
                 ? "Límite alcanzado"
-                : `Embocado en ${p?.scores[0]} ${p?.scores[0] === 1 ? "golpe" : "golpes"}`}
+                : context === "community"
+                  ? "¡Cancha completada!"
+                  : `Embocado en ${p?.scores[0]} ${p?.scores[0] === 1 ? "golpe" : "golpes"}`}
             </strong>
             <p>
-              Resultado de prueba. No registra récords ni verifica todos los
-              caminos.
+              {context === "community"
+                ? `${p?.scores[0]} ${p?.scores[0] === 1 ? "golpe" : "golpes"} · Sin récords oficiales.`
+                : "Resultado de prueba. No registra récords ni verifica todos los caminos."}
             </p>
             <button
               onClick={() => {
@@ -214,7 +232,7 @@ export function WorkshopPlay({
                 setS(structuredClone(game.current!.state));
               }}
             >
-              Repetir prueba
+              {context === "community" ? "Repetir cancha" : "Repetir prueba"}
             </button>
           </>
         ) : (
@@ -222,12 +240,16 @@ export function WorkshopPlay({
             <p role="status">
               {s?.moving
                 ? "Pelota en movimiento"
-                : "Prueba tu recorrido con el golpe normal"}
+                : context === "community"
+                  ? "Prepara tu golpe normal"
+                  : "Prueba tu recorrido con el golpe normal"}
             </p>
             <label>
-              Ángulo de prueba
+              {context === "community" ? "Ángulo" : "Ángulo de prueba"}
               <input
-                aria-label="Ángulo de prueba"
+                aria-label={
+                  context === "community" ? "Ángulo" : "Ángulo de prueba"
+                }
                 type="range"
                 min={-Math.PI}
                 max={Math.PI}
@@ -238,9 +260,12 @@ export function WorkshopPlay({
               />
             </label>
             <label>
-              Potencia de prueba · {Math.round(power * 100)}%
+              {context === "community" ? "Potencia" : "Potencia de prueba"} ·{" "}
+              {Math.round(power * 100)}%
               <input
-                aria-label="Potencia de prueba"
+                aria-label={
+                  context === "community" ? "Potencia" : "Potencia de prueba"
+                }
                 type="range"
                 min="0.03"
                 max="1"
@@ -251,7 +276,7 @@ export function WorkshopPlay({
               />
             </label>
             <button className="primary" disabled={!canShoot} onClick={fire}>
-              Golpear prueba
+              {context === "community" ? "GOLPEAR" : "Golpear prueba"}
             </button>
             <button
               disabled={!canShoot}
@@ -260,7 +285,9 @@ export function WorkshopPlay({
                 setS(structuredClone(game.current!.state));
               }}
             >
-              Reiniciar desde salida
+              {context === "community"
+                ? "Reiniciar intento"
+                : "Reiniciar desde salida"}
             </button>
           </>
         )}

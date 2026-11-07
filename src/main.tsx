@@ -1,3 +1,17 @@
+import {
+  readPublicationTarget,
+  saveCommunityIntent,
+  clearCommunityIntent,
+} from "./communityIntent";
+import { loadCommunityConfig } from "./communityApi";
+import type { CommunityConfig, CreationDetail } from "../shared/community";
+import type { PublicationTarget } from "./CommunityPublisher";
+import {
+  readWorkshopDraft,
+  readWorkshopLibrary,
+  saveWorkshopLibrary,
+  saveWorkshopDraft,
+} from "./workshopStorage";
 import type { WorkshopDocument } from "../shared/workshop";
 import { CupDialog } from "./CupPanels";
 import { getCupPlan } from "../shared/cups";
@@ -94,6 +108,20 @@ const initial: State = {
 const defaultServerUrl =
   import.meta.env.VITE_SERVER_URL ||
   (import.meta.env.VITE_STATIC_HOST === "true" ? PUBLIC_SERVER_URL : "");
+const communityServerUrl = (
+  import.meta.env.VITE_COMMUNITY_SERVER_URL ||
+  (import.meta.env.VITE_STATIC_HOST === "true"
+    ? import.meta.env.VITE_SERVER_URL || PUBLIC_SERVER_URL
+    : "")
+).replace(/\/+$/, "");
+const communityRequested = () => {
+  const p = new URLSearchParams(location.search);
+  return (
+    p.has("community") ||
+    p.has("creation") ||
+    (p.has("state") && (p.has("code") || p.has("error")))
+  );
+};
 const sharedChallenge = challengeFromSearch(location.search);
 const invalidChallengeLink =
   new URLSearchParams(location.search).has("challenge") &&
@@ -102,11 +130,14 @@ const invalidChallengeLink =
 const Workshop = lazy(() =>
   import("./Workshop").then((m) => ({ default: m.Workshop })),
 );
+const Community = lazy(() =>
+  import("./Community").then((m) => ({ default: m.Community })),
+);
 function App() {
   const [s, setS] = useState<State>(initial),
     [screen, setScreen] = useState<
-      "home" | "local" | "online" | "game" | "workshop"
-    >("home"),
+      "home" | "local" | "online" | "game" | "workshop" | "community"
+    >(communityRequested() ? "community" : "home"),
     [serverUrl, setServerUrl] = useState(
       new URLSearchParams(location.search).get("server") ||
         readLocal("golf-server-url") ||
@@ -186,6 +217,95 @@ function App() {
   const [roomWorkshop, setRoomWorkshop] = useState<WorkshopDocument | null>(
     null,
   );
+  const [roomPublication, setRoomPublication] = useState<{
+    id: string;
+    revision: number;
+    title: string;
+    par: number;
+  } | null>(null);
+  const [communityDraft, setCommunityDraft] = useState<WorkshopDocument | null>(
+    null,
+  );
+  const [communityTarget, setCommunityTarget] = useState<
+    PublicationTarget | undefined
+  >(readPublicationTarget);
+  const [communityCapability, setCommunityCapability] =
+    useState<CommunityConfig | null>(null);
+  const [communityCheck, setCommunityCheck] = useState(0);
+  const [communityCheckError, setCommunityCheckError] = useState("");
+  useEffect(() => {
+    if (!["home", "workshop", "community"].includes(screen)) return;
+    const c = new AbortController();
+    setCommunityCapability(null);
+    setCommunityCheckError("");
+    loadCommunityConfig(communityServerUrl, c.signal)
+      .then(setCommunityCapability)
+      .catch(() => {
+        if (!c.signal.aborted)
+          setCommunityCheckError(
+            "No pudimos comprobar la comunidad. Puedes reintentar.",
+          );
+      });
+    return () => c.abort();
+  }, [screen, communityCheck]);
+  const openCommunity = (document?: WorkshopDocument) => {
+    setCommunityDraft(document || null);
+    const u = new URL(location.pathname, location.origin);
+    u.searchParams.set("community", "1");
+    history.pushState(null, "", u);
+    setScreen("community");
+  };
+  const closeCommunity = () => {
+    history.replaceState(null, "", location.pathname);
+    setScreen("home");
+  };
+  const editCommunity = (
+    document: WorkshopDocument,
+    target: PublicationTarget,
+  ) => {
+    try {
+      const current = readWorkshopDraft();
+      if (current && JSON.stringify(current) !== JSON.stringify(document)) {
+        const library = readWorkshopLibrary();
+        if (
+          !library.some(
+            (s) => JSON.stringify(s.doc) === JSON.stringify(current),
+          )
+        ) {
+          saveWorkshopLibrary([
+            ...library,
+            {
+              id: crypto.randomUUID(),
+              updated: new Date().toISOString(),
+              doc: current,
+            },
+          ]);
+        }
+      }
+      if (!saveWorkshopDraft(document))
+        throw Error(
+          "No se pudo conservar el diseño. Exporta tu borrador antes de editar otra creación.",
+        );
+      setCommunityTarget(target);
+      saveCommunityIntent("club-community-target", JSON.stringify(target));
+      history.replaceState(null, "", location.pathname);
+      setScreen("workshop");
+      setError("");
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  const inviteCommunity = (entry: CreationDetail) => {
+    setRoomWorkshop(null);
+    setRoomPublication({
+      id: entry.id,
+      revision: entry.revision,
+      title: entry.title,
+      par: entry.par,
+    });
+    setServerUrl(communityServerUrl || location.origin);
+    setScreen("online");
+  };
   useEffect(() => setCupDetails(false), [s.phase, s.cup?.round]);
   useEffect(() => saveLocal("golf-circuit", circuit), [circuit]);
   const onlineAvailable =
@@ -544,7 +664,10 @@ function App() {
     mountLocalGame(g, selectedControl);
     setCircuit(selectedCircuit);
     if (lesson === undefined) school.close();
-    else school.start(lesson, g.state);
+    else {
+      school.start(lesson, g.state);
+      if (lesson === 0) setPower(0.16);
+    }
   }
   function startChallenge(c: ClubChallenge) {
     if (!ready) return;
@@ -609,7 +732,16 @@ function App() {
               name,
               circuit,
               format: onlineFormat,
-              ...(roomWorkshop ? { workshop: roomWorkshop } : {}),
+              ...(roomPublication
+                ? {
+                    publication: {
+                      id: roomPublication.id,
+                      revision: roomPublication.revision,
+                    },
+                  }
+                : roomWorkshop
+                  ? { workshop: roomWorkshop }
+                  : {}),
             }
           : { type, name, code: code.trim().toUpperCase() };
     setLatency(null);
@@ -705,6 +837,7 @@ function App() {
     game.current = null;
     setS(initial);
     setRoomWorkshop(null);
+    setRoomPublication(null);
     setPaused(false);
     setLookMode(false);
     setSettings(false);
@@ -720,7 +853,7 @@ function App() {
       }
     >
       <div className={"scene " + (screen === "game" ? "" : "hero-scene")}>
-        {screen !== "workshop" && (
+        {screen !== "workshop" && screen !== "community" && (
           <Scene
             graphicsMode={graphicsMode}
             s={screen === "game" ? s : { ...initial, circuit }}
@@ -761,7 +894,8 @@ function App() {
           className="wordmark"
           aria-label={GAME_NAME}
           onClick={() => {
-            if (screen !== "game") setScreen("home");
+            if (screen === "community") closeCommunity();
+            else if (screen !== "game") setScreen("home");
           }}
         >
           H1<span>HOYO EN UNO · GOLF CLUB</span>
@@ -797,6 +931,11 @@ function App() {
           personalHistory={personalHistory}
           practiceHistory={practiceHistory}
           onPractice={practiceStart}
+          hasSavedRound={recovery.save.kind === "saved"}
+          onQuickPlay={() => {
+            if (recovery.save.kind === "saved") resumeLocal();
+            else practiceStart(0, "sunset", 0);
+          }}
           circuit={circuit}
           setCircuit={setCircuit}
           controlMode={controlMode}
@@ -806,6 +945,7 @@ function App() {
           onLocal={() => setScreen("local")}
           onOnline={() => {
             setRoomWorkshop(null);
+            setRoomPublication(null);
             setScreen("online");
           }}
           savedRound={
@@ -827,6 +967,7 @@ function App() {
           schoolProgress={school.progress}
           onLearn={() => practiceStart(0, "sunset", 0)}
           onWorkshop={() => setScreen("workshop")}
+          onCommunity={() => openCommunity()}
         />
       )}
       {screen === "workshop" && (
@@ -839,10 +980,56 @@ function App() {
         >
           <Workshop
             graphicsMode={graphicsMode}
+            versionTarget={communityTarget}
+            publicationStatus={
+              communityCheckError ||
+              (communityCapability
+                ? communityCapability.publishing
+                  ? ""
+                  : "Publicación no disponible: falta configurar el servicio de comunidad."
+                : "Comprobando el servicio de comunidad…")
+            }
+            onRefreshPublication={() => setCommunityCheck((v) => v + 1)}
+            onDetachPublication={() => {
+              setCommunityTarget(undefined);
+              clearCommunityIntent("club-community-target");
+            }}
             onClose={() => setScreen("home")}
+            onPublish={
+              communityCapability?.publishing
+                ? (document) => {
+                    saveCommunityIntent("club-community-publish", "1");
+                    openCommunity(document);
+                  }
+                : undefined
+            }
             onPlayOnline={(document) => {
               setRoomWorkshop(document);
+              setRoomPublication(null);
               setScreen("online");
+            }}
+          />
+        </Suspense>
+      )}
+      {screen === "community" && (
+        <Suspense
+          fallback={
+            <div className="community-page">
+              <p role="status">Abriendo comunidad…</p>
+            </div>
+          }
+        >
+          <Community
+            base={communityServerUrl}
+            graphicsMode={graphicsMode}
+            draft={communityDraft}
+            target={communityTarget}
+            onClose={closeCommunity}
+            onEdit={editCommunity}
+            onInvite={inviteCommunity}
+            onPublicationSent={() => {
+              setCommunityTarget(undefined);
+              clearCommunityIntent("club-community-target");
             }}
           />
         </Suspense>
@@ -980,7 +1167,36 @@ function App() {
               placeholder="¿Cómo te llamas?"
             />
           </label>
-          {roomWorkshop ? (
+          {roomPublication ? (
+            <div className="private-course-summary">
+              <strong>{roomPublication.title}</strong>
+              <p>
+                Comunidad · Revisión {roomPublication.revision} · Par{" "}
+                {roomPublication.par}. El servidor carga esta revisión
+                publicada.
+              </p>
+              <button
+                className="text-button"
+                onClick={() => {
+                  history.pushState(
+                    null,
+                    "",
+                    `${location.pathname}?community=1&creation=${roomPublication.id}&revision=${roomPublication.revision}`,
+                  );
+                  setCommunityDraft(null);
+                  setScreen("community");
+                }}
+              >
+                Volver a la creación
+              </button>
+              <button
+                className="text-button"
+                onClick={() => setRoomPublication(null)}
+              >
+                Usar recorrido oficial
+              </button>
+            </div>
+          ) : roomWorkshop ? (
             <div className="private-course-summary">
               <strong>{roomWorkshop.name}</strong>
               <p>
@@ -1050,6 +1266,7 @@ function App() {
       )}
       {screen === "game" && (
         <GamePanels
+          hideResults={mode === "local" && school.session !== null}
           shotExtras={
             s.cup && s.cup.phase !== "setup" ? (
               <button
@@ -1192,6 +1409,16 @@ function App() {
                   )
                 : leave()
             }
+            onPlayRound={() => {
+              const g = new Game();
+              g.selectCircuit("sunset");
+              g.add("0", names[0]);
+              g.start("strokes");
+              school.close();
+              challenges.close();
+              setCircuit("sunset");
+              mountLocalGame(g, activeControl);
+            }}
             onClose={school.close}
           />
         )}

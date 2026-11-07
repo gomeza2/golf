@@ -1,36 +1,140 @@
-# Canchas privadas y comunidad
+# Comunidad de creaciones — 0.17.0
 
-## Disponible — 0.16.0
+## Qué está implementado
 
-Desde **Taller → Jugar con amigos online** se prepara una sala con una creación. Elige nombre y formato, crea la sala y comparte código o enlace. Los invitados no necesitan importar un archivo: reciben la misma revisión al entrar o reconectar. El servidor vuelve a validar y compilar el documento. Cliente y servidor requieren protocolo 13, HTTPS o localhost para la comprobación SHA-256.
+La comunidad usa **PostgreSQL real**, con autores vinculados a una identidad OIDC, creaciones, revisiones inmutables, denuncias y un historial de moderación. No usa localStorage como base pública ni crea cuentas, votos, partidas o estadísticas de ejemplo.
 
-Una sala conserva una sola cancha fija. No se cambia por una copa o un recorrido oficial durante esa sesión. Se puede elegir Menos golpes o Duelo por puntos antes de empezar, disputar el hoyo, ver resultados, jugar revancha y volver al lobby. Para editar o sustituir el diseño, vuelve al taller y crea otra sala. El documento se transmite una vez por admisión/reconexión; los estados periódicos solo llevan su huella. El cliente comprueba la revisión antes de prepararse, y el servidor sigue validando golpes y turnos.
+- Galería pública paginada, planos del diseño real y búsqueda por nombre/descripción, alias de autor, ID de autor, dificultad y características.
+- Características calculadas desde el documento: agua, arena, césped alto, rampas, alturas, mecanismos y pasos estrechos. La dificultad es una indicación del autor; no una certificación automática.
+- Publicación autenticada en estado **En revisión**. Solo una decisión del moderador la hace pública.
+- Página de creación y enlaces a cada revisión. Una nueva versión no modifica la anterior; si está pendiente, la última aprobada sigue disponible.
+- Juego individual con el mismo Game/Rapier/Scene y resultado real, separado de los récords oficiales. No exige cuenta.
+- Invitación a una sala privada por referencia `{id, revision}`. El servidor carga y valida esa revisión desde PostgreSQL: no acepta una geometría enviada por el cliente como si fuera la publicación.
+- Edición de una nueva revisión en el taller. Se conserva una copia del borrador anterior en la biblioteca antes de sustituirlo; si no puede guardarse, la operación se detiene con un error. El contexto de revisión sobrevive a una recarga de la misma sesión.
+- Denuncias autenticadas, deduplicadas por persona/revisión; cola de moderación, aprobación, rechazo, retirada, restauración y cierre de denuncias con motivo.
+- Historial de decisiones persistente y de solo anexado. El contenido y los identificadores de cada revisión no pueden actualizarse ni borrarse mediante las operaciones normales de la base.
 
-La partida privada tiene reloj de 30 s, límite de 12 golpes y las reglas habituales de desconexión y recuperación. La prueba individual del taller conserva su reloj libre. El par, la clasificación, las estadísticas y los resultados de la cancha privada usan su propio trazado y no generan récords oficiales, progresión de retos ni guardados de rondas oficiales.
+La publicación conserva el documento del taller **v1: una cancha de un hoyo**. No se agrega un editor de colecciones de varios hoyos ni se modifican los recorridos oficiales. El protocolo de salas es **14**, las reglas locales siguen en **7** y el guardado oficial sigue en formato **1**.
 
-La validación comprueba estructura, salida y copa, límites y presupuesto: 60 KB, 80 piezas, hasta 220 colliders, 2048 triángulos y ocho mecanismos. No certifica que haya una ruta completada. Se conservan concesión y límites para terminar también un diseño imposible. No admite scripts ni recursos remotos. SHA-256 identifica la revisión; las puntuaciones proceden de Rapier y las reglas del servidor, no de datos enviados por jugadores.
+## Estado público y configuración incompleta
 
-**Persistencia actual:** las salas y sus diseños permanecen en memoria. Una desconexión temporal permite recuperar la sesión; un reinicio/despliegue elimina la sala. Guarda/exporta la creación desde el taller para conservarla. No hay galería, publicación comunitaria, autoría verificada ni enlaces permanentes a creaciones todavía.
+El repositorio contiene la implementación, migración, integración OIDC y pruebas. **No contiene una conexión de producción a PostgreSQL, una cuenta de identidad ni credenciales inventadas.** Configurar el código no provisiona esos servicios.
 
-## Orden de implementación
+`GET /api/community/config` comprueba la base y la versión del esquema:
 
-1. **Implementado en 0.16.0:** admitir una creación validada en una sala privada. El servidor recibe el documento, ejecuta `parseWorkshop`, valida límites y compila él mismo el `Course`. Fija la geometría y una huella de contenido antes de preparar jugadores. Cada participante recibe ese mismo documento/versión; un diseño no se cambia durante la partida.
-2. **Implementado y probado en automatización:** turnos, recepción/reconexión, límite/reloj, resultados, revancha y presupuesto de recursos. Completar ensayos humanos y carga concurrente. La simulación sigue en `Game`/Rapier. No se aceptan snapshots ni puntuaciones del navegador. Una ronda de creación no genera marcas oficiales.
-3. Incorporar almacenamiento central persistente y publicar creaciones con revisión. Render gratuito conserva actualmente las salas en memoria y pierde datos de disco al desplegar: ese disco no se presentará como una comunidad duradera.
-4. Construir galería con búsqueda, autoría, revisión, denuncias e historial de versiones. Los enlaces compartidos apuntarán a una revisión inmutable, no al borrador mutable de un navegador.
+| Configuración                                       | Interfaz y permisos                                                                                                                  |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Sin base, base caída o migración pendiente          | Estado no disponible, recuperación visible; sin tarjetas ficticias ni publicación. El golf oficial y las salas del taller continúan. |
+| PostgreSQL listo, identidad/moderadores incompletos | Galería y juego públicos de las revisiones existentes; publicación y administración desactivadas.                                    |
+| PostgreSQL, OIDC y moderadores listos               | Acceso de autores, envíos a revisión y moderación protegidos.                                                                        |
 
-## Datos y límites
+El taller solo muestra **Publicar en la comunidad** cuando el servicio anuncia que los envíos están configurados. Una búsqueda fallida no se sustituye por registros locales ni resultados inventados.
 
-La base es el documento versionado del taller. La creación propuesta conservaría ID estable, revisión, fecha UTC, autor, documento normalizado y huella de contenido. Cada revisión tendría estado pendiente/publicada/retirada y motivo de revisión. El cliente muestra autoría e historial reales, sin usuarios o resultados inventados.
+## Activar PostgreSQL
 
-Además de los límites actuales (60 KB/80 piezas/coordenadas y alturas acotadas), el servidor debe comprobar el coste de la geometría compilada: colliders, triángulos, mecanismos, zonas y tiempo de simulación. Rechazará campos, versiones o datos no admitidos. No aceptará scripts, modelos remotos, HTML ni recursos ejecutables.
+1. Provisiona una base PostgreSQL mantenida por el propietario, por ejemplo en un proveedor gestionado compatible. La aplicación no exige un proveedor específico.
+2. Define `COMMUNITY_DATABASE_URL` **solo en el servidor**. Usa las credenciales reales y la configuración TLS del proveedor; no desactives la verificación del certificado.
+3. Instala y aplica la migración:
 
-Una prueba terminada por el servidor puede acreditar que se completó una ruta concreta; no demuestra que todas las rutas sean jugables. Un límite de golpes, concesión o puntuación inválida no dará esa acreditación. La moderación y las denuncias seguirán siendo necesarias. No se inventarán votos o rankings a partir de localStorage.
+```sh
+npm ci
+npm run community:migrate
+npm run build
+npm start
+```
 
-## Persistencia y acceso
+Los comandos cargan `.env` si existe. En un despliegue ya compilado:
 
-La opción prevista es PostgreSQL gestionado con un plan gratuito disponible (por ejemplo, Supabase o Neon), configurado mediante variables del servidor. Requiere una cuenta del propietario y una conexión provisionada; todavía no hay una base de comunidad conectada. Las credenciales privadas nunca irán en Vite, archivos exportados ni el repositorio.
+```sh
+npm run community:migrate:production
+```
 
-Jugar y consultar las canchas públicas seguirá siendo posible sin registro obligatorio. Para publicar o administrar revisiones se necesita una identidad verificable y límites de envío; el sistema de autoría, moderación y protección contra spam se implementará con el servicio elegido. Los registros locales de progreso seguirán separados de resultados compartidos.
+La migración es transaccional, usa un bloqueo asesor y se puede repetir. No siembra publicaciones ni cuentas. Rechaza un esquema más nuevo para evitar degradarlo. El servidor no ejecuta migraciones destructivas al arrancar.
 
-Hasta que exista el backend comunitario, se pueden compartir archivos y jugar creaciones en salas privadas. No se muestra un botón de publicación ni una galería ficticia.
+El esquema `golf_community` contiene `authors`, `creations`, `revisions`, `reports`, `moderation` y `migrations`. Las restricciones de PostgreSQL mantienen unicidad, relaciones, estados y contenido inmutable. El pool limita conexiones y tiempos de consulta.
+
+Los datos no se escriben en el disco efímero de Render. Reiniciar o desplegar el servidor no borra PostgreSQL. Conserva el servicio de base de datos y configura sus copias de seguridad; retirar una publicación conserva su historial, no elimina sus documentos de la base.
+
+## Configurar identidad y moderadores
+
+Se requiere un proveedor OIDC con **Authorization Code + PKCE S256**, descubrimiento OpenID y access tokens JWT firmados RS256 o ES256 para una audiencia de API. Por ejemplo, una aplicación SPA y una API en Auth0, o configuración equivalente de Keycloak. No se exige registro para explorar o jugar.
+
+Variables del servidor:
+
+| Variable                       | Valor real que debe proporcionar el propietario                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `COMMUNITY_OIDC_ISSUER`        | Emisor exacto del token, incluida su barra final si el proveedor la utiliza. HTTPS en producción.                  |
+| `COMMUNITY_OIDC_CLIENT_ID`     | Identificador público de la aplicación SPA. No es un client secret.                                                |
+| `COMMUNITY_OIDC_AUDIENCE`      | Audiencia del access token para la API de comunidad.                                                               |
+| `COMMUNITY_OIDC_JWKS_URL`      | Endpoint HTTPS de claves públicas del proveedor.                                                                   |
+| `COMMUNITY_OIDC_SCOPE`         | `openid profile` por defecto; añade solo scopes configurados en el proveedor.                                      |
+| `COMMUNITY_MODERATOR_SUBJECTS` | Valores exactos `sub` de los moderadores, separados por coma. No alias, emails ni roles enviados por el navegador. |
+
+Registra como callbacks las direcciones de la aplicación que realmente utilices, por ejemplo la raíz del servidor y `/golf/` en Pages. Autoriza sus orígenes web en el proveedor para el intercambio PKCE. Para desarrollo, registra `http://localhost:5173/`. La API rechaza emisores/audiencias incorrectos, firmas inválidas y tokens caducados. Un ID token para el cliente no sustituye al access token de la API.
+
+El acceso del navegador usa `oidc-client-ts`; el servidor verifica con `jose`. Los tokens de sesión quedan en sessionStorage, no en localStorage ni en enlaces de invitación. No se incluyen en el código del juego ni se aceptan roles del cliente. El alias público se elige al publicar; la autoría está ligada al ID estable de la cuenta verificada, no a ese alias.
+
+La API de comunidad se elige desde la configuración de despliegue, **no** desde el parámetro de invitación `server=`. Esto evita enviar credenciales de publicación a un servidor de salas elegido por un enlace externo.
+
+## Cliente separado / GitHub Pages
+
+- `VITE_COMMUNITY_SERVER_URL` fija opcionalmente el origen de la API antes de compilar. Sin él, Node usa mismo origen; Pages usa su servidor online configurado.
+- Es una URL pública de API, nunca una conexión PostgreSQL, un token o un secreto.
+- Incluye el origen de Pages en `CLIENT_ORIGIN` del servidor. El origen propio de Node se admite automáticamente.
+- Detrás de un único proxy de entrada de Render, configura `COMMUNITY_TRUST_PROXY_HOPS=1`. Localmente usa `0`. Solo se deben confiar saltos de proxy controlados por el operador.
+- Después de cambiar variables del cliente recompila; después de cambiar variables del servidor reinicia y recarga el navegador.
+
+## Flujo de uso
+
+### Autor
+
+1. Abre el taller, crea y prueba el diseño.
+2. **Publicar en la comunidad**, entra con tu cuenta y completa alias, descripción y dificultad.
+3. Envía a revisión y consulta **Mis publicaciones**. Hasta aprobarse, el documento solo es accesible por su autor y moderación.
+4. Desde una revisión propia, **Editar nueva versión en el taller** prepara una copia. Publicar añade una revisión; no edita la anterior.
+5. Si quieres un proyecto independiente, usa **Publicar como creación nueva** en el taller.
+
+Una revisión concurrente causa un conflicto visible: se conserva el borrador y se debe partir del estado más reciente. No se sobrescribe la revisión de otra sesión ni se admite modificar una creación ajena.
+
+### Visitante
+
+Explora, filtra y abre una creación sin cuenta. **Jugar en solitario** carga el documento verificado en 3D. **Invitar amigos a esta versión** prepara una sala que carga esa revisión desde el servidor. Los enlaces `?community=1&creation=ID&revision=N` fijan la versión; sin `revision` se muestra la última publicada disponible.
+
+Las salas conservan los turnos, nombres, límite de golpes, golpes/puntos, reconexión y revancha existentes. Se guarda el diseño en PostgreSQL; el estado temporal de una sala continúa en memoria y no sobrevive a un reinicio del proceso.
+
+### Moderación
+
+Revisa la cola, inspecciona el documento y prueba la cancha. Aprueba o rechaza indicando un motivo. Las denuncias no retiran automáticamente contenido por acumulación: requieren una decisión real. Retirar una revisión bloquea nuevas cargas y salas desde ella, pero no cambia la geometría de una partida ya admitida. Su enlace conserva una ficha de retirada sin exponer el documento al público.
+
+Si existe una revisión anterior publicada, continúa accesible. Para retirar toda una creación, revisa y retira también las versiones públicas anteriores. El historial permite ver quién decidió cada cambio y cuándo. Cerrar una denuncia registra su resolución y no reescribe las decisiones anteriores.
+
+## Límites y seguridad
+
+- Se reutilizan `parseWorkshop`, `workshopIssues`, `validateRoomWorkshop` y la compilación compartida. Documento máximo 60 KB/80 piezas, 220 colisiones, 2048 triángulos y ocho mecanismos.
+- La revisión se identifica por SHA-256. Cliente y servidor comprueban contenido, límites y versión; los estados periódicos de sala no retransmiten el documento.
+- Descripción y alias son texto; no se admiten scripts, HTML ejecutable, modelos remotos ni URLs de claves aportadas por usuarios.
+- Consultas SQL parametrizadas, control de propietario y moderador, bloqueo transaccional para versiones concurrentes y cuotas por cuenta.
+- Máximo 20 versiones y 20 denuncias por cuenta/día; una denuncia por cuenta y revisión. API limitada por dirección de cliente y memoria acotada para el limitador.
+- Una publicación no demuestra automáticamente que se puede completar. Los límites/concesión evitan bloquear una sala con un diseño imposible.
+- No hay votos, rankings globales, conteos de jugadores o récords comunitarios inventados. Los números de piezas, terrenos y mecanismos proceden del documento.
+
+## Pruebas con servicios reales locales
+
+La base de pruebas está aislada. Los scripts destructivos solo admiten una URL local cuyo nombre termine en `_test` y nunca usan `COMMUNITY_DATABASE_URL` como sustituto.
+
+```sh
+docker compose -f compose.community.test.yml up -d
+export TEST_COMMUNITY_DATABASE_URL=postgresql://postgres@127.0.0.1:55432/golf_test
+npm run test:community
+npm run test:community:e2e
+```
+
+El Compose es **solo de pruebas**, limitado a loopback. Las pruebas recrean su esquema. La base de desarrollo/producción requiere autenticación y TLS según su proveedor.
+
+La suite PostgreSQL comprueba migración, publicación, propiedad, revisión, inmutabilidad, versiones concurrentes, paginación, filtros, cuotas, denuncias y persistencia tras reiniciar el servicio HTTP. Usa claves RSA efímeras y tokens JWT realmente firmados para comprobar firma, emisor, audiencia, caducidad y permisos.
+
+La suite de navegador usa un proveedor OIDC **exclusivamente de pruebas**, con PKCE real y cuentas efímeras de fixtures. No se importa ni se despliega con la aplicación. Cubre acceso, publicación, revisión, juego físico individual y online, historial, edición/recarga del borrador y retirada. También comprueba admisiones simultáneas, desconexión durante consulta y corrupción de checksum. GitHub Actions ejecuta ambas suites con un servicio PostgreSQL real.
+
+## Lo que aún falta
+
+Provisionar la base y el proveedor de identidad de producción y configurar las variables anteriores para activar el servicio público. No se afirma que estén conectados si `/config` dice lo contrario. También quedan ensayos humanos de moderación y dificultad, carga concurrente, copias de seguridad operativas del proveedor y futuras colecciones comunitarias de varios hoyos. La revisión de Retroceso/Precisión y nuevos recursos del taller siguen en el roadmap del juego.

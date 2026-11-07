@@ -38,6 +38,7 @@ import { MatchFormatPicker } from "./MatchFormatPicker";
 import { FinalPodium } from "./FinalPodium";
 type Setter<T> = Dispatch<SetStateAction<T>>;
 type Props = {
+  hideResults?: boolean;
   shotExtras?: ReactNode;
   resultExtras?: ReactNode;
   practiceReport: PracticeReport | null;
@@ -74,6 +75,7 @@ type Props = {
   leave: () => void;
 };
 export function GamePanels({
+  hideResults = false,
   shotExtras,
   resultExtras,
   practiceReport,
@@ -669,7 +671,7 @@ export function GamePanels({
           </section>
         </>
       )}
-      {(s.phase === "scores" || s.phase === "finished") && (
+      {!hideResults && (s.phase === "scores" || s.phase === "finished") && (
         <section className="panel results">
           <div className="eyebrow">
             {points ? "DUELO POR PUNTOS · " : ""}

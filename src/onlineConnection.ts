@@ -18,6 +18,7 @@ export type RoomEntry =
       circuit: CircuitId;
       format: MatchFormat;
       workshop?: WorkshopDocument;
+      publication?: { id: string; revision: number };
     }
   | { type: "join"; name: string; code: string }
   | { type: "resume" };

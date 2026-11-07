@@ -203,6 +203,17 @@ test("local pause, inspection, settings and background keep the clock and moving
     .getByRole("button", { name: "Continuar partida", exact: true })
     .click();
   await expect.poll(position).not.toEqual(frozen);
+  // Start a separate real shot: the pause assertion above may consume the
+  // previous shot's remaining motion on a slower browser.
+  await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled({
+    timeout: 25000,
+  });
+  await page.getByRole("slider", { name: "Ángulo", exact: true }).fill("1");
+  await page.getByRole("slider", { name: "Potencia", exact: true }).fill("0.6");
+  await page.getByRole("button", { name: /GOLPEAR/ }).click();
+  await expect(
+    page.getByText("Pelota en movimiento", { exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Controles", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Ajustes" })).toBeVisible();
   const settings = await position();

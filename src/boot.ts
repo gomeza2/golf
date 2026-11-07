@@ -13,7 +13,7 @@ let progress = 0,
   complete = false,
   lastActivity = performance.now(),
   physics = false,
-  scene = false;
+  presentation = false;
 const controller = new AbortController();
 function update(value: number, message: string, description?: string) {
   if (failed || complete) return;
@@ -38,14 +38,14 @@ function fail(message: string) {
 }
 function stage() {
   update(
-    90 + (physics ? 5 : 0) + (scene ? 5 : 0),
+    90 + (physics ? 5 : 0) + (presentation ? 5 : 0),
     !physics
       ? "Preparando las físicas…"
-      : !scene
+      : !presentation
         ? "Encendiendo el campo…"
         : "El club está listo.",
   );
-  if (physics && scene && !failed) {
+  if (physics && presentation && !failed) {
     complete = true;
     clearInterval(watchdog);
     clearTimeout(timeout);
@@ -58,7 +58,11 @@ window.addEventListener("club:physics-ready", () => {
   stage();
 });
 window.addEventListener("club:scene-ready", () => {
-  scene = true;
+  presentation = true;
+  stage();
+});
+window.addEventListener("club:community-ready", () => {
+  presentation = true;
   stage();
 });
 window.addEventListener("club:failed", (event) =>

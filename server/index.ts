@@ -1,3 +1,4 @@
+import { createCommunity } from "./community/http";
 import {
   chooseCup,
   startRoomMatch,
@@ -35,7 +36,9 @@ const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const community = createCommunity(process.env, origins);
 const http = createServer(async (req, res) => {
+  if (await community.handle(req, res)) return;
   if (req.url === "/health") {
     res.writeHead(200, {
       "Content-Type": "application/json",
@@ -146,12 +149,14 @@ io.on("connection", (socket) => {
   let room: Room | undefined;
   let pid = "";
   let contentHash = "";
+  let admitting = false;
   let bucket = 20;
   const refill = setInterval(() => (bucket = Math.min(20, bucket + 10)), 1000);
-  socket.on("action", (data: unknown, ack?: () => void) => {
+  socket.on("action", async (data: unknown, ack?: () => void) => {
     if (--bucket < 0) return;
     if (!data || typeof data !== "object") return;
     const d = data as Record<string, unknown>;
+    let admissionOwner = false;
     try {
       if (
         !(d.type === "create" && d.workshop !== undefined) &&
@@ -160,6 +165,9 @@ io.on("connection", (socket) => {
         throw Error("Acción demasiado grande");
       if (d.type === "create" || d.type === "join" || d.type === "resume") {
         if (room) throw Error("Ya estás en una sala");
+        if (admitting) throw Error("La entrada a una sala ya está en curso");
+        admitting = true;
+        admissionOwner = true;
         if (d.type === "create") {
           if (rooms.size >= 200) throw Error("Servidor ocupado");
           let code = "";
@@ -170,15 +178,41 @@ io.on("connection", (socket) => {
             throw Error("Recorrido inválido");
           if (d.format !== undefined && !isMatchFormat(d.format))
             throw Error("Formato de partida inválido");
-          const custom =
-            d.workshop === undefined
+          if (d.publication !== undefined && d.workshop !== undefined)
+            throw Error("Elige una sola fuente de cancha");
+          if (
+            d.publication !== undefined &&
+            (!d.publication ||
+              typeof d.publication !== "object" ||
+              Array.isArray(d.publication))
+          )
+            throw Error("Referencia de publicación inválida.");
+          const reference = d.publication as
+            { id?: unknown; revision?: unknown } | undefined;
+          const published = reference
+            ? await community.publicDocument(reference.id, reference.revision)
+            : undefined;
+          if (!socket.connected) throw Error("Conexión cerrada");
+          if (rooms.size >= 200) throw Error("Servidor ocupado");
+          const custom = published
+            ? validateRoomWorkshop(published.document)
+            : d.workshop === undefined
               ? undefined
               : validateRoomWorkshop(d.workshop);
+          while (rooms.has(code))
+            code = randomBytes(3).toString("hex").toUpperCase();
           const hash = custom
             ? createHash("sha256").update(custom.canonical).digest("hex")
             : undefined;
+          if (published && published.hash !== hash)
+            throw Error("La revisión publicada perdió su integridad.");
           const game = new Game(custom?.course, Boolean(custom));
           if (hash) game.state.workshopHash = hash;
+          if (published)
+            game.state.publication = {
+              id: published.id,
+              revision: published.revision,
+            };
           if (!custom && isCircuitId(d.circuit)) game.selectCircuit(d.circuit);
           if (isMatchFormat(d.format)) game.selectFormat(d.format);
           game.state.code = code;
@@ -377,6 +411,8 @@ io.on("connection", (socket) => {
       io.to(s.code).emit("state", snapshot(room));
     } catch (e) {
       fail(socket, e instanceof Error ? e.message : "Error de sala");
+    } finally {
+      if (admissionOwner) admitting = false;
     }
   });
   socket.on("disconnect", () => {

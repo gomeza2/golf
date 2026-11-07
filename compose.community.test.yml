@@ -1,0 +1,18 @@
+# Isolated test database only. The loopback trust setup is not a production configuration.
+services:
+  community-db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: golf_test
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - community-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d golf_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  community-test-data:
