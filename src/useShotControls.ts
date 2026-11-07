@@ -165,6 +165,7 @@ export function useShotControls(options: {
     },
     armed: active && Boolean(anchor.current?.shot),
     review,
+    clearReview: () => setReview(null),
     pointer,
     targetPower: anchor.current?.power ?? options.power,
     cameraAngle: anchor.current?.angle ?? options.angle,

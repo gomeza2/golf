@@ -22,7 +22,7 @@ En Más ajustes se preparan dirección y referencia de potencia. La referencia e
 
 La barra señala la referencia elegida y un indicador separado muestra el desvío angular. «En tu ventana» significa que la entrada actual está a un grado y 2,5 puntos porcentuales de tu referencia. Es información del control: no garantiza acertar el hoyo, no corrige automáticamente la suelta y no añade fuerza.
 
-Al soltar se registra una lectura transitoria: potencia enviada, referencia inicial y giro/desvío. Se limpia al preparar otro gesto o cambiar de jugador/ronda. No se almacena como puntuación ni como estadística competitiva. Los clics de compatibilidad táctil de la suelta no accionan otros botones cuando se encoge el panel; un toque nuevo sigue permitiendo pausar normalmente. Una pérdida de captura cancela y restaura la preparación; pulsaciones inferiores a 150 ms siguen cancelándose.
+Al soltar se registra una lectura transitoria: potencia enviada, referencia inicial y giro/desvío. Se limpia al preparar otro gesto o cambiar de jugador/ronda. No se almacena como puntuación ni como estadística competitiva. Un tiro directo mediante Espacio limpia la lectura del gesto anterior para no mostrarla como si correspondiera al nuevo golpe. Los clics de compatibilidad táctil de la suelta no accionan otros botones cuando se encoge el panel; un toque nuevo sigue permitiendo pausar normalmente. Una pérdida de captura cancela y restaura la preparación; pulsaciones inferiores a 150 ms siguen cancelándose.
 
 Los eventos de ratón, tacto y teclado aportan su marca temporal. Si un navegador usa un reloj incompatible, se utiliza el reloj local de rendimiento. La física y sus reglas permanecen iguales; los resultados se validan con el motor existente.
 

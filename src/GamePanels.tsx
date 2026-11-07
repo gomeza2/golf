@@ -576,7 +576,7 @@ export function GamePanels({
                 <button
                   className="primary shoot"
                   disabled={!canShoot || chargeActive}
-                  onClick={shoot}
+                  onClick={() => shoot()}
                 >
                   GOLPEAR <span>→</span>
                 </button>

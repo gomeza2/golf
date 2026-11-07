@@ -509,6 +509,7 @@ function App() {
     setCameraLook((v) => changeLook(v, delta));
   const shoot = (shot?: Shot) => {
     if (!canShoot) return;
+    if (!shot) controls.clearReview();
     tone("shot", volume);
     if (mode === "local") {
       game.current?.shoot(

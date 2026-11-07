@@ -73,6 +73,16 @@ test("pull distinguishes the cancellation zone, restores the reference and perfo
       ),
     )
     .toBeLessThan(9);
+  await expect(page.getByRole("button", { name: /Arrastre fino/ })).toBeEnabled(
+    { timeout: 25000 },
+  );
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+  });
+  await page.keyboard.press(" ");
+  await expect(page.locator(".turn-toast b")).toHaveText("2/12");
+  await expect(review).toHaveCount(0);
   await page
     .getByRole("button", { name: "Reintentar desde la salida", exact: true })
     .click();
