@@ -362,6 +362,7 @@ test("landscape advanced controls leave the ball lane clear and school actions a
           name: "Potencia",
           exact: true,
         });
+        await expect(power).toBeEnabled();
         await power.scrollIntoViewIfNeeded();
         await expect(power).toBeInViewport();
         await page
