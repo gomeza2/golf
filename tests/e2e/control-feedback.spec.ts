@@ -85,7 +85,24 @@ test("precision exposes live angular drift and records one measured release with
   page,
 }) => {
   await start(page, "Precisión");
+  await page.getByRole("slider", { name: "Potencia", exact: true }).fill("1");
+  expect(
+    await page
+      .locator(".charge-track.pulse i")
+      .evaluate((el) => [
+        (el as HTMLElement).style.left,
+        (el as HTMLElement).style.width,
+      ]),
+  ).toEqual(["97.5%", "2.5%"]);
   await page.getByRole("slider", { name: "Potencia", exact: true }).fill("0.5");
+  expect(
+    await page
+      .locator(".charge-track.pulse i")
+      .evaluate((el) => [
+        (el as HTMLElement).style.left,
+        (el as HTMLElement).style.width,
+      ]),
+  ).toEqual(["47.5%", "5%"]);
   const trigger = page.getByRole("button", {
     name: "MANTENER Y SOLTAR",
     exact: true,

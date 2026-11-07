@@ -679,7 +679,8 @@ export function GamePanels({
                 <span style={{ width: `${power * 100}%` }} />
                 <i
                   style={{
-                    left: `${Math.max(0, Math.min(0.95, referencePower - 0.025)) * 100}%`,
+                    left: `${Math.max(0, referencePower - 0.025) * 100}%`,
+                    width: `${(Math.min(1, referencePower + 0.025) - Math.max(0, referencePower - 0.025)) * 100}%`,
                   }}
                 />
               </div>
