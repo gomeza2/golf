@@ -30,7 +30,10 @@ export default defineConfig({
   plugins: [startupManifest()],
   base: process.env.PAGES_BASE_PATH || "/",
   server: {
-    proxy: { "/socket.io": { target: "http://localhost:3001", ws: true } },
+    proxy: {
+      "/socket.io": { target: "http://localhost:3001", ws: true },
+      "/api/community": { target: "http://localhost:3001" },
+    },
   },
   build: {
     rollupOptions: {

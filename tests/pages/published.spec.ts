@@ -76,7 +76,20 @@ test("the released school completes a physical target with the actual published 
       { timeout: 90000, intervals: [1000, 3000, 5000] },
     )
     .toContain(`v${APP_VERSION}`);
-  await page.getByRole("button", { name: /Aprender jugando/ }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("button", { name: "Jugar ahora →", exact: true }),
+  ).toBeInViewport();
+  await expect(
+    page.getByRole("button", { name: "Jugar online con amigos", exact: true }),
+  ).toBeInViewport();
+  await page.screenshot({
+    path: "work/pages-welcome-mobile.png",
+    animations: "disabled",
+  });
+  await page
+    .getByRole("button", { name: "Jugar ahora →", exact: true })
+    .click();
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
@@ -90,7 +103,7 @@ test("the released school completes a physical target with the actual published 
     animations: "disabled",
   });
   console.log(
-    `PAGES SCHOOL VERIFIED: version ${APP_VERSION}, real approach completed, optional guide and normal physics: ${baseURL}`,
+    `PAGES SCHOOL VERIFIED: version ${APP_VERSION}, quick entry, visible online, real approach completed and normal physics: ${baseURL}`,
   );
 });
 test("the built Pages site loads assets and plays a local match from /golf/", async ({
@@ -121,7 +134,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   const response = await page.goto(baseURL!);
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle(/Hoyo en Uno/);
-  await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Un buen golpe/ }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /Vuelta completa/ }),
   ).toBeVisible();
@@ -142,7 +157,10 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await page.getByRole("button", { name: "Entendido", exact: true }).click();
   if (!process.env.VITE_SERVER_URL && !PUBLIC_SERVER_URL)
     await expect(
-      page.getByRole("button", { name: /Jugar online/ }),
+      page.getByRole("button", {
+        name: "Jugar online con amigos",
+        exact: true,
+      }),
     ).toBeDisabled();
   await page.getByRole("button", { name: /Riviera Salvaje/ }).click();
   await page.getByRole("button", { name: /Jugar en este/ }).click();
@@ -181,7 +199,9 @@ test("the built Pages site loads assets and plays a local match from /golf/", as
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeInViewport();
   await page.screenshot({ path: "work/pages-mobile.png" });
   await page.getByRole("button", { name: "Salir", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /Poco campo/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Un buen golpe/ }),
+  ).toBeVisible();
   await page.screenshot({ path: "work/pages-catalogue-mobile.png" });
   await page.reload();
   await expect(
@@ -504,4 +524,33 @@ test("the published workshop prepares a real private design and keeps its draft 
   console.log(
     `PAGES PRIVATE WORKSHOP VERIFIED: version ${APP_VERSION}, bounded draft handed to online preparation and retained after return: ${baseURL}`,
   );
+});
+
+test("the released community entry loads its interface and reports actual backend availability without fabricated creations", async ({
+  page,
+  baseURL,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("golf-graphics-mode", "low"),
+  );
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Abrir comunidad de canchas", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Comunidad de canchas", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#boot-screen")).toHaveCount(0);
+  await expect
+    .poll(
+      async () =>
+        await page
+          .locator(
+            ".community-search,.community-empty,.community-page [role=alert]",
+          )
+          .count(),
+      { timeout: 20000 },
+    )
+    .toBeGreaterThan(0);
+  await page.screenshot({ path: "work/pages-community.png", fullPage: true });
 });

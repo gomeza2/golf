@@ -1,5 +1,22 @@
 # Hoyo en Uno · Golf Club
 
+## 0.17.0 — Bienvenida y comunidad persistente
+
+- La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.
+
+- Auditoría de primera impresión, portada renovada, online visible y entrada directa a la escuela real sin sustituir un guardado recuperable.
+- Guía visual, respuesta específica por objetivo, potencia inicial suave y continuación inmediata a una ronda de tres hoyos.
+- Contacto y salpicaduras Web Audio con textura, liberación de nodos y feedback breve respetuoso de movimiento reducido.
+- Recorrido Playwright de jugador nuevo en escritorio y móvil hasta completar dos hoyos, con fallo, reintento y reanudación.
+
+- PostgreSQL, migración transaccional, autoría OIDC/JWT verificada y permisos separados para autor y moderación.
+- Galería pública con planos reales, búsqueda, filtros, paginación, historial y enlaces fijos a cada revisión.
+- Envío pendiente, aprobación/rechazo, denuncias, retirada/restauración e historial de decisiones de solo anexado.
+- Juego individual y salas cargadas por referencia de publicación, con checksum y diseño fijo; sin cuenta para explorar/jugar.
+- Edición de nuevas versiones con respaldo del borrador, control de concurrencia y separación de los récords oficiales.
+- Comunidad desactivada o de solo lectura según configuración real; no se añaden cuentas, votos o publicaciones ficticias.
+- Protocolo 14; se mantienen reglas v7, guardado 1 y documento 1. Configuración, pruebas PostgreSQL/OIDC y despliegue en COMMUNITY.md.
+
 ## 0.16.0 — Canchas privadas del taller
 
 - Crear una sala con una creación, compartirla por invitación y jugar el mismo diseño sin importar archivos por invitado.

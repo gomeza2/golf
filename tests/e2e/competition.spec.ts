@@ -100,7 +100,9 @@ test("local points require two players, removing a rival restores strokes and on
     page.getByRole("button", { name: /Menos golpes/ }),
   ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: /Volver al club/ }).click();
-  await page.getByRole("button", { name: /Jugar online/ }).click();
+  await page
+    .getByRole("button", { name: "Jugar online con amigos", exact: true })
+    .click();
   await expect(page.locator(".setup")).toContainText(
     "Online utiliza control Clásico",
   );

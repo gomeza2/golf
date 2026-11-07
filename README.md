@@ -1,6 +1,14 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.16.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas: no necesita cuentas, modelos remotos, claves ni base de datos.
+Versión **0.17.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+
+## Empezar a jugar — renovación 0.17.0
+
+**Jugar ahora** abre la guía interactiva con tiros reales: fuerza, banda y copa. Al terminar puedes entrar directamente a una vuelta de tres hoyos. Si existe una partida recuperable, la acción principal permite continuarla sin reemplazarla. **Jugar online con amigos** queda visible en la portada y abre las salas reales; catálogo, modos y taller siguen accesibles.
+
+Se renovaron jerarquía visual, guía móvil, feedback, transitorios de sonido y continuidad inicial. [FIRST-IMPRESSION.md](FIRST-IMPRESSION.md) recoge la auditoría crítica, las pruebas y lo que necesita evaluación con personas. No se afirma que las capturas o la compilación demuestren diversión.
+
+La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.
 
 ## Jugar desde GitHub Pages
 
@@ -10,13 +18,33 @@ Pages sirve el juego local completo para 1–8 personas y doce opciones de recor
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
-## Canchas del taller con amigos — 0.16.0
+## Comunidad persistente — 0.17.0
+
+Galería pública, búsqueda por nombre, autor, dificultad y características, planos del diseño real y enlaces permanentes a creaciones/revisiones. El taller envía una versión inmutable a moderación; solo una aprobación la hace pública. Denuncias, retirada, restauración e historial de decisiones se guardan en PostgreSQL. No hay votos, usuarios o estadísticas de partidas ficticios.
+
+Las canchas publicadas se pueden jugar individualmente sin cuenta o llevar a una sala con amigos. El servidor carga la revisión por ID desde la base, valida su documento y checksum y conserva el motor de físicas y las reglas de sala existentes. Los récords/guardados oficiales no se mezclan con estas partidas. Cada creación usa el formato actual del taller: un hoyo.
+
+**Activación real:** `COMMUNITY_DATABASE_URL`, migración y configuración OIDC/moderadores. Sin base, se muestra comunidad no disponible; con base e identidad incompleta, solo exploración de publicaciones existentes. El taller no muestra publicación si falta configuración. No se ha inventado ni provisionado una base/proveedor de producción. [COMMUNITY.md](COMMUNITY.md) detalla variables, permisos, API, pruebas y despliegue.
+
+```sh
+# Con COMMUNITY_DATABASE_URL privado configurado en .env:
+npm run community:migrate
+npm run dev
+# Migración de un despliegue compilado:
+npm run community:migrate:production
+```
+
+Dependencias nuevas: `pg` para PostgreSQL, `jose` para verificar JWT/JWKS y `oidc-client-ts` para Authorization Code + PKCE. Ninguna credencial privada se compila en Vite. `VITE_COMMUNITY_SERVER_URL` es solo el origen público de API, fijado por despliegue.
+
+Protocolo online **14**, reglas v7, guardado 1 y documento del taller 1. Se conservan los 31 hoyos oficiales, recorridos, tres controles, modos, copas y récords. Las salas siguen siendo temporales; la persistencia de creaciones está en PostgreSQL.
+
+## Canchas del taller con amigos — entrega 0.16.0
 
 **Taller → Jugar con amigos online** prepara tu creación para una sala privada. Escribe tu nombre, elige golpes o puntos y crea la sala. Comparte su código/enlace: tus amigos reciben el diseño sin importar archivos. Antes de prepararse, cada cliente verifica la misma revisión SHA-256; el servidor valida y compila la geometría, limita su coste y calcula los resultados con Rapier.
 
 Se juega un hoyo fijo con reloj de 30 s, límite de 12 golpes, par propio, resultados, reconexión y revancha. La cancha no se cambia ni se convierte en copa dentro de esa sala; para otro diseño se crea una nueva. La práctica individual del taller sigue sin reloj. Los resultados privados no generan récords oficiales ni sustituyen sus guardados. El contenido viaja al entrar/reconectar, no en cada actualización de posiciones.
 
-Protocolo **13**; reglas v7, guardados 1 y documento del taller v1 conservados. Las salas están en memoria y se pierden si el servidor reinicia. Guardar/exportar el diseño lo conserva fuera de la sala. HTTPS o localhost para verificar la revisión. Todavía no hay galería pública ni publicación persistente: [COMMUNITY.md](COMMUNITY.md) define el siguiente paso y sus requisitos. No se agregan servicios, cuentas, secretos o dependencias nuevas.
+El protocolo 13 se introdujo en esta entrega; el vigente es 14. Reglas v7, guardados 1 y documento del taller v1 conservados. Las salas están en memoria y se pierden si el servidor reinicia. Guardar/exportar el diseño lo conserva fuera de la sala. HTTPS o localhost para verificar la revisión. Todavía no hay galería pública ni publicación persistente: [COMMUNITY.md](COMMUNITY.md) define el siguiente paso y sus requisitos. No se agregan servicios, cuentas, secretos o dependencias nuevas.
 
 ## Cumbres y Mareas — 0.15.0
 
@@ -36,7 +64,7 @@ Se conservan el golpe normal y las físicas generales de reglas v7; los desnivel
 
 QA física: vueltas amplias de **4/8/7** golpes y atajos de **3/1/4**, completos sin recolocaciones ni penalizaciones. Para las puertas se espera una ventana real dentro del tiempo de turno; el as oblicuo no se obtiene tirando recto con máxima potencia. Estos son recorridos de prueba, no una guía visible de tiros. La geometría elevada, la espiral y el mundo guardado se verifican con Rapier; la escena usa los mismos datos.
 
-**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. El protocolo 12 se introdujo en esta entrega; el vigente es 13: actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
+**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. El protocolo 12 se introdujo en esta entrega; el vigente es 14: actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
 
 La comunidad de creaciones queda como la siguiente fase: primero partidas privadas con contenido validado por servidor y después publicación persistente/galería. [COMMUNITY.md](COMMUNITY.md) define el contrato, límites y almacenamiento necesarios. Todavía se comparten archivos del taller; no hay galería ni publicación central conectada. La revisión específica de Retroceso y Precisión queda en una fase posterior, como solicitó el usuario.
 
@@ -50,7 +78,7 @@ En **Probar en 3D → Inspeccionar cancha**, gira, inclina y acerca/aleja la cá
 
 **Revisar el diseño** avisa de zonas de arena/rough que no coinciden con suelo a su altura, islas separadas y falta de conexión de suelo entre salida/copa. Usa una cuadrícula aproximada de 0,5 m y la altura superior; no tiene en cuenta paredes, saltos, pasos inferiores ni resuelve tiros. **No bloquea** rutas con saltos y no certifica que una cancha se pueda completar. Los errores estructurales anteriores sí siguen bloqueando la prueba. Se conserva el mismo compilador y la misma física.
 
-El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 13.
+El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 14.
 
 Código nuevo: `shared/workshopTools.ts` (transformaciones), `shared/workshopDiagnostics.ts` (avisos), `src/WorkshopSelection.tsx` y `src/WorkshopImport.tsx`. Pruebas de herramientas/diagnóstico en `tests/workshop-tools.test.ts`; los casos de navegador comprueban grupos, historial, foco, cámara táctil y embocado después de inspeccionar.
 
@@ -66,7 +94,7 @@ Las plataformas se recortan físicamente alrededor de la copa gris, incluida su 
 
 Formato de documento v1: hasta 80 piezas, nombre de 48 caracteres, par 2–8, alturas 0–4 m, tamaños/posiciones/rotaciones acotados y archivos de hasta 60 KB. No admite código, URL de modelos, mallas arbitrarias ni IDs reservados/duplicados. El compilador produce un `Course` local; `Scene` recibe esa misma geometría explícitamente. El modo de prueba se marca como personalizado y se rechaza en récords, práctica oficial, desafíos y guardado de recuperación oficial. Una prueba del taller no reemplaza una partida local guardada.
 
-**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 13. No se agrega un circuito falso al registro oficial ni se renumeran récords.
+**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 14. No se agrega un circuito falso al registro oficial ni se renumeran récords.
 
 **Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
 
@@ -87,7 +115,7 @@ La nueva entrada principal prioriza canchas con decisiones reales. **Jugar Al Fi
 
 No hay suelo ni paredes rectangulares invisibles cerrando las pistas nuevas. Los vacíos son reales y el agua aplica la penalización habitual. El anillo utiliza la misma malla cerrada en Three.js, Rapier y el mapa; las rampas diagonales comparten un cuaternión para representación y colisión. La distancia anunciada es la ruta amplia, no la dimensión de la caja usada para cámara/límites. Los tiros siguen siendo normales: no se añade impulso vertical ni aumenta la potencia de reglas v7.
 
-En **Online → Crear sala → Tipo de encuentro**, la **Copa Al Filo** enlaza Abiertas y Cruzadas: ocho hoyos jugados sobre cuatro huellas, actas acumuladas por servidor, golpes o puntos, reconexión y revancha. Las copas anteriores se conservan. En esa entrega se introdujo el protocolo 11; el protocolo vigente es 13. las salas siguen en memoria y se pierden al reiniciar/desplegar el servidor.
+En **Online → Crear sala → Tipo de encuentro**, la **Copa Al Filo** enlaza Abiertas y Cruzadas: ocho hoyos jugados sobre cuatro huellas, actas acumuladas por servidor, golpes o puntos, reconexión y revancha. Las copas anteriores se conservan. En esa entrega se introdujo el protocolo 11; el protocolo vigente es 14. las salas siguen en memoria y se pierden al reiniciar/desplegar el servidor.
 
 Comprobaciones físicas reproducibles: rutas amplias de **5/6/7/4** golpes frente a atajos **3/2/1/2**, y Cruzadas **5/6/8/4** frente a **3/3/2/3**. El as del anillo se prueba en una ventana concreta del mecanismo. Son recorridos de QA, no ayudas visibles ni garantías para cualquier momento de una partida. Se prueban también fallos de puente, puerta cerrada, soporte del anillo, rampa diagonal, recuperación durante un golpe y registros independientes sin renumerar claves antiguas. `tests/fixtures/rift.ts` solo se importa desde pruebas.
 
@@ -261,13 +289,17 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm test`: 207 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
+`npm test`: 210 pruebas de reglas, física, recorridos, superficies, controles, guardado y cámara. Se completan las rondas de 18 y 9 hoyos desde sus salidas con el golpe normal, sin recolocar la pelota ni recurrir a penalizaciones. También se comprueban lanzamiento vertical cero, potencia máxima, guía corta, aterrizajes, pérdida de energía, pendientes, cuatro superficies, banda curva, copa, límites y validez de los récords. Las rutas se recalibraron para la velocidad reducida y la corrección de aristas internas del green. También se prueban salida por honores, empates y retiros. Diez pruebas de recuperación comparan fotograma a fotograma tiros interrumpidos, colisiones, compuertas, caída en copa, agua, rondas completas y datos dañados.
 
-`npm run test:e2e`: 63 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Cuatro casos de amigos comprueban dos navegadores/sockets online, reglas del lobby y retiro tras vencer la reconexión; diez pruebas nuevas cubren elección de formato, plazos, podio y reconocimientos. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets comprueba que el cliente no puede cambiar el formato mediante un campo en el comando de inicio. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
+`npm run test:e2e`: 68 casos con Chromium y sockets reales: controles de escritorio/tacto, cancelación y multidedo, preferencia antes de iniciar y bloqueo de cambios durante la ronda, modo online forzado a Clásico, panel compacto, indicador lateral, nombres persistentes, rechazo de golpes elevados, permisos/reconexión/capacidad de salas, cámara y partida solo completa con récord persistente tras recargar. Arranca automáticamente cliente y servidor. Usa `/usr/bin/chromium` si existe o el navegador de Playwright; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` permite elegirlo. Cuatro casos de amigos comprueban dos navegadores/sockets online, reglas del lobby y retiro tras vencer la reconexión; diez pruebas nuevas cubren elección de formato, plazos, podio y reconocimientos. Dos casos de competición cubren embocados reales, puntos, recuperación, honores y bloqueo del formato; el caso de sockets comprueba que el cliente no puede cambiar el formato mediante un campo en el comando de inicio. Tres casos gráficos miden buffers reales en móvil, persistencia, conservación de un tiro y llamadas WebGL al ocultar/mostrar la pestaña. Cinco casos de recuperación cubren recarga durante un golpe, nombres/turno/reloj, control fijo en móvil, tabla entre hoyos, finalización de práctica sin duplicar marcas, descarte y cuota bloqueada. Las capturas se guardan en `work/`.
 
-`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus diez pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública se juega un duelo por puntos real, se cambia la calidad y se recuperan turno y formato tras recargar; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
+`PAGES_BASE_PATH=/golf/ VITE_STATIC_HOST=true npm run build` seguido de `npm run test:pages` comprueba la compilación estática para publicar, bajo el prefijo real y sin fallback de rutas. Sus once pruebas detectan 404 de scripts/fuentes, errores de JavaScript y fallos del golpe; bloquean una descarga para comprobar que la barra espera bytes reales y prueban la recuperación ante fallos del motor o del script inicial. Contra la URL pública se juega un duelo por puntos real, se cambia la calidad y se recuperan turno y formato tras recargar; las tres inyecciones de fallo/espera se reservan al servidor de pruebas. `PUBLIC_GAME_URL` permite repetir esta comprobación contra la URL ya desplegada.
 
 `npm run build`: comprobación TypeScript, cliente en `dist/` y servidor en `dist-server/`. La CI ejecuta los tres comandos. WebGL con renderizado por software permite automatizar estas comprobaciones; no sustituye pruebas de rendimiento en teléfonos físicos.
+
+### Pruebas de comunidad
+
+`npm run test:community` usa PostgreSQL real y no admite sustituirlo por localStorage ni una base simulada. Requiere `TEST_COMMUNITY_DATABASE_URL` local con nombre terminado en `_test`. La suite OIDC/navegador se ejecuta con `npm run test:community:e2e`. Ambas tienen un job propio en GitHub Actions y proveedores/usuarios efímeros solo de pruebas. Consulta [COMMUNITY.md](COMMUNITY.md#pruebas-con-servicios-reales-locales) para levantar los servicios.
 
 ## Producción: cliente y servidor en un proceso
 
@@ -280,7 +312,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (13), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (14), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 

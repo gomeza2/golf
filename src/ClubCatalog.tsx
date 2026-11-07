@@ -55,6 +55,10 @@ export function ClubCatalog({
   onLearn,
   activities,
   onWorkshop,
+  onCommunity,
+  onQuickPlay,
+  hasSavedRound,
+  learned,
 }: {
   circuit: CircuitId;
   personalHistory: PersonalHistory;
@@ -72,6 +76,10 @@ export function ClubCatalog({
   onLearn: () => void;
   activities?: React.ReactNode;
   onWorkshop: () => void;
+  onCommunity: () => void;
+  onQuickPlay: () => void;
+  hasSavedRound: boolean;
+  learned: boolean;
 }) {
   const catalog = [
     circuits.find((c) => c.id === "rift")!,
@@ -79,37 +87,96 @@ export function ClubCatalog({
   ];
   return (
     <section className="club-catalog">
-      <div className="catalog-intro">
-        <div>
-          <div className="eyebrow">EL CLUB / CATÁLOGO DE PARTIDAS</div>
+      <div className="catalog-intro welcome-hero">
+        <div className="welcome-copy">
+          <div className="eyebrow">HOYO EN UNO · UN CLUB PARA COMPARTIR</div>
           <h1>
-            Poco campo.
+            Un buen golpe.
             <br />
-            Mucha <em>rivalidad.</em>
+            <em>Una gran rivalidad.</em>
           </h1>
-        </div>
-        <div className="catalog-feature">
           <p>
-            {uniqueCourses.length} hoyos distintos. Cumbres y Mareas suma
-            alturas, una espiral y compuertas. Al Filo conserva sus cuatro
-            huellas. Clásicos y vueltas de 9/18 conservados.
-            <br />
-            Elige el recorrido, tu forma de golpear y con quién jugar.
+            Una banda inesperada. Un atajo sobre el agua. Ese último golpe que
+            cambia la partida. Empieza a jugar o reúne a tus amigos.
           </p>
-          <button
-            className="primary"
-            disabled={!ready}
-            onClick={() => {
-              if (circuit !== "rift-alt") setCircuit("rift");
-              onLocal();
-            }}
-          >
-            Jugar Al Filo →
-          </button>
-          <small>
-            Cuatro huellas · Dos posiciones de banderas · Riesgo real
+          <div className="welcome-actions">
+            <button
+              className="primary welcome-play"
+              disabled={!ready}
+              onClick={onQuickPlay}
+            >
+              {hasSavedRound ? "Seguir mi partida →" : "Jugar ahora →"}
+            </button>
+            <button
+              className="welcome-online"
+              disabled={!ready || !onlineAvailable}
+              onClick={onOnline}
+            >
+              <svg
+                className="friends-symbol"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="8" cy="7" r="3" />
+                <path d="M2 21v-4a6 6 0 0 1 12 0v4M17 4a3 3 0 0 1 0 6M18 13a5 5 0 0 1 4 5v3" />
+              </svg>{" "}
+              Jugar online con amigos
+            </button>
+          </div>
+          <small className="welcome-caption">
+            {hasSavedRound
+              ? "Tu partida guardada sigue aquí. Puedes continuarla."
+              : learned
+                ? "Sin cuenta · Vuelta de tres hoyos · Tu control elegido"
+                : "Sin cuenta · Aprende con tiros reales · A tu ritmo"}
           </small>
+          <small className="welcome-caption">
+            {onlineAvailable
+              ? "Online: crea una sala privada o entra con un código."
+              : "Online no disponible en este sitio. El modo local sigue disponible."}
+          </small>
+          <div className="welcome-links">
+            <a href="#recorridos">Elegir recorrido ↓</a>
+            <button
+              className="text-button"
+              disabled={!ready}
+              onClick={() => {
+                if (circuit !== "rift-alt") setCircuit("rift");
+                onLocal();
+              }}
+            >
+              Jugar Al Filo →
+            </button>
+          </div>
         </div>
+        <div className="welcome-window" aria-hidden="true">
+          <span className="welcome-stamp">
+            H1<span>GOLF CLUB</span>
+          </span>
+          <div className="welcome-field-caption">
+            <span>LEE LA PISTA. ENCUENTRA TU LÍNEA.</span>
+            <strong>
+              La próxima buena historia
+              <br />
+              empieza con un golpe.
+            </strong>
+          </div>
+        </div>
+        <div className="welcome-footnote">
+          {uniqueCourses.length} hoyos distintos · Tres formas de golpear ·
+          Local, online y taller
+        </div>
+      </div>
+      <div className="welcome-route" aria-label="Tu primera vuelta">
+        <span>
+          <b>01</b> Siente la fuerza
+        </span>
+        <span>
+          <b>02</b> Descubre las bandas
+        </span>
+        <span>
+          <b>03</b> Ve por la copa
+        </span>
       </div>
       {activities && (
         <details className="club-activities">
@@ -119,40 +186,7 @@ export function ClubCatalog({
           {activities}
         </details>
       )}
-      <div className="adventure-entry">
-        <div>
-          <small>NUEVO RECORRIDO · CUMBRES Y MAREAS</small>
-          <strong>Abajo hay agua. Arriba, otra ruta.</strong>
-          <p>
-            Glaciar de ocho metros, faro en espiral y túneles bajo los puentes.
-            Tres hoyos con rutas amplias y atajos.
-          </p>
-        </div>
-        <button
-          className="primary"
-          disabled={!ready}
-          onClick={() => {
-            setCircuit("cumbres");
-            onLocal();
-          }}
-        >
-          Jugar Cumbres y Mareas
-        </button>
-      </div>
-      <div className="workshop-entry">
-        <div>
-          <small>CREATIVIDAD DEL CLUB</small>
-          <strong>Tu cancha. Tus decisiones.</strong>
-          <p>
-            Plataformas, rampas y obstáculos. Crea, guarda y prueba con físicas
-            reales.
-          </p>
-        </div>
-        <button disabled={!ready} onClick={onWorkshop}>
-          Abrir taller de hoyos
-        </button>
-      </div>
-      <div className="catalog-layout">
+      <div className="catalog-layout" id="recorridos">
         <div
           className="course-catalog"
           role="group"
@@ -386,6 +420,50 @@ export function ClubCatalog({
             </p>
           )}
         </aside>
+      </div>
+      <div className="adventure-entry">
+        <div>
+          <small>NUEVO RECORRIDO · CUMBRES Y MAREAS</small>
+          <strong>Abajo hay agua. Arriba, otra ruta.</strong>
+          <p>
+            Glaciar de ocho metros, faro en espiral y túneles bajo los puentes.
+            Tres hoyos con rutas amplias y atajos.
+          </p>
+        </div>
+        <button
+          className="primary"
+          disabled={!ready}
+          onClick={() => {
+            setCircuit("cumbres");
+            onLocal();
+          }}
+        >
+          Jugar Cumbres y Mareas
+        </button>
+      </div>
+      <div className="workshop-entry">
+        <div>
+          <small>CREATIVIDAD DEL CLUB</small>
+          <strong>Tu cancha. Tus decisiones.</strong>
+          <p>
+            Plataformas, rampas y obstáculos. Crea, guarda y prueba con físicas
+            reales.
+          </p>
+        </div>
+        <button disabled={!ready} onClick={onWorkshop}>
+          Abrir taller de hoyos
+        </button>
+      </div>
+      <div className="community-entry">
+        <div>
+          <small>CREACIONES DE JUGADORES</small>
+          <strong>Una comunidad de nuevas ideas.</strong>
+          <p>
+            Descubre canchas publicadas, versiones y desafíos creados en el
+            taller.
+          </p>
+        </div>
+        <button onClick={onCommunity}>Abrir comunidad de canchas</button>
       </div>
     </section>
   );

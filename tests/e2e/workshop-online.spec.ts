@@ -200,7 +200,9 @@ test("two browser friends play a workshop creation, recover its content after re
     await expect(a.getByTestId("room-code")).toHaveText(/^[A-F0-9]{6}$/);
     const code = await a.getByTestId("room-code").innerText();
     await b.goto(`/?room=${code}`);
-    await b.getByRole("button", { name: /Jugar online/ }).click();
+    await b
+      .getByRole("button", { name: "Jugar online con amigos", exact: true })
+      .click();
     await b.getByRole("textbox", { name: "Tu nombre" }).fill("Luis");
     await b.getByRole("button", { name: /Unirme/ }).click();
     for (const p of [a, b]) {
@@ -220,7 +222,9 @@ test("two browser friends play a workshop creation, recover its content after re
       b.getByText("Pelota en movimiento", { exact: true }),
     ).toBeVisible();
     await a.reload();
-    await a.getByRole("button", { name: /Jugar online/ }).click();
+    await a
+      .getByRole("button", { name: "Jugar online con amigos", exact: true })
+      .click();
     await a
       .getByRole("button", { name: "Recuperar mi sesión", exact: true })
       .click();

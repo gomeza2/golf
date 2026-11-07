@@ -146,7 +146,9 @@ test("two browser players share lobby rules, see real rival shots and receive th
       b = await cb.newPage();
     await a.goto(process.env.PUBLIC_ONLINE_URL || "/");
     await a.getByRole("button", { name: /Club del As/ }).click();
-    await a.getByRole("button", { name: /Jugar online/ }).click();
+    await a
+      .getByRole("button", { name: "Jugar online con amigos", exact: true })
+      .click();
     await a.getByRole("textbox", { name: "Tu nombre" }).fill("Ana");
     await a.getByRole("button", { name: /Duelo por puntos/ }).click();
     await a.getByRole("button", { name: /Crear sala/ }).click();
@@ -157,7 +159,9 @@ test("two browser players share lobby rules, see real rival shots and receive th
         ? `${process.env.PUBLIC_ONLINE_URL}/?room=${code}`
         : `/?room=${code}`,
     );
-    await b.getByRole("button", { name: /Jugar online/ }).click();
+    await b
+      .getByRole("button", { name: "Jugar online con amigos", exact: true })
+      .click();
     await b.getByRole("textbox", { name: "Tu nombre" }).fill("Luis");
     await b.getByRole("button", { name: /Unirme/ }).click();
     await expect(

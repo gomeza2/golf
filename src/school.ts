@@ -6,18 +6,17 @@ export const schoolTarget = { x: -3, y: 0.02, z: 6, radius: 1.1 };
 export const lessons = [
   {
     title: "La fuerza justa",
-    description:
-      "Deja la pelota dentro del aro con un solo golpe. El aro es tu objetivo de práctica; ajusta dirección y fuerza.",
+    description: "Deja la pelota en el aro con un golpe suave.",
   },
   {
     title: "Tu aliada, la banda",
     description:
-      "Haz un rebote contra una pared y deja que la pelota se detenga dentro del campo. Puedes usar más de un golpe.",
+      "Rebota en una pared y deja que la pelota se detenga dentro del campo.",
   },
   {
     title: "Hasta el fondo de la copa",
     description:
-      "Completa el hoyo sin penalizaciones ni límite de golpes. La pelota tiene que caer dentro: pasar sobre el borde no cuenta.",
+      "Haz caer la pelota en la copa. Puedes usar varios golpes; evita las penalizaciones.",
   },
 ] as const;
 export type SchoolSession = {
@@ -99,7 +98,11 @@ export function observeSchool(
 }
 export function schoolFeedback(session: SchoolSession, state: State) {
   if (session.phase === "passed")
-    return "Ejercicio superado con un tiro real. La pelota y el reloj están detenidos.";
+    return [
+      "¡En el aro! Ya controlas un golpe corto.",
+      "¡Buena banda! Una pared también puede ser tu aliada.",
+      "¡Dentro! Ahora puedes poner tus golpes a prueba en una vuelta completa.",
+    ][session.lesson];
   const p = state.players[0];
   if (p?.capped.length)
     return "Llegaste al límite. Reintenta desde la salida para completar el ejercicio.";
