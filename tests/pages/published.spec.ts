@@ -554,3 +554,81 @@ test("the released community entry loads its interface and reports actual backen
     .toBeGreaterThan(0);
   await page.screenshot({ path: "work/pages-community.png", fullPage: true });
 });
+test("the published precision control accepts touch without ghost pause and preserves its reference", async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() =>
+      localStorage.setItem("golf-graphics-mode", "low"),
+    );
+    await page.goto(baseURL!);
+    await expect(page.locator(".header-right")).toContainText(
+      `v${APP_VERSION}`,
+    );
+    await page
+      .locator(".shot-mode-picker")
+      .getByRole("button", { name: /Precisión/ })
+      .click();
+    await page.getByRole("button", { name: /Aprender jugando/ }).click();
+    await page
+      .getByRole("button", { name: "Más ajustes", exact: true })
+      .click();
+    await page
+      .getByRole("slider", { name: "Potencia", exact: true })
+      .fill("0.25");
+    await page
+      .getByRole("button", { name: "Menos ajustes", exact: true })
+      .click();
+    const trigger = page.getByRole("button", {
+      name: "MANTENER Y SOLTAR",
+      exact: true,
+    });
+    await expect(trigger).toBeEnabled();
+    const box = (await trigger.boundingBox())!;
+    const cdp = await context.newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [
+        { x: box.x + box.width / 2, y: box.y + box.height / 2, id: 1 },
+      ],
+    });
+    await expect(
+      page.getByRole("img", { name: "Oscilación de dirección", exact: true }),
+    ).toBeVisible();
+    await page.waitForTimeout(350);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect(page.locator(".turn-toast b")).toHaveText("1/12");
+    await expect(
+      page.getByRole("dialog", { name: "Partida en pausa", exact: true }),
+    ).toHaveCount(0);
+    await expect(page.locator('input[aria-label="Potencia"]')).toHaveValue(
+      "0.25",
+    );
+    await expect(
+      page.getByRole("status", {
+        name: "Lectura del último golpe",
+        exact: true,
+      }),
+    ).toHaveAttribute("data-reference-power", "0.25");
+    await page.screenshot({
+      path: "work/pages-controls-mobile.png",
+      animations: "disabled",
+    });
+    await cdp.detach();
+    console.log(
+      `PAGES CONTROLS VERIFIED: version ${APP_VERSION}, native touch release, one physical stroke, preserved reference, no ghost pause: ${baseURL}`,
+    );
+  } finally {
+    await context.close();
+  }
+});

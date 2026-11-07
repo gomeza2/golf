@@ -1,5 +1,15 @@
 # Hoyo en Uno · Golf Club
 
+## 0.18.0 — Retroceso fino y precisión legible
+
+- Sensibilidad fina opcional de 3–35 % para putts cortos, con referencias/presets acotados y curva normal conservada.
+- Zona de cancelación visible y estado de tiro armado coherente con el gesto real.
+- Más ajustes revela dirección y referencia de potencia en los tres controles.
+- Lectura de ángulo/potencia y resumen de la suelta, sin predicción de trayectoria ni bonificaciones físicas.
+- Cronometría mediante eventos de entrada y cancelación al perder captura del puntero.
+- Lecturas transitorias limpias entre jugadores/rondas; física, registros y esquema bloqueado conservados.
+- Controles avanzados laterales en horizontal, ajustes desplazables y guía compacta sin tapar la pelota.
+
 ## 0.17.0 — Bienvenida y comunidad persistente
 
 - La entrada rápida conserva el progreso por control: propone el primer ejercicio pendiente y, una vez completada la escuela, inicia directamente la vuelta de tres hoyos. Las partidas recuperables tienen prioridad.

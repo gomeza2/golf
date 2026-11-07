@@ -74,3 +74,30 @@ it("pulse is deterministic, time based and never exceeds accepted angle/power li
   }
   expect(pulseShot(620, 1)).toEqual(pulseShot(620, 1));
 });
+it("fine pulling reaches legal short putts without boosting normal shot power", () => {
+  expect(pullShot(0, 12, 0, true)).toMatchObject({ power: 0.03, valid: true });
+  expect(pullShot(0, 11, 0, true).valid).toBe(false);
+  expect(pullShot(0, 90, 0, true).power).toBeCloseTo(0.175);
+  expect(pullShot(0, 900, 0, true).power).toBe(0.35);
+  expect(pullShot(0, 90, 0).power).toBe(0.5);
+  expect(pullShot(90, 0, 1, true).angle).toBe(pullShot(90, 0, 1).angle);
+});
+it("input review measures wrapped direction and keeps selected and released power separate", async () => {
+  const { shotReview } = await import("../src/shotControls");
+  const result = shotReview(
+    { angle: -Math.PI + 0.01, power: 0.6 },
+    { angle: Math.PI - 0.01, power: 0.55 },
+  );
+  expect(result.angleError).toBeCloseTo(0.02);
+  expect(result.power).toBe(0.6);
+  expect(result.referencePower).toBe(0.55);
+});
+it("input timestamps retain queued event timing and safely reject incompatible clocks", async () => {
+  const { shotEventTime } = await import("../src/shotControls");
+  expect(shotEventTime(500, 900)).toBe(500);
+  expect(shotEventTime(undefined, 900)).toBe(900);
+  expect(shotEventTime(1700000000000, 900)).toBe(900);
+  expect(shotEventTime(-1, 900)).toBe(900);
+  expect(shotEventTime(NaN, 900)).toBe(900);
+  expect(shotEventTime(0, 90000)).toBe(90000);
+});

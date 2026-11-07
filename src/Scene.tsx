@@ -701,7 +701,7 @@ function World({
             (e.target as unknown as Element).releasePointerCapture(e.pointerId);
             return;
           }
-          if (controlMode === "pull") shotInput.release();
+          if (controlMode === "pull") shotInput.release(e.timeStamp);
           drag.current = null;
           (e.target as unknown as Element).releasePointerCapture(e.pointerId);
         }}
@@ -729,7 +729,7 @@ function World({
           activePointer.current = e.pointerId;
           if (controlMode === "pull") {
             (e.target as unknown as Element).setPointerCapture(e.pointerId);
-            shotInput.start(e.clientX, e.clientY);
+            shotInput.start(e.clientX, e.clientY, e.timeStamp);
             return;
           }
           const aimed = Math.atan2(e.point.x - p.x, -(e.point.z - p.z));
