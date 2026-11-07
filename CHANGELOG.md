@@ -8,6 +8,7 @@
 - Lectura de ángulo/potencia y resumen de la suelta, sin predicción de trayectoria ni bonificaciones físicas.
 - Cronometría mediante eventos de entrada y cancelación al perder captura del puntero.
 - Lecturas transitorias limpias entre jugadores/rondas; física, registros y esquema bloqueado conservados.
+- Controles avanzados laterales en horizontal, ajustes desplazables y guía compacta sin tapar la pelota.
 
 ## 0.17.0 — Bienvenida y comunidad persistente
 

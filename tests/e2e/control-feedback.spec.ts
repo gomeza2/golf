@@ -335,3 +335,82 @@ test("precision keeps its reference with real touch and keyboard releases on mob
     await context.close();
   }
 });
+
+test("landscape advanced controls leave the ball lane clear and school actions accessible", async ({
+  browser,
+}) => {
+  for (const [width, height] of [
+    [844, 390],
+    [667, 375],
+  ]) {
+    for (const mode of ["Precisión", "Retroceso"] as const) {
+      const context = await browser.newContext({
+        viewport: { width, height },
+        hasTouch: true,
+        isMobile: true,
+      });
+      const page = await context.newPage();
+      try {
+        await start(page, mode, false);
+        const panel = page.locator(".shot-panel"),
+          coach = page.locator(".school-coach");
+        await expect(coach).toBeVisible();
+        await page
+          .getByRole("button", { name: "Más ajustes", exact: true })
+          .click();
+        const power = page.getByRole("slider", {
+          name: "Potencia",
+          exact: true,
+        });
+        await power.scrollIntoViewIfNeeded();
+        await expect(power).toBeInViewport();
+        await page
+          .getByRole("button", { name: "Menos ajustes", exact: true })
+          .click();
+        if (mode === "Precisión") {
+          await page
+            .getByRole("button", { name: "MANTENER Y SOLTAR", exact: true })
+            .hover();
+          await page.mouse.down();
+          await expect(
+            page.getByRole("img", {
+              name: "Oscilación de dirección",
+              exact: true,
+            }),
+          ).toBeVisible();
+        } else {
+          await page.getByRole("button", { name: /Arrastre fino/ }).click();
+          await page.mouse.move(width / 2, height * 0.4);
+          await page.mouse.down();
+          await page.mouse.move(width / 2, height * 0.4 + 20);
+          await expect(page.getByText(/SUELTA PARA TIRAR/)).toBeVisible();
+        }
+        const desk = (await panel.boundingBox())!,
+          guide = (await coach.boundingBox())!;
+        expect(desk.x + desk.width).toBeLessThan(width / 2 - 16);
+        expect(guide.x).toBeGreaterThan(width / 2 + 16);
+        expect(guide.y + guide.height).toBeLessThanOrEqual(height - 8);
+        expect(desk.y).toBeGreaterThan(185);
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth),
+        ).toBeLessThanOrEqual(width);
+        await page.screenshot({
+          path: `work/controls-landscape-${mode}-${width}.png`,
+          animations: "disabled",
+        });
+        await page.keyboard.press("Escape");
+        await page.mouse.up();
+        await expect(page.locator(".turn-toast b")).toHaveText("0/12");
+        const close = page.getByRole("button", {
+          name: "Cerrar guía y seguir practicando",
+          exact: true,
+        });
+        await expect(close).toBeInViewport();
+        await close.click();
+        await expect(coach).toHaveCount(0);
+      } finally {
+        await context.close();
+      }
+    }
+  }
+});

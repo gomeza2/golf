@@ -26,6 +26,8 @@ Al soltar se registra una lectura transitoria: potencia enviada, referencia inic
 
 Los eventos de ratón, tacto y teclado aportan su marca temporal. Si un navegador usa un reloj incompatible, se utiliza el reloj local de rendimiento. La física y sus reglas permanecen iguales; los resultados se validan con el motor existente.
 
+En pantallas horizontales bajas, los controles avanzados se sitúan a la izquierda y la guía de escuela a la derecha, dejando libre la línea central de la pelota. Los ajustes expandidos permiten desplazamiento dentro del panel; los botones de la guía permanecen accesibles. La regresión comprueba Retroceso y Precisión en 844×390 y 667×375, incluyendo carga, cancelación y cierre de la guía.
+
 ## Compatibilidad y pruebas
 
 Clásico, online Clásico, circuitos, entrenamiento, escuela, editor, comunidad y récords se conservan. Reglas 7, protocolo 14 y documentos/guardados 1 permanecen. La sensibilidad fina no introduce un golpe elevado ni una fuerza adicional.
