@@ -1,5 +1,10 @@
 import type { CupState } from "./cups";
-import { TURN_SECONDS } from "./rules";
+import {
+  TURN_SECONDS,
+  PHYSICS_EDITION,
+  physicsEdition,
+  type PhysicsEdition,
+} from "./rules";
 import {
   holeOutcome,
   isMatchFormat,
@@ -45,6 +50,7 @@ export type Player = {
   capped: number[];
 };
 export type State = {
+  physics?: PhysicsEdition;
   custom?: true;
   workshopHash?: string;
   publication?: { id: string; revision: number };
@@ -66,7 +72,7 @@ export type State = {
   code: string;
   event?: {
     seq: number;
-    kind: "bounce" | "water" | "cup";
+    kind: "bounce" | "landing" | "water" | "cup";
     outcome?: HoleOutcome & {
       playerId: string;
       playerName: string;
@@ -90,6 +96,7 @@ export const total = (p: Player) =>
   p.scores.reduce((a, b) => a + b, 0) + p.strokes;
 export class Game {
   state: State = {
+    physics: PHYSICS_EDITION,
     phase: "lobby",
     practice: false,
     players: [],
@@ -117,7 +124,11 @@ export class Game {
   constructor(
     private readonly customCourse?: Course,
     private readonly competitiveCustom = false,
+    // All current workshop documents are format 1: preserve the physics in
+    // which their authors built and published them. Official new games use 2.
+    physics: PhysicsEdition = customCourse ? 1 : PHYSICS_EDITION,
   ) {
+    this.state.physics = physics;
     if (customCourse) this.state.custom = true;
     if (customCourse && competitiveCustom)
       this.state.courseOverride = customCourse;
@@ -317,7 +328,7 @@ export class Game {
     this.last = { ...p.pos };
     // A ball waiting on a slope stays at its saved lie until its next shot.
     this.ball.setTranslation(p.pos, true);
-    this.ball.setLinvel(shotVelocity(angle, power), true);
+    this.ball.setLinvel(shotVelocity(angle, power, physicsEdition(s)), true);
     s.moving = true;
     this.elapsed = 0;
     this.quiet = 0;
@@ -365,6 +376,40 @@ export class Game {
       this.ball.setLinvel({ x: 0, y: 0, z: 0 }, true);
     }
     const before = this.ball.linvel();
+    // Restitution belongs to the approaching contact, not a synthetic upward
+    // impulse. Quiet contacts remain inelastic, including after snapshot restore.
+    let landingRestitution = 0;
+    if (physicsEdition(s) === 2 && s.moving && before.y < -1.4) {
+      const pos = this.ball.translation();
+      const hit = this.world.castRayAndGetNormal(
+        new RAPIER.Ray(pos, { x: 0, y: -1, z: 0 }),
+        Math.max(0.36, 0.26 - before.y / 60),
+        true,
+        undefined,
+        undefined,
+        undefined,
+        this.ball,
+      );
+      if (hit && hit.normal.y > 0.45) {
+        const normalSpeed =
+          before.x * hit.normal.x +
+          before.y * hit.normal.y +
+          before.z * hit.normal.z;
+        if (normalSpeed < -1.4) {
+          const surface = surfaceAt(this.course(), {
+            ...pos,
+            y: pos.y - hit.timeOfImpact + 0.22,
+          });
+          landingRestitution = {
+            grass: 0.32,
+            sand: 0.08,
+            rough: 0.18,
+            dirt: 0.4,
+          }[surface];
+        }
+      }
+    }
+    this.ball.collider(0).setRestitution(landingRestitution);
     this.world.step();
     if (!s.moving) {
       if (s.time > s.deadline && (!s.custom || this.competitiveCustom)) {
@@ -393,9 +438,20 @@ export class Game {
     ) {
       this.emitEvent("bounce", pos);
       this.lastBounce = s.time;
+    } else if (
+      landingRestitution > 0 &&
+      before.y < -1.4 &&
+      v.y > 0.4 &&
+      s.time - this.lastBounce > 0.12
+    ) {
+      this.emitEvent("landing", pos);
+      this.lastBounce = s.time;
     }
-    if (c.water?.some((zone) => inZone(zone, pos) && pos.y < zone.y + 0.24)) {
-      this.emitEvent("water", pos);
+    const water = c.water?.find(
+      (zone) => inZone(zone, pos) && pos.y < zone.y + 0.24,
+    );
+    if (water) {
+      this.emitEvent("water", { ...pos, y: water.y + 0.02 });
       p.pos = { ...this.last };
       p.strokes = Math.min(MAX_STROKES, p.strokes + 1);
       p.penalties++;
@@ -472,12 +528,13 @@ export class Game {
     // Moving obstacles may transfer energy, but cannot launch a ball without bound.
     const actual = this.ball.linvel(),
       magnitude = Math.hypot(actual.x, actual.y, actual.z);
-    if (magnitude > 18)
+    const speedLimit = physicsEdition(s) === 2 ? 22 : 18;
+    if (magnitude > speedLimit)
       this.ball.setLinvel(
         {
-          x: (actual.x * 18) / magnitude,
-          y: (actual.y * 18) / magnitude,
-          z: (actual.z * 18) / magnitude,
+          x: (actual.x * speedLimit) / magnitude,
+          y: (actual.y * speedLimit) / magnitude,
+          z: (actual.z * speedLimit) / magnitude,
         },
         true,
       );
@@ -500,7 +557,7 @@ export class Game {
     }
   }
   emitEvent(
-    kind: "bounce" | "water" | "cup",
+    kind: "bounce" | "landing" | "water" | "cup",
     pos: V3,
     outcome?: NonNullable<State["event"]>["outcome"],
   ) {

@@ -213,7 +213,7 @@ test("two browser players share lobby rules, see real rival shots and receive th
         .fill(String(Number(aceShots[0].angle.toFixed(10))));
       await page
         .getByRole("slider", { name: "Potencia", exact: true })
-        .fill(String(aceShots[0].power));
+        .fill(String(Number(aceShots[0].power.toFixed(10))));
       await page.getByRole("button", { name: /GOLPEAR/ }).click();
       const observer = page === a ? b : a;
       await expect(

@@ -1,5 +1,6 @@
+import { currentPower, upgradeRoute } from "./power";
 // Physical QA routes. Never imported as player aim assistance.
-export const adventureSafeShots: [number, number][][] = [
+const legacy_adventureSafeShots: [number, number][][] = [
   [
     [0, 0.577],
     [1.7329379526421123, 0.633],
@@ -26,7 +27,7 @@ export const adventureSafeShots: [number, number][][] = [
     [2.025074452064903, 0.119],
   ],
 ];
-export const adventureRiskShots: [number, number][][] = [
+const legacy_adventureRiskShots: [number, number][][] = [
   [
     [0.6107259643892086, 0.673],
     [-0.00012440283547876757, 0.143],
@@ -40,3 +41,7 @@ export const adventureRiskShots: [number, number][][] = [
     [1.5663895988609586, 0.127],
   ],
 ];
+
+export const adventureSafeShots = legacy_adventureSafeShots.map(upgradeRoute);
+
+export const adventureRiskShots = legacy_adventureRiskShots.map(upgradeRoute);

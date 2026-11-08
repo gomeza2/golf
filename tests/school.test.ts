@@ -100,7 +100,8 @@ it("optional teaching metadata survives the same physical save while old or corr
     const saved = captureLocalRound(g, "pull");
     saved.school = session;
     expect(validateLocalRound(saved)).toBe(true);
-    expect(saved.format).toBe(1);
+    expect(saved.format).toBe(2);
+    expect(saved.state.physics).toBe(2);
     expect(saved.rules).toBe(7);
     recovered = restoreLocalRound(saved);
     let resumed = restoreSchoolSession(saved.school, recovered.state)!;

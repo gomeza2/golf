@@ -9,7 +9,7 @@ async function shoot(page: Page, angle: number, power: number) {
     .fill(String(Number(angle.toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
-    .fill(String(power));
+    .fill(String(Number(power.toFixed(10))));
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
   await expect(
     page.getByText("Pelota en movimiento", { exact: true }),

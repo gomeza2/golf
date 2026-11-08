@@ -148,7 +148,7 @@ export function WorkshopPlay({
           <p>
             Par {course.par} ·{" "}
             {(s?.phase === "finished" ? p?.scores[0] : p?.strokes) ?? 0} golpes
-            · {p?.penalties ?? 0} penalizaciones
+            · {p?.penalties ?? 0} penalizaciones · Física original
           </p>
         </div>
         <button onClick={onBack}>{backLabel}</button>

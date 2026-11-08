@@ -1,4 +1,5 @@
 import { getCircuit } from "../shared/courses";
+import { physicsEdition } from "../shared/rules";
 import {
   getChallenge,
   challengeTitle,
@@ -60,6 +61,7 @@ export function SavedRound({
           : `${state.players.length} ${state.players.length === 1 ? "jugador" : "jugadores"}`}{" "}
         · Hoyo {state.hole + 1}/{circuit.courses.length} ·{" "}
         {controlModes.find((m) => m.id === control)!.name}
+        {physicsEdition(state) === 1 ? " · Física original" : ""}
       </p>
       <span>{state.players.map((p) => p.name).join(" · ")}</span>
       <small>

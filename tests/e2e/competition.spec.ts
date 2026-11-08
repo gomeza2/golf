@@ -7,7 +7,7 @@ async function ace(page: Page) {
     .fill(String(Number(aceShots[0].angle.toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
-    .fill(String(aceShots[0].power));
+    .fill(String(Number(aceShots[0].power.toFixed(10))));
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
 }
 test("a real points duel awards completed aces, survives reload and keeps scores and tee honours", async ({

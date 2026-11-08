@@ -231,13 +231,7 @@ export function ImpactEffect({
   if (!event || time - event.time > 1 || time < event.time) return null;
   const age = time - event.time;
   return (
-    <group
-      position={[
-        event.pos.x,
-        event.kind === "water" ? -0.25 : event.pos.y,
-        event.pos.z,
-      ]}
-    >
+    <group position={[event.pos.x, event.pos.y, event.pos.z]}>
       {detail > 0 &&
         !window.matchMedia("(prefers-reduced-motion: reduce)").matches && (
           <ImpactParticles

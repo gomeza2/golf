@@ -1,5 +1,16 @@
 # Hoyo en Uno · Golf Club
 
+## 0.19.0 — Tierras bravas, saltos y drives largos
+
+- Tres hoyos de 90–160 m con rutas amplias/arriesgadas, agua, salto real, tres niveles, compuerta y puente giratorio; 34 hoyos, 13 selecciones y 38 prácticas.
+- Máxima velocidad 20 m/s, incremento progresivo solo por encima del 75 % y respuesta suave/media conservada.
+- Restitución de aterrizaje por superficie, con rodamiento y choque lateral sin elevación artificial.
+- Evento de aterrizaje separado del rebote en banda; salpicaduras a la altura real del agua.
+- Edición de física 2 para nuevas rondas oficiales, formato de guardado 2 y protocolo 15.
+- Recuperación de snapshots 0.18 reales; desafíos c1 y documentos de taller 1 conservan física original.
+- Marcas anteriores visibles y sin migración destructiva; récords nuevos en espacio separado.
+- Rutas físicas seguras/arriesgadas, guardados en vuelo y duelo real con honores cubiertos por pruebas.
+
 ## 0.18.0 — Retroceso fino y precisión legible
 
 - Sensibilidad fina opcional de 3–35 % para putts cortos, con referencias/presets acotados y curva normal conservada.

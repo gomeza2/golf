@@ -386,7 +386,7 @@ export function Workshop({
         <div>
           <small>CREAR · PROBAR · COMPARTIR ARCHIVO</small>
           <h1>Taller de hoyos</h1>
-          <p>Diseña tu riesgo. Cada pieza usa las físicas del club.</p>
+          <p>Diseña tu riesgo. Documento 1 · Física original conservada.</p>
         </div>
         <button onClick={onClose}>Volver al club</button>
       </div>

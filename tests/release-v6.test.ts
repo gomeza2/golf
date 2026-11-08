@@ -13,7 +13,7 @@ function game() {
   g.add("a", "Ana");
   return g;
 }
-it("real grass travel is approximately proportional from 20 to 100 percent, with small tap shots below it", () => {
+it("grass travel keeps calibrated medium shots and adds progressive long drives above 75 percent", () => {
   const course = courses[0],
     original = { ...course };
   try {
@@ -36,12 +36,13 @@ it("real grass travel is approximately proportional from 20 to 100 percent, with
     };
     const max = distance(1),
       observed = new Map<number, number>();
-    expect(max).toBeGreaterThan(25.6);
-    expect(max).toBeLessThan(26.2);
+    expect(max).toBeGreaterThan(33);
+    expect(max).toBeLessThan(35);
     for (const p of [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]) {
       const d = distance(p);
       observed.set(p, d);
-      expect(Math.abs(d / max - p)).toBeLessThan(0.025);
+      if (p <= 0.75) expect(Math.abs(d / 25.90873 - p)).toBeLessThan(0.025);
+      else expect(d).toBeGreaterThan(25.90873 * p);
     }
     const a = observed.get(0.5)!,
       b = observed.get(0.6)!,

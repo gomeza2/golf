@@ -1,8 +1,10 @@
-import { RULES_VERSION } from "../shared/rules";
+import { RULES_VERSION, type PhysicsEdition } from "../shared/rules";
 import { getCircuit, isCircuitId, type CircuitId } from "../shared/courses";
 import type { State } from "../shared/game";
 import { isControlMode, type ControlMode } from "./shotControls";
-export const RECORDS_KEY = `club-personal-normal-v${RULES_VERSION}`;
+const storageKey = (physics: PhysicsEdition) =>
+  `club-personal-normal-v${RULES_VERSION}${physics === 2 ? "-p2" : ""}`;
+export const RECORDS_KEY = storageKey(2);
 export const goalLabels: Record<string, string> = {
   finish: "Recorrido completado",
   par: "Al par o mejor",
@@ -29,9 +31,11 @@ const positive = (v: unknown, max: number): v is number =>
   Number.isInteger(v) && (v as number) > 0 && (v as number) <= max;
 export const recordKey = (circuit: CircuitId, control: ControlMode) =>
   `${circuit}:${control}`;
-export function readPersonalRecords(): PersonalHistory {
+export function readPersonalRecords(
+  physics: PhysicsEdition = 2,
+): PersonalHistory {
   try {
-    const raw = JSON.parse(localStorage.getItem(RECORDS_KEY) || "null");
+    const raw = JSON.parse(localStorage.getItem(storageKey(physics)) || "null");
     if (
       !raw ||
       raw.version !== RULES_VERSION ||
@@ -123,10 +127,13 @@ export function recordCompletedRound(
     report: { best: next.best, score, improved, earned },
   };
 }
-export function persistPersonalRecords(records: PersonalHistory) {
+export function persistPersonalRecords(
+  records: PersonalHistory,
+  physics: PhysicsEdition = 2,
+) {
   try {
     localStorage.setItem(
-      RECORDS_KEY,
+      storageKey(physics),
       JSON.stringify({ version: RULES_VERSION, records }),
     );
     return true;

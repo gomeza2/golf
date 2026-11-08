@@ -7,7 +7,7 @@ import {
   type ChallengeResult,
 } from "../shared/challenges";
 import type { State } from "../shared/game";
-import { RULES_VERSION } from "../shared/rules";
+import { RULES_VERSION, physicsEdition } from "../shared/rules";
 export const CHALLENGES_KEY = `club-challenges-v${RULES_VERSION}-c1`;
 export type ChallengeSession = { id: string; attempt: string };
 export type ChallengeRecord = {
@@ -42,6 +42,7 @@ export function restoreChallengeSession(
     c = getChallenge(v?.id);
   if (
     !c ||
+    physicsEdition(state) !== 1 ||
     !attemptValid(v.attempt) ||
     control !== "classic" ||
     state.practice ||

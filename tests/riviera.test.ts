@@ -1,3 +1,4 @@
+import {currentPower} from "./fixtures/power";
 import { beforeAll, afterEach, it, expect } from "vitest";
 import { Game, initPhysics } from "../shared/game";
 import { getCourse, rivieraCourses, geometry } from "../shared/courses";
@@ -72,7 +73,7 @@ it("normal shots have no vertical launch and use the same bounded speed", () => 
   const g = game(1);
   g.shoot("0", 0, 1);
   expect(g.ball.linvel().y).toBe(0);
-  expect(Math.hypot(g.ball.linvel().x, g.ball.linvel().z)).toBeCloseTo(16.2);
+  expect(Math.hypot(g.ball.linvel().x, g.ball.linvel().z)).toBeCloseTo(20);
   expect(shotVelocity(1, 0.5).y).toBe(0);
   expect(
     Math.hypot(shotVelocity(1, 0.5).x, shotVelocity(1, 0.5).z),
@@ -160,7 +161,7 @@ it("completes all four Riviera holes from their tees, without repositioning or p
   let highest = 0;
   for (let hole = 0; hole < 4; hole++) {
     for (const [angle, power] of routes[hole]) {
-      expect(g.shoot("0", angle, power)).toBe(true);
+      expect(g.shoot("0", angle, currentPower(power))).toBe(true);
       for (let frame = 0; frame < 1200 && g.state.moving; frame++) {
         g.tick();
         highest = Math.max(highest, g.state.players[0].pos.y);

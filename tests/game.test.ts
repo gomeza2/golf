@@ -1,3 +1,4 @@
+import {currentPower} from "./fixtures/power";
 import { beforeAll, describe, it, expect, afterEach } from "vitest";
 import {
   Game,
@@ -142,7 +143,7 @@ describe("authoritative rules and physics", () => {
     ];
     for (let hole = 0; hole < 3; hole++) {
       for (const [angle, power] of routes[hole]) {
-        expect(g.shoot("0", angle, power)).toBe(true);
+        expect(g.shoot("0", angle, currentPower(power))).toBe(true);
         settle(g);
       }
       expect(g.state.players[0].done).toBe(true);
@@ -278,7 +279,7 @@ it("plays the complete lunar circuit from the tees, including live sliding gates
   ];
   for (let hole = 0; hole < 3; hole++) {
     for (const [angle, power] of routes[hole]) {
-      expect(g.shoot("a", angle, power)).toBe(true);
+      expect(g.shoot("a", angle, currentPower(power))).toBe(true);
       settle(g);
     }
     expect(g.state.players[0].done).toBe(true);
@@ -318,7 +319,7 @@ it("plays all larger park holes from the tees without repositioning", () => {
   ];
   for (let hole = 0; hole < 3; hole++) {
     for (const [angle, power] of routes[hole]) {
-      expect(g.shoot("a", angle, power)).toBe(true);
+      expect(g.shoot("a", angle, currentPower(power))).toBe(true);
       settle(g);
     }
     expect(g.state.players[0].done).toBe(true);

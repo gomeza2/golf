@@ -46,7 +46,7 @@ test("a real two-stroke tower finish displays Eagle minus two and preserves the 
       .fill(String(Number(wrapAngle(angle).toFixed(10))));
     await page
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(power));
+      .fill(String(Number(power.toFixed(10))));
     await page.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(
       page.getByText("Pelota en movimiento", { exact: true }),

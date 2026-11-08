@@ -11,7 +11,7 @@ function game() {
   return g;
 }
 afterEach(() => games.splice(0).forEach((g) => g.dispose()));
-it("grass absorbs a landing instead of bouncing the ball repeatedly", () => {
+it("settled grass contact does not keep creating small rebounds", () => {
   const g = game();
   g.shoot("a", 0, 0.05);
   g.ball.setTranslation({ x: -3, y: 2, z: 9 }, true);

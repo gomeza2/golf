@@ -1,3 +1,4 @@
+import { physicsEdition } from "../shared/rules";
 import {
   readPublicationTarget,
   saveCommunityIntent,
@@ -449,19 +450,29 @@ function App() {
       return;
     savedRound.current = roundId;
     if (s.practice) {
-      const result = recordPractice(practiceHistory, s, roundControl);
+      const physics = physicsEdition(s);
+      const result = recordPractice(
+        physics === 1 ? readPracticeRecords(1) : practiceHistory,
+        s,
+        roundControl,
+      );
       if (result) {
-        const persisted = persistPracticeRecords(result.history);
-        setPracticeHistory(result.history);
+        const persisted = persistPracticeRecords(result.history, physics);
+        if (physics === 2) setPracticeHistory(result.history);
         setPracticeReport({ ...result.report, persisted });
       }
       return;
     }
     if (challenges.session) return;
-    const result = recordCompletedRound(personalHistory, s, roundControl);
+    const physics = physicsEdition(s);
+    const result = recordCompletedRound(
+      physics === 1 ? readPersonalRecords(1) : personalHistory,
+      s,
+      roundControl,
+    );
     if (result) {
-      const persisted = persistPersonalRecords(result.history);
-      setPersonalHistory(result.history);
+      const persisted = persistPersonalRecords(result.history, physics);
+      if (physics === 2) setPersonalHistory(result.history);
       setRoundReport({ ...result.report, persisted });
     }
   }, [s.phase, roundId, mode]);
@@ -476,7 +487,7 @@ function App() {
         tone(
           s.event.kind === "water"
             ? "splash"
-            : s.event.kind === "bounce"
+            : s.event.kind === "bounce" || s.event.kind === "landing"
               ? "bounce"
               : "cup",
           volume,
@@ -687,6 +698,7 @@ function App() {
   function startChallenge(c: ClubChallenge) {
     if (!ready) return;
     const g = new Game();
+    g.state.physics = 1;
     g.selectCircuit(c.circuit);
     g.add("0", names[0]);
     g.start("strokes");
@@ -1205,7 +1217,7 @@ function App() {
               <p>
                 Comunidad · Revisión {roomPublication.revision} · Par{" "}
                 {roomPublication.par}. El servidor carga esta revisión
-                publicada.
+                publicada. Física original del documento 1.
               </p>
               <button
                 className="text-button"
@@ -1233,7 +1245,8 @@ function App() {
               <strong>{roomWorkshop.name}</strong>
               <p>
                 Cancha del taller · Par {roomWorkshop.par} · Un hoyo privado. El
-                servidor valida el diseño antes de admitir la sala.
+                servidor valida el diseño antes de admitir la sala. Física
+                original del documento 1.
               </p>
               <button
                 className="text-button"

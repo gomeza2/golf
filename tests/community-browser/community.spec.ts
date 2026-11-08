@@ -154,6 +154,11 @@ test("a real creation moves through OIDC publication, review, anonymous discover
         localStorage.getItem("club-personal-normal-v7"),
       ),
     ).toBeNull();
+    expect(
+      await guest.evaluate(() =>
+        localStorage.getItem("club-personal-normal-v7-p2"),
+      ),
+    ).toBeNull();
     await guest
       .getByRole("button", { name: "Volver a la creación", exact: true })
       .click();

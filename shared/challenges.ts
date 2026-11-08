@@ -1,6 +1,6 @@
 import { getCircuit, type CircuitId } from "./courses";
 import { MAX_STROKES, type State } from "./game";
-import { RULES_VERSION } from "./rules";
+import { RULES_VERSION, physicsEdition } from "./rules";
 
 // Versioned pools are deliberately frozen: adding a course must not change an old link.
 const dailyPool: readonly CircuitId[] = [
@@ -107,6 +107,7 @@ export function assessChallenge(
 ): ChallengeResult | null {
   if (
     control !== "classic" ||
+    physicsEdition(state) !== 1 ||
     state.custom ||
     state.phase !== "finished" ||
     state.practice ||

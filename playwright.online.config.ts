@@ -14,8 +14,12 @@ const target = normalizeServerUrl(
 process.env.PUBLIC_ONLINE_URL = target;
 export default defineConfig({
   ...base,
-  testMatch: ["friends.spec.ts", "workshop-online.spec.ts"],
-  grep: /server owns format|two browser players|public sky circuit|real friend cup|real risk course|public summit circuit|public workshop room/,
+  testMatch: [
+    "friends.spec.ts",
+    "workshop-online.spec.ts",
+    "wildlands.spec.ts",
+  ],
+  grep: /server owns format|two browser players|public sky circuit|real friend cup|real risk course|public summit circuit|public workshop room|public wild circuit/,
   webServer: undefined,
   globalSetup: "./tests/online-setup.ts",
   timeout: 180000,

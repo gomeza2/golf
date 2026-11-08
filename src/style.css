@@ -4118,3 +4118,7 @@ button > span {
     margin-right: 10px;
   }
 }
+
+.legacy-marks { margin: 12px 0; padding: 10px 14px; border: 1px solid #c8d7b333; border-radius: 9px; background: #163c32; font-size: 11px; color: #cbd8cd; }
+.legacy-marks summary { cursor: pointer; min-height: 36px; padding: 8px 0; color: #e8c888; }
+.legacy-marks p, .legacy-marks li { line-height: 1.6; }

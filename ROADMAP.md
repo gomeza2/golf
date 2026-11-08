@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.18.0, dominio de Retroceso y Precisión
+## Entrega actual — 0.19.0, Tierras bravas y aterrizajes
+
+Campos extensos con huellas abiertas sobre agua: presa con salto real, escalera de ocho metros y delta de tres rutas. Geometría, colisiones, mapa y servidor comparten Course. Potencia superior progresiva, aterrizajes por superficie y salpicaduras a la altura real del agua. No se añade golpe elevado ni trayectoria resuelta.
+
+Una edición de física explícita conserva guardados originales, desafíos c1 y documentos del taller 1; rondas oficiales nuevas usan física 2. Récords originales visibles y almacenados sin sobrescribir; nuevas marcas separadas. Catálogo ampliado sin renumerar prácticas anteriores ni cambiar las vueltas de 9/18. Puntuación 7, protocolo 15. [PHYSICS-AND-WILDLANDS.md](PHYSICS-AND-WILDLANDS.md) recoge verificación y límites.
+
+**Siguiente fase:** sesiones con personas y teléfonos físicos para ajustar lectura de alturas, ventanas de mecanismos, cámara y fuerza máxima. Preparar documento 2 con adopción explícita de física nueva para creaciones, conservando revisiones publicadas inmutables. La comunidad pública sigue necesitando PostgreSQL, identidad y moderación reales del propietario; no se inventan estadísticas ni disponibilidad.
+
+## Entrega anterior — 0.18.0, dominio de Retroceso y Precisión
 
 La siguiente fase se centra en controles antes de ampliar campos. Se corrige la imposibilidad práctica de preparar putts inferiores a 6,7 % en el arrastre normal mediante una sensibilidad fina opcional de 3–35 %. La zona de cancelación refleja el estado real, y Más ajustes revela dirección/referencia en los tres esquemas. Precisión incorpora lectura de desvío, referencia elegida y análisis de la suelta, manteniendo sus dos oscilaciones y dificultad.
 
