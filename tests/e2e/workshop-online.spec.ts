@@ -238,6 +238,11 @@ test("two browser friends play a workshop creation, recover its content after re
       expect(
         await p.evaluate(() => localStorage.getItem("club-personal-normal-v7")),
       ).toBeNull();
+      expect(
+        await p.evaluate(() =>
+          localStorage.getItem("club-personal-normal-v7-p2"),
+        ),
+      ).toBeNull();
     }
     await b.screenshot({ path: "work/workshop-online-mobile-results.png" });
     const owner = (await a.getByRole("button", { name: /La revancha/ }).count())

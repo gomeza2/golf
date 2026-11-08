@@ -1,6 +1,14 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.18.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+Versión **0.19.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+
+## Tierras bravas y física de aterrizajes — 0.19.0
+
+Tres campos nuevos de **90–160 m de recorrido**, con rutas seguras y atajos que exigen precisión: salto sobre agua, descenso de ocho metros y delta con tres caminos, compuerta y puente giratorio. El catálogo alcanza **34 hoyos físicos, 13 selecciones y 38 prácticas**. Las vueltas clásicas de 9/18, los tres controles, escuela, copas, editor y comunidad permanecen disponibles.
+
+El golpe sigue siendo normal, con impulso vertical cero. La potencia de 0–75 % conserva su respuesta; el último cuarto aumenta progresivamente hasta 20 m/s (antes 16,2). Los aterrizajes recuperan energía según césped, arena, rough o tierra, sin rebote artificial al rodar o chocar de lado. La flecha sigue siendo corta y no predice el destino.
+
+**Compatibilidad:** los guardados originales, desafíos c1 y creaciones del taller/documento 1 mantienen la física original. Las rondas oficiales nuevas usan física 2 y guardado 2. Los récords anteriores se conservan y se consultan en «Marcas anteriores»; los nuevos tienen un espacio separado. Reglas de puntuación 7 y protocolo online **15**. Actualiza cliente y servidor juntos. [PHYSICS-AND-WILDLANDS.md](PHYSICS-AND-WILDLANDS.md) describe las decisiones, pruebas y límites.
 
 ## Controles más legibles — 0.18.0
 
@@ -20,7 +28,7 @@ La entrada rápida conserva el progreso por control: propone el primer ejercicio
 
 URL del proyecto: **https://gomeza2.github.io/golf/**. La publicación la realiza el workflow **Publish playable game** al actualizar `main`; su estado y la comprobación final de la URL están en GitHub Actions. La primera publicación debe terminar correctamente antes de que desaparezca un 404 anterior.
 
-Pages sirve el juego local completo para 1–8 personas y doce opciones de recorrido, con dos perfiles de bandera en Al Filo. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
+Pages sirve el juego local completo para 1–8 personas y trece opciones de recorrido, con dos perfiles de bandera en Al Filo. No ejecuta Node ni las salas: si no hay un servidor público configurado, el botón online aparece desactivado con una explicación y una acción **Conectar un servidor**. Puedes escribir una URL HTTPS en el menú online sin recompilar. La URL se recuerda localmente y las invitaciones incluyen `server=` (nunca el token de recuperación). También puedes configurar `VITE_SERVER_URL` en GitHub y volver a publicar. Permite `https://gomeza2.github.io` en `CLIENT_ORIGIN` del servidor. Los códigos de sala no funcionan como sesiones online hasta que ese servidor esté disponible.
 
 El workflow compila con la ruta `/golf/`, comprueba en Chromium que todos los assets cargan y se puede golpear, publica `dist/` y repite la prueba contra la URL desplegada. Publica sobre el sitio Pages existente desde `main`, con `pages: write` e `id-token: write`; no necesita modificar sus ajustes administrativos. Como recomienda GitHub, seleccionar **Settings → Pages → Source: GitHub Actions** evita que además se ejecute el publicador Jekyll heredado. Si un fork todavía no tiene Pages habilitado, su propietario debe activarlo una vez en **Settings → Pages → Source: GitHub Actions**.
 
@@ -42,7 +50,7 @@ npm run community:migrate:production
 
 Dependencias nuevas: `pg` para PostgreSQL, `jose` para verificar JWT/JWKS y `oidc-client-ts` para Authorization Code + PKCE. Ninguna credencial privada se compila en Vite. `VITE_COMMUNITY_SERVER_URL` es solo el origen público de API, fijado por despliegue.
 
-Protocolo online **14**, reglas v7, guardado 1 y documento del taller 1. Se conservan los 31 hoyos oficiales, recorridos, tres controles, modos, copas y récords. Las salas siguen siendo temporales; la persistencia de creaciones está en PostgreSQL.
+Protocolo online **15**, reglas v7, guardados 1/2 y documento del taller 1. Se conservan los 34 hoyos oficiales, recorridos, tres controles, modos, copas y récords. Las salas siguen siendo temporales; la persistencia de creaciones está en PostgreSQL.
 
 ## Canchas del taller con amigos — entrega 0.16.0
 
@@ -50,7 +58,7 @@ Protocolo online **14**, reglas v7, guardado 1 y documento del taller 1. Se cons
 
 Se juega un hoyo fijo con reloj de 30 s, límite de 12 golpes, par propio, resultados, reconexión y revancha. La cancha no se cambia ni se convierte en copa dentro de esa sala; para otro diseño se crea una nueva. La práctica individual del taller sigue sin reloj. Los resultados privados no generan récords oficiales ni sustituyen sus guardados. El contenido viaja al entrar/reconectar, no en cada actualización de posiciones.
 
-El protocolo 13 se introdujo en esta entrega; el vigente es 14. Reglas v7, guardados 1 y documento del taller v1 conservados. Las salas están en memoria y se pierden si el servidor reinicia. Guardar/exportar el diseño lo conserva fuera de la sala. HTTPS o localhost para verificar la revisión. Todavía no hay galería pública ni publicación persistente: [COMMUNITY.md](COMMUNITY.md) define el siguiente paso y sus requisitos. No se agregan servicios, cuentas, secretos o dependencias nuevas.
+El protocolo 13 se introdujo en esta entrega; el vigente es 15. Reglas v7, guardados 1 y documento del taller v1 conservados. Las salas están en memoria y se pierden si el servidor reinicia. Guardar/exportar el diseño lo conserva fuera de la sala. HTTPS o localhost para verificar la revisión. Todavía no hay galería pública ni publicación persistente: [COMMUNITY.md](COMMUNITY.md) define el siguiente paso y sus requisitos. No se agregan servicios, cuentas, secretos o dependencias nuevas.
 
 ## Cumbres y Mareas — 0.15.0
 
@@ -70,7 +78,7 @@ Se conservan el golpe normal y las físicas generales de reglas v7; los desnivel
 
 QA física: vueltas amplias de **4/8/7** golpes y atajos de **3/1/4**, completos sin recolocaciones ni penalizaciones. Para las puertas se espera una ventana real dentro del tiempo de turno; el as oblicuo no se obtiene tirando recto con máxima potencia. Estos son recorridos de prueba, no una guía visible de tiros. La geometría elevada, la espiral y el mundo guardado se verifican con Rapier; la escena usa los mismos datos.
 
-**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. El protocolo 12 se introdujo en esta entrega; el vigente es 14: actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
+**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. El protocolo 12 se introdujo en esta entrega; el vigente es 15: actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
 
 La comunidad de creaciones queda como la siguiente fase: primero partidas privadas con contenido validado por servidor y después publicación persistente/galería. [COMMUNITY.md](COMMUNITY.md) define el contrato, límites y almacenamiento necesarios. Todavía se comparten archivos del taller; no hay galería ni publicación central conectada. La revisión específica de Retroceso y Precisión queda en una fase posterior, como solicitó el usuario.
 
@@ -84,7 +92,7 @@ En **Probar en 3D → Inspeccionar cancha**, gira, inclina y acerca/aleja la cá
 
 **Revisar el diseño** avisa de zonas de arena/rough que no coinciden con suelo a su altura, islas separadas y falta de conexión de suelo entre salida/copa. Usa una cuadrícula aproximada de 0,5 m y la altura superior; no tiene en cuenta paredes, saltos, pasos inferiores ni resuelve tiros. **No bloquea** rutas con saltos y no certifica que una cancha se pueda completar. Los errores estructurales anteriores sí siguen bloqueando la prueba. Se conserva el mismo compilador y la misma física.
 
-El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 14.
+El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 15.
 
 Código nuevo: `shared/workshopTools.ts` (transformaciones), `shared/workshopDiagnostics.ts` (avisos), `src/WorkshopSelection.tsx` y `src/WorkshopImport.tsx`. Pruebas de herramientas/diagnóstico en `tests/workshop-tools.test.ts`; los casos de navegador comprueban grupos, historial, foco, cámara táctil y embocado después de inspeccionar.
 
@@ -100,7 +108,7 @@ Las plataformas se recortan físicamente alrededor de la copa gris, incluida su 
 
 Formato de documento v1: hasta 80 piezas, nombre de 48 caracteres, par 2–8, alturas 0–4 m, tamaños/posiciones/rotaciones acotados y archivos de hasta 60 KB. No admite código, URL de modelos, mallas arbitrarias ni IDs reservados/duplicados. El compilador produce un `Course` local; `Scene` recibe esa misma geometría explícitamente. El modo de prueba se marca como personalizado y se rechaza en récords, práctica oficial, desafíos y guardado de recuperación oficial. Una prueba del taller no reemplaza una partida local guardada.
 
-**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 14. No se agrega un circuito falso al registro oficial ni se renumeran récords.
+**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 15. No se agrega un circuito falso al registro oficial ni se renumeran récords.
 
 **Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
 
@@ -279,8 +287,8 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 - **Superficies**: césped, césped alto (rough), tierra y arena aplican resistencias crecientes de 0,016 / 0,04 / 0,055 / 0,085 por paso. La resistencia se aplica a la velocidad tangente al suelo, también en pendientes, y no a superficies que estén por debajo de un puente. Las bandas curvas visibles usan segmentos con colisión compartida con el motor.
 - Fuera de límites: vuelve al punto anterior al golpe con un golpe adicional. La simulación limita cada movimiento a 18 segundos como protección contra bloqueos.
 - El motor comparte pasos fijos de 60 Hz y acumula intervalos variables, tanto en cliente como en servidor. Limita la recuperación tras pausas largas a 250 ms para evitar bloqueos. Una pelota esperando sobre una rampa conserva su posición hasta el golpe; la resistencia solo se aplica cuando hay suelo debajo.
-- La elasticidad se separa por material: **césped y rampas 0; bandas 0,52; copa 0,08; pelota 0**, con combinación máxima. El suelo absorbe el aterrizaje; las bandas reflejan con pérdida de energía. No se usa elasticidad de pared en el suelo. Se comprueba con caídas, rebotes medidos y tiros cortos que paran en menos de tres segundos.
-- El golpe normal tiene **velocidad máxima 16,2**, velocidad vertical inicial **0** y una guía de **1,2–2,4 m**. No se dibujan arcos, posiciones finales ni rebotes previstos. Las rampas y colisiones pueden elevar naturalmente la pelota; un límite de velocidad total 18 evita transferencias desmedidas de obstáculos móviles.
+- La elasticidad de suelo quieto sigue en cero; al aterrizar en física 2 la pelota usa césped 0,32, arena 0,08, rough 0,18 o tierra 0,40. Bandas 0,52 y copa 0,08, con combinación máxima. El golpe lateral no agrega elevación. Se comprueban caídas, pérdida de energía, asentamiento y tiros cortos. La física original conserva sus coeficientes anteriores.
+- El golpe normal tiene **velocidad máxima 20 m/s**, velocidad vertical inicial **0** y una guía de **1,2–2,4 m**. No se dibujan arcos, posiciones finales ni rebotes previstos. Las rampas y colisiones pueden elevar naturalmente la pelota; un límite de velocidad total 22 m/s evita transferencias desmedidas de obstáculos móviles.
 - La fricción, resistencia, gravedad, CCD y restitución se calculan en Rapier. El cliente interpola posiciones para suavizar los estados de red.
 - Vista del campo o seguimiento suave en tercera persona de la pelota activa. Cámara adaptada al ancho de pantalla. No se lanza al mover la cámara: el golpe tiene un botón separado.
 - Ajustes: volumen persistente, silencio e instrucciones de ratón, teclado y tacto. Sonidos sintetizados con Web Audio.
@@ -318,7 +326,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (14), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (15), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 
@@ -365,7 +373,7 @@ Las salas y sesiones son **efímeras y residen en memoria**; un reinicio del ser
 
 ## Alcance de esta versión
 
-Incluye once tarjetas de recorrido (31 hoyos distintos, vueltas de 9/18 y perfil alternativo de banderas), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade competición local y online con reglas Stableford y las mismas físicas. El final multijugador muestra un podio y reconocimientos calculados a partir de los hoyos completados: ases, hoyos bajo par y vueltas sin penalizaciones ni límites. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
+Incluye doce tarjetas de recorrido (34 hoyos distintos, vueltas de 9/18 y perfil alternativo de banderas), selección local/online, revancha y recuperación de una partida local en curso. La identidad Battle se apoya en rutas de riesgo, rebotes y ventanas de los obstáculos; **no incluye habilidades ni modificadores**. El Duelo por puntos añade competición local y online con reglas Stableford y las mismas físicas. El final multijugador muestra un podio y reconocimientos calculados a partir de los hoyos completados: ases, hoyos bajo par y vueltas sin penalizaciones ni límites. No hay cámara orbital libre, espectadores, salas públicas, persistencia de salas ni cuentas. El anfitrión puede quitar invitados desconectados del lobby; no puede expulsar rivales conectados en mitad de una partida. Se implementan rampas y barreras giratorias y deslizantes, además de agua con penalización, arena, puentes y saltos producidos por el terreno. Faltan túneles y plataformas que transporten pelotas.
 
 El motor mantiene un solo hoyo visible y una pelota física activa. La calidad automática adapta resolución y sombras; Ahorro las desactiva y Alta permite DPR 2 con sombras de 2048. La geometría fija de cada pista se reutiliza entre actualizaciones y el renderizado se detiene en segundo plano. Faltan pruebas manuales en dispositivos iOS/Android físicos y pruebas de carga de muchas salas. Hay sonidos sintetizados de golpe, rebote, agua, cambios de turno y embocada, con anillos de impacto. El césped utiliza una textura procedural local y el agua una animación ligera. La primera versión prioriza la partida completa y las salas reales.
 
@@ -408,11 +416,11 @@ El contenedor usa Node 22, usuario sin privilegios y `/health`. La receta del co
 
 ## Avance por fases
 
-- Base y partidas locales: implementadas, con 31 hoyos, clasificación, revancha y guardado con recuperación tras recargar.
+- Base y partidas locales: implementadas, con 34 hoyos, clasificación, revancha y guardado con recuperación tras recargar.
 - Multijugador: salas privadas autoritativas, 2–8 clientes, reconexión, latencia, invitación con servidor y controles de versión. Servidor público en Render, con comprobación de clientes reales antes de publicar Pages. Las salas siguen siendo efímeras.
 - Experiencia visual y controles: cámara de seguimiento, carga real, césped procedural, agua animada, impactos, guía corta de dirección, Clásico, Retroceso y Precisión.
 - Variedad: rampas, puentes, canales, islas, arena, barreras móviles y elecciones entre ruta segura y salto.
-- Pulido: pruebas automáticas de los 31 hoyos, recuperación y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
+- Pulido: pruebas automáticas de los 34 hoyos, recuperación y casos de red; pendientes pruebas de rendimiento en teléfonos físicos, carga de muchas salas y mecánicas Battle adicionales.
 
 ## Récords y objetivos de un jugador
 
@@ -438,7 +446,7 @@ Pulsa **Mirar** para explorar: arrastra con ratón o tacto, o usa los botones de
 
 La copa tiene aro e interior gris, caída visible y mástil centrado con colisión. La flecha gana grosor, contraste y marcas cortas sin predecir posiciones finales. Se suavizan las esquinas de los obstáculos, se cierran rendijas laterales accidentales y se corrige la unión de la rampa de entrenamiento. Los tres primeros hoyos reciben trazados revisados; todos los campos comparten las mejoras de presentación, copa y bordes.
 
-La potencia se calibra con distancias reales de rodamiento del motor sobre césped plano. Entre 20 y 100 % se busca una distancia de referencia aproximadamente proporcional al porcentaje, no una velocidad proporcional: 50 % recorre unos 13 m, 60 % unos 15,5 m y 100 % unos 26 m en la pista de medición sin obstáculos. Por debajo del 20 % una transición suave permite golpes cortos. La velocidad máxima es 16,2 (+2,5 % respecto a v6), siempre con lanzamiento vertical cero. Arena, pendientes, paredes y agua modifican el resultado real. La guía sigue corta y no muestra el punto final. Servidor y cliente usan protocolo de red 8; las reglas físicas y marcas siguen en v7; los récords anteriores permanecen separados en sus claves v5.
+La potencia se calibra con distancias reales de rodamiento del motor sobre césped plano. Entre 20 y 75 % se conserva una distancia de referencia aproximadamente proporcional al porcentaje, no una velocidad proporcional: 50 % recorre unos 13 m, 60 % unos 15,5 m y 100 % unos 33–35 m desde la física 2, en la pista de medición sin obstáculos. Por debajo del 20 % una transición suave permite golpes cortos. La velocidad máxima actual es 20 m/s; física original conserva 16,2. Siempre con lanzamiento vertical cero. Arena, pendientes, paredes y agua modifican el resultado real. La guía sigue corta y no muestra el punto final. Servidor y cliente usan protocolo de red 8; las reglas físicas y marcas siguen en v7; los récords anteriores permanecen separados en sus claves v5.
 
 Consulta [RESEARCH.md](RESEARCH.md) para las fuentes primarias, decisiones y límites de la investigación.
 

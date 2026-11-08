@@ -1,10 +1,11 @@
+import { currentPower, upgradeRoute } from "./power";
 // Verified physical aces. These are test routes, never shown as aiming assistance.
-export const aceShots = [
+const legacy_aceShots = [
   { hole: 0, wait: 0, angle: 0.30675055439664217, power: 0.953 },
   { hole: 1, wait: 0, angle: 0.845, power: 1 },
   { hole: 2, wait: 30, angle: -0.01, power: 0.88 },
 ];
-export const aceRoundShots: [number, number][][] = [
+const legacy_aceRoundShots: [number, number][][] = [
   [
     [5.675135116162207, 0.4],
     [0.07342845121955252, 0.3],
@@ -19,3 +20,11 @@ export const aceRoundShots: [number, number][][] = [
   ],
   [[0, 1]],
 ];
+
+export const legacyAceShots = legacy_aceShots;
+export const aceShots = legacy_aceShots.map((s) => ({
+  ...s,
+  power: currentPower(s.power),
+}));
+
+export const aceRoundShots = legacy_aceRoundShots.map(upgradeRoute);

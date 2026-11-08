@@ -1,6 +1,6 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import { Game, MAX_STROKES, type State } from "../shared/game";
-import { RULES_VERSION, TURN_SECONDS } from "../shared/rules";
+import { RULES_VERSION, TURN_SECONDS, physicsEdition } from "../shared/rules";
 import {
   getCircuit,
   getCourse,
@@ -18,7 +18,7 @@ const MAX_BYTES = 2_000_000;
 export type LocalRound = {
   challenge?: ChallengeSession;
   school?: SchoolSession;
-  format: 1;
+  format: 1 | 2;
   rules: number;
   engine: string;
   savedAt: number;
@@ -92,7 +92,7 @@ export function captureLocalRound(
     throw Error("Las pruebas del taller no sustituyen el guardado oficial.");
   const world = game.world.takeSnapshot();
   return {
-    format: 1,
+    format: physicsEdition(game.state) === 2 ? 2 : 1,
     rules: RULES_VERSION,
     engine: RAPIER.version(),
     savedAt,
@@ -121,7 +121,7 @@ export function validateLocalRound(value: unknown): value is LocalRound {
       sim = r.simulation;
     if (
       !r ||
-      r.format !== 1 ||
+      (r.format !== 1 && r.format !== 2) ||
       r.rules !== RULES_VERSION ||
       typeof r.engine !== "string" ||
       r.engine.length > 40 ||
@@ -130,6 +130,9 @@ export function validateLocalRound(value: unknown): value is LocalRound {
       !finite(r.aim.angle, -Math.PI * 2, Math.PI * 2) ||
       !finite(r.aim.power, 0.03, 1) ||
       !s ||
+      (s.physics !== undefined && s.physics !== 1 && s.physics !== 2) ||
+      (r.format === 1 && s.physics === 2) ||
+      (r.format === 2 && s.physics !== 2) ||
       s.custom !== undefined ||
       s.courseOverride !== undefined ||
       s.workshopHash !== undefined ||

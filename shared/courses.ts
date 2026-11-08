@@ -1,6 +1,7 @@
 import { createRiftCourses } from "./riftCourses";
 import { createAdventureCourses } from "./adventureCourses";
 import { createSkyCourses } from "./skyCourses";
+import { createWildCourses } from "./wildCourses";
 export type V3 = { x: number; y: number; z: number };
 export type Block = {
   pos: [number, number, number];
@@ -134,19 +135,7 @@ export const colors = [
   "#f6f0da",
 ];
 
-export type CircuitId =
-  | "cumbres"
-  | "rift"
-  | "rift-alt"
-  | "skyruins"
-  | "sunset"
-  | "moonlight"
-  | "park"
-  | "riviera"
-  | "masters"
-  | "tour"
-  | "nine"
-  | "aces";
+export type CircuitId = (typeof circuits)[number]["id"];
 export const nightCourses: Course[] = [
   {
     name: "Las diagonales",
@@ -543,6 +532,7 @@ export const adventureCourses = createAdventureCourses({
   rampDeck,
   curvedBank,
 });
+export const wildCourses = createWildCourses({ deck, rampDeck });
 export const riftAlternateCourses = riftCourses.map((course, i) => ({
   ...course,
   cup: [
@@ -558,6 +548,7 @@ export const uniqueCourses = [
   ...skyCourses,
   ...riftCourses,
   ...adventureCourses,
+  ...wildCourses,
 ];
 // Append alternate pin layouts without renumbering any existing practice record.
 export const practiceLayouts = [
@@ -567,6 +558,7 @@ export const practiceLayouts = [
   ...riftCourses,
   ...riftAlternateCourses,
   ...adventureCourses,
+  ...wildCourses,
 ];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
@@ -707,6 +699,17 @@ export const circuits = [
     edge: "#bccbd0",
     background: "#658995",
     accent: "#f1c775",
+  },
+  {
+    id: "wildlands" as const,
+    name: "Tierras bravas",
+    description:
+      "3 campos abiertos de 90–160 m: salto de presa, tres pisos y un delta con tres rutas. Potencia, agua y aterrizajes.",
+    courses: wildCourses,
+    ground: "#438c78",
+    edge: "#cbbd9b",
+    background: "#426e7f",
+    accent: "#ffd28a",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>

@@ -1,5 +1,6 @@
+import { currentPower, upgradeRoute } from "./power";
 // Physical QA routes only. Never used as in-game aim assistance.
-export const riftSafeShots: [number, number][][] = [
+const legacy_riftSafeShots: [number, number][][] = [
   [
     [0, 0.653],
     [0, 0.617],
@@ -31,7 +32,7 @@ export const riftSafeShots: [number, number][][] = [
     [1.0546236629634078, 0.159],
   ],
 ];
-export const riftRiskShots: [number, number][][] = [
+const legacy_riftRiskShots: [number, number][][] = [
   [
     [0, 0.193],
     [1.5716023602316371, 0.617],
@@ -47,7 +48,7 @@ export const riftRiskShots: [number, number][][] = [
     [0.3884805875773413, 0.969],
   ],
 ];
-export const riftAlternateSafeShots: [number, number][][] = [
+const legacy_riftAlternateSafeShots: [number, number][][] = [
   [
     [0, 0.653],
     [0, 0.617],
@@ -80,7 +81,7 @@ export const riftAlternateSafeShots: [number, number][][] = [
     [0.9440971259961868, 0.247],
   ],
 ];
-export const riftAlternateRiskShots: [number, number][][] = [
+const legacy_riftAlternateRiskShots: [number, number][][] = [
   [
     [0, 0.193],
     [1.5716023602316371, 0.617],
@@ -101,3 +102,13 @@ export const riftAlternateRiskShots: [number, number][][] = [
     [0.5073284543128272, 0.379],
   ],
 ];
+
+export const riftSafeShots = legacy_riftSafeShots.map(upgradeRoute);
+
+export const riftRiskShots = legacy_riftRiskShots.map(upgradeRoute);
+
+export const riftAlternateSafeShots =
+  legacy_riftAlternateSafeShots.map(upgradeRoute);
+
+export const riftAlternateRiskShots =
+  legacy_riftAlternateRiskShots.map(upgradeRoute);

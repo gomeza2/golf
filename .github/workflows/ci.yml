@@ -30,6 +30,7 @@ jobs:
           path: |
             work/welcome-*.png
             work/controls-*.png
+            work/wildlands-*.png
           retention-days: 7
           if-no-files-found: ignore
       - name: Build for GitHub Pages

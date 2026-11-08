@@ -21,13 +21,14 @@ import {
   restoreLocalRound,
   validateLocalRound,
 } from "../src/localRound";
-import { tourShots } from "./fixtures/tour";
+import { legacyTourShots as tourShots } from "./fixtures/tour";
 beforeAll(initPhysics);
 afterEach(() => vi.unstubAllGlobals());
 const daily = getChallenge("c1-d-2026-11-04")!;
 function complete(id = daily.id) {
   const c = getChallenge(id)!,
     g = new Game();
+  g.state.physics = 1;
   g.selectCircuit(c.circuit);
   g.add("0", "Ana");
   g.start();
@@ -201,6 +202,7 @@ it("deduplicates recovered results, keeps best score and medal independently, an
 });
 it("recovers the exact physical challenge attempt without changing the save version; bad optional metadata does not lose the round", () => {
   const g = new Game();
+  g.state.physics = 1;
   let restored: Game | undefined;
   try {
     g.add("0", "Ana");

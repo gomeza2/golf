@@ -153,7 +153,8 @@ export function ChallengeDialog({
       <h3>{getCircuit(challenge.circuit).name}</h3>
       <p>
         {challenge.holes} hoyos · Par {challenge.par} · Un jugador · Clásico
-        fijo · Menos golpes.
+        fijo · Menos golpes. Física original para conservar el mismo desafío y
+        sus marcas.
       </p>
       <ul className="challenge-goals">
         {challengeGoals(challenge).map((g) => (

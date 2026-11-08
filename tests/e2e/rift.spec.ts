@@ -10,7 +10,7 @@ async function fire(page: Page, a: number, p: number) {
     .fill(String(Number(wrapAngle(a).toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
-    .fill(String(p));
+    .fill(String(Number(p.toFixed(10))));
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
   await expect(
     page.getByText("Pelota en movimiento", { exact: true }),
@@ -104,7 +104,7 @@ test("a complete new round plays real shortcuts, curved terrain and a diagonal d
   expect(
     await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem("club-personal-normal-v7")!).records[
+        JSON.parse(localStorage.getItem("club-personal-normal-v7-p2")!).records[
           "rift:classic"
         ].best,
     ),

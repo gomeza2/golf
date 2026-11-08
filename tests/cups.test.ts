@@ -59,7 +59,7 @@ it("fixes plans at start, clears readiness on selection, and rejects changing an
     r.game.dispose();
   }
 });
-it("conceding is turn-validated, impossible in motion, marks the real cap and survives an old-format save", () => {
+it("conceding is turn-validated, impossible in motion, marks the real cap and survives a physical save", () => {
   const r: CupRoom = { game: new Game() };
   r.game.add("0", "Ana");
   r.game.add("1", "Luis");
@@ -81,7 +81,8 @@ it("conceding is turn-validated, impossible in motion, marks the real cap and su
     restored = restoreLocalRound(saved);
     expect(restored.state.cup).toBeUndefined();
     expect(restored.state.players[1].capped).toEqual([0]);
-    expect(saved.format).toBe(1);
+    expect(saved.format).toBe(2);
+    expect(saved.state.physics).toBe(2);
     expect(saved.rules).toBe(7);
   } finally {
     r.game.dispose();

@@ -36,7 +36,7 @@ test("solo round keeps normal control locked, records a real finish and persists
         .fill(String(Number(wrapAngle(angle).toFixed(10))));
       await page
         .getByRole("slider", { name: "Potencia", exact: true })
-        .fill(String(power));
+        .fill(String(Number(power.toFixed(10))));
       if (hole === 2 && i === tourShots[hole].length - 1)
         await page.screenshot({ path: "work/cup-approach.png" });
       await page.getByRole("button", { name: /GOLPEAR/ }).click();

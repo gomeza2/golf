@@ -1,3 +1,4 @@
+import { physicsEdition } from "../shared/rules";
 import { ShotControlFeedback } from "./ShotControlFeedback";
 import type { ShotReview } from "./shotControls";
 import { CupPicker, CupTable, CupLiveBoard } from "./CupPanels";
@@ -227,7 +228,10 @@ export function GamePanels({
           {s.custom && (
             <div className="private-course-summary">
               <strong>{courses[0].name}</strong>
-              <p>Cancha del taller · Par {courses[0].par} · Un hoyo</p>
+              <p>
+                Cancha del taller · Par {courses[0].par} · Un hoyo · Física
+                original
+              </p>
               <p>
                 Creación privada, sin certificación de recorrido. El diseño
                 queda fijo en esta sala. Sin récords oficiales. Puedes jugar una
@@ -513,7 +517,7 @@ export function GamePanels({
               )}
               <span className="locked-control">
                 {controlModes.find((mode) => mode.id === controlMode)?.name} ·
-                FIJO
+                FIJO{physicsEdition(s) === 1 ? " · Física original" : ""}
               </span>
               {shotExtras}
               {chargeActive && (
@@ -762,6 +766,7 @@ export function GamePanels({
               : s.phase === "finished"
                 ? "RECORRIDO COMPLETADO"
                 : "HOYO COMPLETADO"}
+            {physicsEdition(s) === 1 ? " · FÍSICA ORIGINAL" : ""}
           </div>
           <h2>
             {soloOutcome && (s.practice || s.phase === "scores")

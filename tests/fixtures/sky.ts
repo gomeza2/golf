@@ -1,5 +1,6 @@
+import { currentPower, upgradeRoute } from "./power";
 // Offline QA routes only. Never exposed as aim assistance or accepted from clients.
-export const skySafeShots: [number, number][][] = [
+const legacy_skySafeShots: [number, number][][] = [
   [
     [0, 0.92],
     [0.41316485619651877, 0.4],
@@ -17,7 +18,11 @@ export const skySafeShots: [number, number][][] = [
     [1.1279743100375057, 0.54],
   ],
 ];
-export const skyBridgeShots: [number, number][] = [
+const legacy_skyBridgeShots: [number, number][] = [
   [0.3217505543966422, 1],
   [0.32174993707087834, 0.2],
 ];
+
+export const skySafeShots = legacy_skySafeShots.map(upgradeRoute);
+
+export const skyBridgeShots = upgradeRoute(legacy_skyBridgeShots);

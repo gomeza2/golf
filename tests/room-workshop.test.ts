@@ -73,6 +73,7 @@ it("private play enforces turn time while the local workshop sandbox keeps its n
     sandbox = new Game(course);
   try {
     for (const g of [room, sandbox]) {
+      expect(g.state.physics).toBe(1);
       g.add("a", "Ana");
       g.add("b", "Luis");
       g.start();

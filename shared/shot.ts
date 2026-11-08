@@ -1,11 +1,16 @@
 import type { V3 } from "./courses";
 import { powerSpeed } from "./power";
+import type { PhysicsEdition } from "./rules";
 export { MAX_SHOT_SPEED } from "./power";
 export const MAX_GUIDE_LENGTH = 2.4;
 export const wrapAngle = (angle: number) =>
   Math.atan2(Math.sin(angle), Math.cos(angle));
-export function shotVelocity(angle: number, power: number): V3 {
-  const speed = powerSpeed(power);
+export function shotVelocity(
+  angle: number,
+  power: number,
+  physics: PhysicsEdition = 2,
+): V3 {
+  const speed = powerSpeed(power, physics);
   return { x: Math.sin(angle) * speed, y: 0, z: -Math.cos(angle) * speed };
 }
 // A short directional cue, never a predicted landing point or rebound solution.

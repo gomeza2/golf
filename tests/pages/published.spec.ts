@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { aceShots } from "../fixtures/aces";
+import { wildRiskShots } from "../fixtures/wild";
+import { aceShots, legacyAceShots } from "../fixtures/aces";
 import { riftRiskShots } from "../fixtures/rift";
 import { wrapAngle } from "../../shared/shot";
 import { PUBLIC_SERVER_URL } from "../../src/onlineServer";
@@ -39,7 +40,7 @@ test("the published irregular course plays its physical bridge shortcut and save
       .fill(String(Number(wrapAngle(a).toFixed(10))));
     await page
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(p));
+      .fill(String(Number(p.toFixed(10))));
     await page.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(
       page.getByText("Pelota en movimiento", { exact: true }),
@@ -334,10 +335,10 @@ test("the published challenge link starts its fixed Classic round and accepts a 
   await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled();
   await page
     .getByRole("slider", { name: "Ángulo", exact: true })
-    .fill(String(Number(aceShots[0].angle.toFixed(10))));
+    .fill(String(Number(legacyAceShots[0].angle.toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
-    .fill(String(aceShots[0].power));
+    .fill(String(Number(legacyAceShots[0].power.toFixed(10))));
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
   await expect(
     page.getByRole("button", { name: /Siguiente hoyo/ }),
@@ -459,7 +460,7 @@ test("the published Cumbres course loads its high terrain and completes the real
       .fill(String(Number(wrapAngle(a).toFixed(10))));
     await page
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(p));
+      .fill(String(Number(p.toFixed(10))));
     await page.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(
       page.getByText("Pelota en movimiento", { exact: true }),
@@ -519,6 +520,11 @@ test("the published workshop prepares a real private design and keeps its draft 
   await expect(page.locator(".selected-round")).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("club-personal-normal-v7")),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("club-personal-normal-v7-p2"),
+    ),
   ).toBeNull();
   await page.screenshot({ path: "work/pages-workshop-private.png" });
   console.log(
@@ -631,4 +637,60 @@ test("the published precision control accepts touch without ghost pause and pres
   } finally {
     await context.close();
   }
+});
+
+test("the released wildlands mobile course completes a real elevated shortcut with current physics", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(150000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem("golf-graphics-mode", "low");
+    localStorage.setItem("golf-hole-intro", "false");
+  });
+  await expect
+    .poll(
+      async () => {
+        await page.goto(baseURL!);
+        return page.locator(".edition").textContent({ timeout: 15000 });
+      },
+      { timeout: 90000, intervals: [1000, 3000, 5000] },
+    )
+    .toContain(`v${APP_VERSION}`);
+  await page.getByRole("button", { name: /Tierras bravas/ }).click();
+  await page.getByRole("button", { name: /Jugar en este dispositivo/ }).click();
+  await page.getByRole("button", { name: /Comenzar recorrido/ }).click();
+  await expect(page.locator(".hole-hud")).toContainText("El salto de la presa");
+  for (const [angle, power] of wildRiskShots[0]) {
+    const hit = page.getByRole("button", { name: /GOLPEAR/ });
+    await expect(hit).toBeEnabled({ timeout: 20000 });
+    await page
+      .getByRole("slider", { name: "Ángulo", exact: true })
+      .fill(String(Number(angle.toFixed(10))));
+    await page
+      .getByRole("slider", { name: "Potencia", exact: true })
+      .fill(String(Number(power.toFixed(10))));
+    await hit.click();
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeHidden({ timeout: 25000 });
+  }
+  await expect(
+    page.getByRole("button", { name: /Siguiente hoyo/ }),
+  ).toBeVisible();
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("club-local-round")!),
+  );
+  expect(saved.format).toBe(2);
+  expect(saved.state.physics).toBe(2);
+  expect(saved.state.players[0].scores).toEqual([3]);
+  expect(saved.state.players[0].penalties).toBe(0);
+  await page.screenshot({ path: "work/pages-wildlands-mobile.png" });
+  console.log(
+    `PAGES WILDLANDS VERIFIED: version ${APP_VERSION}, genuine ramp and water gap, three strokes, physics 2: ${baseURL}`,
+  );
 });

@@ -100,7 +100,7 @@ it("both temple ramps meet their decks and the real portal leaves ball clearance
     g.dispose();
   }
 });
-it("recovers a sky shot with identical physical contacts and keeps the previous rules/save format", () => {
+it("recovers a sky shot with identical physical contacts and keeps the previous scoring rules", () => {
   const g = game();
   let restored: Game | undefined;
   try {
@@ -109,7 +109,8 @@ it("recovers a sky shot with identical physical contacts and keeps the previous 
     const saved = captureLocalRound(g, "pull");
     expect(saved.rules).toBe(RULES_VERSION);
     expect(saved.rules).toBe(7);
-    expect(saved.format).toBe(1);
+    expect(saved.format).toBe(2);
+    expect(saved.state.physics).toBe(2);
     restored = restoreLocalRound(saved);
     for (let i = 0; i < 400; i++) {
       g.tick();

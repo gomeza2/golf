@@ -65,7 +65,7 @@ test("two friends complete a whole cup through real controls, keep the cumulativ
       .fill(String(Number(aceShots[0].angle.toFixed(10))));
     await a
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(aceShots[0].power));
+      .fill(String(Number(aceShots[0].power.toFixed(10))));
     await a.getByRole("button", { name: /GOLPEAR/ }).click();
     async function concede(page: Page) {
       await expect(page.getByRole("button", { name: /GOLPEAR/ })).toBeEnabled({
@@ -174,5 +174,10 @@ test("local concession completes a real capped round and cannot earn a challenge
   ).toBeNull();
   expect(
     await page.evaluate(() => localStorage.getItem("club-personal-normal-v7")),
+  ).toBeNull();
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("club-personal-normal-v7-p2"),
+    ),
   ).toBeNull();
 });

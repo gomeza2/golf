@@ -1,3 +1,4 @@
+import { LegacyMarks } from "./LegacyMarks";
 import { CourseFootprint } from "./CourseFootprint";
 import {
   circuits,
@@ -288,17 +289,19 @@ export function ClubCatalog({
                     />
                   </svg>
                   <span>
-                    {c.id === "rift"
-                      ? "NUEVO · SIN PERÍMETRO RECTANGULAR"
-                      : c.id === "aces"
-                        ? "RIESGO / RECOMPENSA"
-                        : c.id === "tour"
-                          ? "18 HOYOS SEGUIDOS"
-                          : longest >= 48
-                            ? "DESAFÍO"
-                            : c.id === "sunset"
-                              ? "INICIACIÓN"
-                              : "COMPETITIVO"}
+                    {c.id === "wildlands"
+                      ? "NUEVO · SALTOS Y TRES RUTAS"
+                      : c.id === "rift"
+                        ? "RUTAS ABIERTAS"
+                        : c.id === "aces"
+                          ? "RIESGO / RECOMPENSA"
+                          : c.id === "tour"
+                            ? "18 HOYOS SEGUIDOS"
+                            : longest >= 48
+                              ? "DESAFÍO"
+                              : c.id === "sunset"
+                                ? "INICIACIÓN"
+                                : "COMPETITIVO"}
                   </span>
                 </div>
                 <div className="course-copy">
@@ -387,6 +390,7 @@ export function ClubCatalog({
               </p>
             )}
           </div>
+          <LegacyMarks circuit={circuit} control={controlMode} />
           <TrainingPicker
             circuit={circuit}
             control={controlMode}

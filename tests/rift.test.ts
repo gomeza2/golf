@@ -186,7 +186,7 @@ it("both flag profiles keep their cups inside genuine cut greens, without moving
     expect(b.cup.z).toBeLessThan(bounds.maxZ - 0.6);
   }
 });
-it("restores a new curved-world shot with exact physical contacts using the existing save format", () => {
+it("restores a new curved-world shot with exact physical contacts using the edition-aware save format", () => {
   const g = create("rift", 2);
   let restored: Game | undefined;
   try {
@@ -196,7 +196,8 @@ it("restores a new curved-world shot with exact physical contacts using the exis
     const saved = captureLocalRound(g, "classic");
     restored = restoreLocalRound(saved);
     expect(saved.rules).toBe(7);
-    expect(saved.format).toBe(1);
+    expect(saved.format).toBe(2);
+    expect(saved.state.physics).toBe(2);
     while (g.state.moving) {
       g.tick();
       restored.tick();

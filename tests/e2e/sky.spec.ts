@@ -75,7 +75,7 @@ test("mobile sky route has adaptive scenery and a real two-shot shortcut with sa
       .fill(String(Number(angle.toFixed(10))));
     await page
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(power));
+      .fill(String(Number(power.toFixed(10))));
     await page.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(
       page.getByText("Pelota en movimiento", { exact: true }),

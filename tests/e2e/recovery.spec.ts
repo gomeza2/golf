@@ -15,7 +15,7 @@ async function fire(page: Page, angle: number, power: number) {
     .fill(String(Number(angle.toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
-    .fill(String(power));
+    .fill(String(Number(power.toFixed(10))));
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
 }
 test("reload mid-shot preserves the lie, shot, names, aim and remaining turn, and recovery waits in pause", async ({

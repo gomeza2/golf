@@ -7,7 +7,7 @@ for (const index of [0, 1])
     if (index === 0) await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(page.locator(".catalog-intro")).toContainText(
-      "31 hoyos distintos",
+      "34 hoyos distintos",
     );
     await page.getByRole("button", { name: /Club del As/ }).click();
     await page.locator(".training-picker summary").click();
@@ -32,7 +32,7 @@ for (const index of [0, 1])
       .fill(String(Number(shot.angle.toFixed(10))));
     await page
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(shot.power));
+      .fill(String(Number(shot.power.toFixed(10))));
     await page.getByRole("button", { name: /GOLPEAR/ }).click();
     await expect(
       page.getByText("Pelota en movimiento", { exact: true }),

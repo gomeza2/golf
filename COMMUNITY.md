@@ -1,5 +1,7 @@
 # Comunidad de creaciones — 0.17.0
 
+**Compatibilidad 0.19.0:** las creaciones y revisiones del documento 1 siguen usando la física original, también en salas privadas. La nueva física 2 de los campos oficiales no altera documentos, checksums, validación, autoría o moderación existentes. No se requiere migración adicional de base de datos. La adopción explícita de física nueva queda para un documento versionado posterior. Cliente y servidor online deben actualizarse al protocolo 15.
+
 ## Qué está implementado
 
 La comunidad usa **PostgreSQL real**, con autores vinculados a una identidad OIDC, creaciones, revisiones inmutables, denuncias y un historial de moderación. No usa localStorage como base pública ni crea cuentas, votos, partidas o estadísticas de ejemplo.

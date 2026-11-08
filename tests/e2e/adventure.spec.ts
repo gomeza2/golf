@@ -10,7 +10,7 @@ async function fire(page: Page, a: number, p: number) {
     .fill(String(Number(wrapAngle(a).toFixed(10))));
   await page
     .getByRole("slider", { name: "Potencia", exact: true })
-    .fill(String(p));
+    .fill(String(Number(p.toFixed(10))));
   await page.getByRole("button", { name: /GOLPEAR/ }).click();
   await expect(
     page.getByText("Pelota en movimiento", { exact: true }),
@@ -61,7 +61,7 @@ test("a full Cumbres round uses high terrain, an oblique summit ace and real ove
   expect(
     await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem("club-personal-normal-v7")!).records[
+        JSON.parse(localStorage.getItem("club-personal-normal-v7-p2")!).records[
           "cumbres:classic"
         ].best,
     ),

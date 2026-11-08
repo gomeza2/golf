@@ -66,12 +66,12 @@ it.each(["safe", "risk"] as const)(
   },
 );
 it("keeps the existing practice keys while appending three new physical holes", () => {
-  expect(uniqueCourses).toHaveLength(31);
+  expect(uniqueCourses).toHaveLength(34);
   expect(practiceKey("rift", 0, "classic")).toBe("24:classic");
   expect(practiceKey("rift-alt", 0, "classic")).toBe("28:classic");
   expect(practiceKey("rift-alt", 3, "classic")).toBe("31:classic");
   expect(practiceKey("cumbres", 0, "classic")).toBe("32:classic");
-  expect(practiceLayouts).toHaveLength(35);
+  expect(practiceLayouts).toHaveLength(38);
 });
 it("the spiral has real ascending support and open water gaps", () => {
   const g = create(1);
@@ -151,7 +151,8 @@ it("restores a moving ball on a new sloped mesh with exact existing snapshot com
     for (let i = 0; i < 40; i++) g.tick();
     const saved = captureLocalRound(g, "classic");
     expect(saved.rules).toBe(7);
-    expect(saved.format).toBe(1);
+    expect(saved.format).toBe(2);
+    expect(saved.state.physics).toBe(2);
     restored = restoreLocalRound(saved);
     for (let i = 0; g.state.moving && i < 1500; i++) {
       g.tick();

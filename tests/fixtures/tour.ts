@@ -1,4 +1,5 @@
-export const tourShots: [number, number][][] = [
+import { currentPower, upgradeRoute } from "./power";
+const legacy_tourShots: [number, number][][] = [
   [
     [2.6348841610753104, 0.9185187773],
     [0.4053667940115862, 0.3092004124],
@@ -126,3 +127,10 @@ export const tourShots: [number, number][][] = [
     [0.04674491615418536, 0.9185187773],
   ],
 ];
+
+export const tourShots = legacy_tourShots.map(upgradeRoute);
+export const legacyTourShots = legacy_tourShots;
+
+// Landing edition 2 changes these two final lies; the routes remain physical.
+tourShots[12][7][0] = 1.8085658346591305;
+tourShots[14][6][0] = -0.3330223270225705;

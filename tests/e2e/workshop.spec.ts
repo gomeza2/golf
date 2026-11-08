@@ -131,6 +131,8 @@ test("a real edited cup has no covering floor, holes physically, and never overw
     round: localStorage.getItem("club-local-round"),
     practice: localStorage.getItem("club-practice-v7"),
     personal: localStorage.getItem("club-personal-normal-v7"),
+    currentPersonal: localStorage.getItem("club-personal-normal-v7-p2"),
+    currentPractice: localStorage.getItem("club-practice-v7-p2"),
   }));
   // Key used by the application, checked separately so a typo cannot make isolation pass.
   const saved = await page.evaluate(() =>
@@ -162,6 +164,8 @@ test("a real edited cup has no covering floor, holes physically, and never overw
       round: localStorage.getItem("club-local-round"),
       practice: localStorage.getItem("club-practice-v7"),
       personal: localStorage.getItem("club-personal-normal-v7"),
+      currentPersonal: localStorage.getItem("club-personal-normal-v7-p2"),
+      currentPractice: localStorage.getItem("club-practice-v7-p2"),
     })),
   ).toEqual(before);
   expect(

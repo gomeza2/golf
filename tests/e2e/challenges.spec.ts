@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { powerSpeed, grassCalibration } from "../../shared/power";
 import { getCourse } from "../../shared/courses";
-import { aceShots } from "../fixtures/aces";
+import { legacyAceShots as aceShots } from "../fixtures/aces";
 import { CHALLENGES_KEY } from "../../src/challengeRecords";
 import { RECORDS_KEY } from "../../src/personalRecords";
 const id = "c1-d-2026-11-02";
@@ -53,7 +53,7 @@ test("shared daily challenge completes a real round, recovers its locked attempt
       .fill(String(Number(shot.angle.toFixed(10))));
     await page
       .getByRole("slider", { name: "Potencia", exact: true })
-      .fill(String(shot.power));
+      .fill(String(Number(shot.power.toFixed(10))));
     await page.getByRole("button", { name: /GOLPEAR/ }).click();
     strokes++;
     await expect(
@@ -116,7 +116,9 @@ test("shared daily challenge completes a real round, recovers its locked attempt
               const transform = await page
                 .locator('.hole-map svg rect[fill="#f5cc77"]')
                 .getAttribute("transform");
-              return Number(transform?.match(/translate\(([-\d.e]+)/)?.[1]) * side;
+              return (
+                Number(transform?.match(/translate\(([-\d.e]+)/)?.[1]) * side
+              );
             },
             { timeout: 10000, intervals: [50] },
           )
@@ -130,7 +132,7 @@ test("shared daily challenge completes a real round, recovers its locked attempt
         high = 1;
       for (let n = 0; n < 16; n++) {
         const p = (low + high) / 2,
-          v = powerSpeed(p);
+          v = powerSpeed(p, 1);
         const i = Math.max(
           1,
           grassCalibration.findIndex(([speed]) => speed >= v),
