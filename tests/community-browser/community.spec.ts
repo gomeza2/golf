@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { io, type Socket } from "socket.io-client";
 import { privateWorkshop } from "../fixtures/workshop";
-import { exportWorkshop } from "../../shared/workshop";
+import { exportWorkshop, withWorkshopPhysics } from "../../shared/workshop";
 async function signIn(page: Page, role: "autor" | "moderador" | "lector") {
   await page
     .getByRole("button", { name: "Entrar para publicar", exact: true })
@@ -220,7 +220,7 @@ test("a real creation moves through OIDC publication, review, anonymous discover
         ).some((r: any) => r.doc.name === "Mi borrador aparte"),
       ),
     ).toBe(true);
-    const second = privateWorkshop();
+    const second = withWorkshopPhysics(privateWorkshop(), 2);
     second.name = "La cancha de Ana, segunda ruta";
     await importDoc(author, second);
     await author.reload();
@@ -262,6 +262,9 @@ test("a real creation moves through OIDC publication, review, anonymous discover
     await expect(
       friend.getByRole("heading", { name: "La cancha de Ana", exact: true }),
     ).toBeVisible();
+    await expect(friend.locator(".community-physics").first()).toContainText(
+      "Física original",
+    );
     await friend.goto(`/?community=1&creation=${creation}`);
     await expect(
       friend.getByRole("heading", { name: second.name, exact: true }),
@@ -278,6 +281,54 @@ test("a real creation moves through OIDC publication, review, anonymous discover
     await expect(
       friend.getByRole("heading", { name: second.name, exact: true }),
     ).toBeVisible();
+    await friend.goto("/?community=1");
+    await friend
+      .getByRole("textbox", { name: "Buscar creaciones", exact: true })
+      .fill(second.name);
+    await friend
+      .getByRole("combobox", { name: "Filtrar física", exact: true })
+      .selectOption("1");
+    await friend
+      .getByRole("button", { name: "Buscar canchas", exact: true })
+      .click();
+    await expect(
+      friend.getByRole("heading", {
+        name: "Aún no hay canchas para esta búsqueda",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await friend
+      .getByRole("combobox", { name: "Filtrar física", exact: true })
+      .selectOption("2");
+    await friend
+      .getByRole("button", { name: "Buscar canchas", exact: true })
+      .click();
+    await expect(friend.locator(".community-card")).toHaveCount(1);
+    await expect(friend.locator(".community-card")).toContainText(
+      "Física actual",
+    );
+    await friend.locator(".community-card").click();
+    await expect(friend.locator(".community-physics").first()).toContainText(
+      "Física actual",
+    );
+    await friend
+      .getByRole("button", { name: "Jugar en solitario", exact: true })
+      .click();
+    await expect(friend.locator(".workshop-test-top")).toContainText(
+      "Física actual",
+    );
+    await fire(friend);
+    await expect(
+      friend.getByText("¡Cancha completada!", { exact: true }),
+    ).toBeVisible({ timeout: 20000 });
+    expect(
+      await friend.evaluate(() =>
+        localStorage.getItem("club-personal-normal-v7-p2"),
+      ),
+    ).toBeNull();
+    await friend
+      .getByRole("button", { name: "Volver a la creación", exact: true })
+      .click();
     await friend
       .getByRole("button", { name: "Denunciar esta versión", exact: true })
       .click();

@@ -1,3 +1,4 @@
+import { WorkshopPhysics } from "./WorkshopPhysics";
 import type { PublicationTarget } from "./CommunityPublisher";
 import { validateRoomWorkshop } from "../shared/roomWorkshop";
 import { WorkshopImport } from "./WorkshopImport";
@@ -11,6 +12,9 @@ import { WorkshopSelection } from "./WorkshopSelection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compileWorkshop,
+  withWorkshopPhysics,
+  workshopPhysics,
+  workshopPhysicsLabel,
   exportWorkshop,
   importWorkshop,
   newWorkshop,
@@ -386,10 +390,23 @@ export function Workshop({
         <div>
           <small>CREAR · PROBAR · COMPARTIR ARCHIVO</small>
           <h1>Taller de hoyos</h1>
-          <p>Diseña tu riesgo. Documento 1 · Física original conservada.</p>
+          <p>
+            Diseña tu riesgo.{" "}
+            {workshopPhysicsLabel(workshopPhysics(history.present))} · Guardada
+            con tu creación.
+          </p>
         </div>
         <button onClick={onClose}>Volver al club</button>
       </div>
+      <WorkshopPhysics
+        document={history.present}
+        onChange={(physics) => {
+          edit(withWorkshopPhysics(history.present, physics));
+          setNotice(
+            "Física cambiada. Prueba tus rutas; puedes deshacer este cambio.",
+          );
+        }}
+      />
       {versionTarget && (
         <div className="private-course-summary">
           <strong>

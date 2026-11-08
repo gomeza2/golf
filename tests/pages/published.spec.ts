@@ -1,3 +1,5 @@
+import { longWorkshop } from "../fixtures/workshop";
+import { exportWorkshop } from "../../shared/workshop";
 import { test, expect } from "@playwright/test";
 import { wildRiskShots } from "../fixtures/wild";
 import { aceShots, legacyAceShots } from "../fixtures/aces";
@@ -692,5 +694,64 @@ test("the released wildlands mobile course completes a real elevated shortcut wi
   await page.screenshot({ path: "work/pages-wildlands-mobile.png" });
   console.log(
     `PAGES WILDLANDS VERIFIED: version ${APP_VERSION}, genuine ramp and water gap, three strokes, physics 2: ${baseURL}`,
+  );
+});
+
+test("the released workshop converts an original creation explicitly and physically completes the current-edition long drive", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(120000);
+  await page.addInitScript(() =>
+    localStorage.setItem("golf-graphics-mode", "low"),
+  );
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Importar diseño", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "JSON del diseño", exact: true })
+    .fill(exportWorkshop(longWorkshop()));
+  await page
+    .getByRole("button", { name: "Abrir diseño importado", exact: true })
+    .click();
+  await page
+    .getByRole("combobox", { name: "Física de la cancha", exact: true })
+    .selectOption("2");
+  await page
+    .getByRole("dialog", { name: "¿Usar física actual?", exact: true })
+    .getByRole("button", { name: "Cambiar física", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Probar en 3D", exact: true }).click();
+  await expect(page.locator(".workshop-test-top")).toContainText(
+    "Física actual",
+  );
+  for (const power of ["1", "0.13"]) {
+    const shot = page.getByRole("button", {
+      name: "Golpear prueba",
+      exact: true,
+    });
+    await expect(shot).toBeEnabled({ timeout: 20000 });
+    await page
+      .getByRole("slider", { name: "Potencia de prueba", exact: true })
+      .fill(power);
+    await shot.click();
+    await expect(page.getByRole("status")).toHaveText("Pelota en movimiento");
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeHidden({ timeout: 25000 });
+  }
+  await expect(
+    page.getByText("Embocado en 2 golpes", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".workshop-test-top")).toContainText(
+    "0 penalizaciones",
+  );
+  await page.screenshot({ path: "work/pages-workshop-editions.png" });
+  console.log(
+    `PAGES WORKSHOP EDITIONS VERIFIED: version ${APP_VERSION}, explicit conversion, real full drive and two-stroke finish, physics 2: ${baseURL}`,
   );
 });

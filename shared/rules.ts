@@ -7,5 +7,5 @@ export const physicsEdition = (state: {
   physics?: PhysicsEdition;
 }): PhysicsEdition => state.physics ?? 1;
 // Network features can evolve without invalidating local physics records/saves.
-export const NETWORK_PROTOCOL = 15;
+export const NETWORK_PROTOCOL = 16;
 export const TURN_SECONDS = 30;

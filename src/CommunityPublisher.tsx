@@ -1,6 +1,10 @@
 import { clearCommunityIntent } from "./communityIntent";
 import { useState } from "react";
-import type { WorkshopDocument } from "../shared/workshop";
+import {
+  workshopPhysics,
+  workshopPhysicsLabel,
+  type WorkshopDocument,
+} from "../shared/workshop";
 import { difficultyLabels, type Difficulty } from "../shared/community";
 import { CommunityPreview } from "./CommunityPreview";
 import { communityRequest } from "./communityApi";
@@ -9,6 +13,7 @@ export function CommunityPublisher({
   base,
   token,
   document,
+  supportedVersions = [1],
   target,
   author,
   onPublished,
@@ -17,6 +22,7 @@ export function CommunityPublisher({
   base: string;
   token: string;
   document: WorkshopDocument;
+  supportedVersions?: number[];
   target?: PublicationTarget;
   author: string;
   onPublished: (id: string, revision: number) => void;
@@ -27,6 +33,7 @@ export function CommunityPublisher({
     [difficulty, setDifficulty] = useState<Difficulty>("medium"),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const supported = supportedVersions.includes(document.version);
   return (
     <section
       className="community-publisher"
@@ -39,11 +46,21 @@ export function CommunityPublisher({
             : "PRIMERA PUBLICACIÓN"}
         </small>
         <h2>{document.name}</h2>
+        <span className="community-physics">
+          {workshopPhysicsLabel(workshopPhysics(document))}
+        </span>
+        {!supported && (
+          <p role="alert">
+            Este servidor no admite esta edición del taller. Actualiza el
+            servidor o conserva la física original en una copia del diseño.
+          </p>
+        )}
         <CommunityPreview document={document} />
       </div>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          if (!supported) return;
           setBusy(true);
           setError("");
           try {
@@ -115,7 +132,7 @@ export function CommunityPublisher({
           contenido no certifica que todas sus rutas se puedan completar.
         </p>
         {error && <p role="alert">{error}</p>}
-        <button className="primary" disabled={busy}>
+        <button className="primary" disabled={busy || !supported}>
           {busy ? "Enviando…" : "Enviar a revisión"}
         </button>
         <button

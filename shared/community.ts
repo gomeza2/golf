@@ -1,5 +1,6 @@
 import { validateRoomWorkshop } from "./roomWorkshop";
 import type { WorkshopDocument } from "./workshop";
+import type { PhysicsEdition } from "./rules";
 export const difficulties = ["easy", "medium", "hard"] as const;
 export type Difficulty = (typeof difficulties)[number];
 export const difficultyLabels: Record<Difficulty, string> = {
@@ -19,6 +20,7 @@ export const featureLabels = {
 export type Feature = keyof typeof featureLabels;
 export type RevisionStatus = "pending" | "published" | "rejected" | "withdrawn";
 export type CreationSummary = {
+  physics?: PhysicsEdition;
   id: string;
   revision: number;
   title: string;
@@ -47,9 +49,11 @@ export type CreationDetail = CreationSummary & {
     revision: number;
     status: RevisionStatus;
     publishedAt: string | null;
+    physics?: PhysicsEdition;
   }[];
 };
 export type CommunityConfig = {
+  documentVersions?: number[];
   available: boolean;
   publishing: boolean;
   reason?: string;
@@ -139,6 +143,7 @@ export function galleryFilter(params: URLSearchParams) {
     difficulty = params.get("difficulty") || "",
     authorId = params.get("authorId") || "";
   const features = params.getAll("feature");
+  const physics = params.get("physics") || "";
   const page = Number(params.get("page") || 1);
   if (
     q.length > 80 ||
@@ -146,6 +151,7 @@ export function galleryFilter(params: URLSearchParams) {
     features.length > 7 ||
     features.some((f) => !Object.hasOwn(featureLabels, f)) ||
     (difficulty && !difficulties.includes(difficulty as Difficulty)) ||
+    !["", "1", "2"].includes(physics) ||
     (authorId && !isCreationId(authorId)) ||
     !Number.isInteger(page) ||
     page < 1 ||
@@ -157,6 +163,7 @@ export function galleryFilter(params: URLSearchParams) {
     author,
     authorId,
     difficulty,
+    physics,
     features: [...new Set(features)] as Feature[],
     page,
   };

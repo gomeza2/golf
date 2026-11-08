@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.19.0, Tierras bravas y aterrizajes
+## Entrega actual — 0.20.0, física elegida y verificada en las creaciones
+
+El autor puede adoptar explícitamente física actual mediante documento 2 o conservar documento 1/original. Confirmación, deshacer/rehacer, borrador, biblioteca, exportación/importación y prueba 3D conservan la elección. La huella incluye la edición; servidor y cliente contrastan contenido y física antes de mostrar una cancha privada.
+
+La comunidad mantiene versiones inmutables con edición visible y búsqueda por física. Una revisión nueva necesita los mismos permisos y moderación; no cambia el cuerpo ni los enlaces de la anterior. JSONB existente conserva ambas; esquema PostgreSQL 1 sin migración adicional. Capacidades del servidor impiden ofrecer publicación de formatos no soportados. Protocolo 16, reglas de puntuación 7 y guardados originales intactos. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) documenta la entrega.
+
+**Siguiente fase:** pruebas humanas de los recorridos y las ventanas de control, medidas en teléfonos físicos y ampliación cuidadosa de recursos del taller con presupuestos comprobados. La activación pública de comunidad aún necesita infraestructura real del propietario. No se presenta una galería poblada o una publicación disponible sin esos servicios.
+
+## Entrega anterior — 0.19.0, Tierras bravas y aterrizajes
 
 Campos extensos con huellas abiertas sobre agua: presa con salto real, escalera de ocho metros y delta de tres rutas. Geometría, colisiones, mapa y servidor comparten Course. Potencia superior progresiva, aterrizajes por superficie y salpicaduras a la altura real del agua. No se añade golpe elevado ni trayectoria resuelta.
 

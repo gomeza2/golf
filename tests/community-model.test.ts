@@ -36,6 +36,8 @@ it("validates closed gallery filters and page bounds while preserving literal se
     "page=0",
     "page=1.5",
     "difficulty=impossible",
+    "physics=3",
+    "physics=2;DROP",
     "authorId=not-a-uuid",
   ])
     expect(() => galleryFilter(new URLSearchParams(query))).toThrow(/Filtro/);

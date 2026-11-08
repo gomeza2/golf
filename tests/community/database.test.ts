@@ -1,3 +1,4 @@
+import { withWorkshopPhysics } from "../../shared/workshop";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { testDatabase, databaseUrl } from "./helpers";
@@ -329,4 +330,74 @@ it("survives termination of an idle PostgreSQL connection and reconnects", async
   } finally {
     await Promise.all([pool.end(), admin.end()]);
   }
+});
+
+it("persists two physical editions as immutable independently playable revisions and filters only the latest public edition", async () => {
+  const original = privateWorkshop();
+  original.name = "Ediciones persistentes";
+  const first = await db.publish(a, input({ document: original }));
+  await db.moderate(mod, first.id, 1, {
+    status: "published",
+    reason: "Contenido original revisado.",
+  });
+  const old = await db.detail(first.id, 1);
+  const upgraded = withWorkshopPhysics(original, 2);
+  await expect(
+    db.publish(
+      b,
+      input({ document: upgraded, creationId: first.id, expectedVersion: 1 }),
+    ),
+  ).rejects.toMatchObject({ status: 403 });
+  const second = await db.publish(
+    a,
+    input({ document: upgraded, creationId: first.id, expectedVersion: 1 }),
+  );
+  expect(
+    (
+      await db.gallery(
+        new URLSearchParams("q=Ediciones persistentes&physics=1"),
+      )
+    ).total,
+  ).toBe(1);
+  expect(
+    (
+      await db.gallery(
+        new URLSearchParams("q=Ediciones persistentes&physics=2"),
+      )
+    ).total,
+  ).toBe(0);
+  await db.moderate(mod, first.id, second.revision, {
+    status: "published",
+    reason: "Nueva edición revisada por moderación.",
+  });
+  const reread = new CommunityDatabase(db.pool);
+  expect((await reread.detail(first.id, 1)).document).toEqual(original);
+  expect((await reread.detail(first.id, 1)).hash).toBe(old.hash);
+  const current = await reread.detail(first.id, 2);
+  expect(current.document).toEqual(upgraded);
+  expect(current.physics).toBe(2);
+  expect(old.physics).toBe(1);
+  expect(current.versions.map((v) => [v.revision, v.physics])).toEqual([
+    [2, 2],
+    [1, 1],
+  ]);
+  expect(current.hash).not.toBe(old.hash);
+  const modern = await reread.gallery(
+    new URLSearchParams("q=Ediciones persistentes&physics=2"),
+  );
+  expect(modern.items.map((r) => r.id)).toEqual([first.id]);
+  expect(modern.items[0].preview).toEqual(upgraded);
+  expect(
+    (
+      await reread.gallery(
+        new URLSearchParams("q=Ediciones persistentes&physics=1"),
+      )
+    ).total,
+  ).toBe(0);
+  await expect(
+    db.pool.query(
+      "UPDATE golf_community.revisions SET document=jsonb_set(document,'{physics}','1') WHERE creation_id=$1 AND revision=2",
+      [first.id],
+    ),
+  ).rejects.toThrow(/immutable/i);
 });

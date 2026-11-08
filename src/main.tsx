@@ -1,3 +1,4 @@
+import { workshopPhysics, workshopPhysicsLabel } from "../shared/workshop";
 import { physicsEdition } from "../shared/rules";
 import {
   readPublicationTarget,
@@ -223,6 +224,7 @@ function App() {
     revision: number;
     title: string;
     par: number;
+    physics: 1 | 2;
   } | null>(null);
   const [communityDraft, setCommunityDraft] = useState<WorkshopDocument | null>(
     null,
@@ -303,6 +305,9 @@ function App() {
       revision: entry.revision,
       title: entry.title,
       par: entry.par,
+      physics: entry.document
+        ? workshopPhysics(entry.document)
+        : (entry.physics ?? 1),
     });
     setServerUrl(communityServerUrl || location.origin);
     setScreen("online");
@@ -1217,7 +1222,7 @@ function App() {
               <p>
                 Comunidad · Revisión {roomPublication.revision} · Par{" "}
                 {roomPublication.par}. El servidor carga esta revisión
-                publicada. Física original del documento 1.
+                publicada. {workshopPhysicsLabel(roomPublication.physics)}.
               </p>
               <button
                 className="text-button"
@@ -1245,8 +1250,8 @@ function App() {
               <strong>{roomWorkshop.name}</strong>
               <p>
                 Cancha del taller · Par {roomWorkshop.par} · Un hoyo privado. El
-                servidor valida el diseño antes de admitir la sala. Física
-                original del documento 1.
+                servidor valida el diseño antes de admitir la sala.{" "}
+                {workshopPhysicsLabel(workshopPhysics(roomWorkshop))}.
               </p>
               <button
                 className="text-button"

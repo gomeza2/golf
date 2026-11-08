@@ -1,3 +1,4 @@
+import { workshopPhysicsLabel } from "../shared/workshop";
 import {
   readCommunityIntent,
   readPublicationTarget,
@@ -89,6 +90,7 @@ export function Community({
   const [q, setQ] = useState(""),
     [author, setAuthor] = useState(""),
     [difficulty, setDifficulty] = useState(""),
+    [physics, setPhysics] = useState(""),
     [features, setFeatures] = useState<Feature[]>([]),
     [page, setPage] = useState(1),
     [query, setQuery] = useState(""),
@@ -328,6 +330,7 @@ export function Community({
                     base={base}
                     token={auth.token}
                     document={publication}
+                    supportedVersions={config.documentVersions ?? [1]}
                     target={editTarget}
                     author={auth.actor.name}
                     onCancel={() => {
@@ -465,6 +468,7 @@ export function Community({
                       if (q.trim()) params.set("q", q.trim());
                       if (author.trim()) params.set("author", author.trim());
                       if (difficulty) params.set("difficulty", difficulty);
+                      if (physics) params.set("physics", physics);
                       features.forEach((f) => params.append("feature", f));
                       setPage(1);
                       setQuery(params.toString());
@@ -502,6 +506,19 @@ export function Community({
                             {v}
                           </option>
                         ))}
+                      </select>
+                    </label>
+                    <label>
+                      Física
+                      <select
+                        aria-label="Filtrar física"
+                        disabled={!config.documentVersions?.includes(2)}
+                        value={physics}
+                        onChange={(e) => setPhysics(e.target.value)}
+                      >
+                        <option value="">Todas</option>
+                        <option value="1">Original</option>
+                        <option value="2">Actual</option>
                       </select>
                     </label>
                     <button className="primary">Buscar canchas</button>
@@ -571,6 +588,9 @@ export function Community({
                                   </small>
                                   <h2>{r.title}</h2>
                                   <p>Por {r.author.name}</p>
+                                  <span className="community-physics">
+                                    {workshopPhysicsLabel(r.physics ?? 1)}
+                                  </span>
                                   <p>{r.description}</p>
                                   <div className="community-tags">
                                     {r.features.map((f) => (

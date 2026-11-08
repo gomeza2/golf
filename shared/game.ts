@@ -124,8 +124,8 @@ export class Game {
   constructor(
     private readonly customCourse?: Course,
     private readonly competitiveCustom = false,
-    // All current workshop documents are format 1: preserve the physics in
-    // which their authors built and published them. Official new games use 2.
+    // Generic custom courses default to original physics; validated workshop
+    // documents explicitly supply their edition. Official new games use 2.
     physics: PhysicsEdition = customCourse ? 1 : PHYSICS_EDITION,
   ) {
     this.state.physics = physics;

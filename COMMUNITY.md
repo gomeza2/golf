@@ -1,12 +1,14 @@
-# Comunidad de creaciones — 0.17.0
+# Comunidad de creaciones — 0.20.0
 
-**Compatibilidad 0.19.0:** las creaciones y revisiones del documento 1 siguen usando la física original, también en salas privadas. La nueva física 2 de los campos oficiales no altera documentos, checksums, validación, autoría o moderación existentes. No se requiere migración adicional de base de datos. La adopción explícita de física nueva queda para un documento versionado posterior. Cliente y servidor online deben actualizarse al protocolo 15.
+**Ediciones físicas:** documento 1 mantiene física original; documento 2 requiere `physics: 2`. La elección se guarda dentro del JSONB inmutable y su hash. No se reescriben revisiones anteriores ni hace falta una migración adicional. Nuevo servidor y cliente usan protocolo 16. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) explica la conversión explícita y las pruebas de compatibilidad.
+
+`GET /api/community/config` declara `documentVersions: [1,2]` cuando la base está disponible. Los clientes no ofrecen enviar documento 2 a un servidor que no lo anuncia. Galería y detalles incluyen `physics`; el historial identifica ambas ediciones. El filtro `physics=1|2` aplica a la última revisión pública de cada creación; las anteriores siguen disponibles por enlace fijo. No se vuelve a mostrar una revisión antigua en la galería solamente para coincidir con un filtro.
 
 ## Qué está implementado
 
 La comunidad usa **PostgreSQL real**, con autores vinculados a una identidad OIDC, creaciones, revisiones inmutables, denuncias y un historial de moderación. No usa localStorage como base pública ni crea cuentas, votos, partidas o estadísticas de ejemplo.
 
-- Galería pública paginada, planos del diseño real y búsqueda por nombre/descripción, alias de autor, ID de autor, dificultad y características.
+- Galería pública paginada, planos del diseño real y búsqueda por nombre/descripción, alias de autor, ID de autor, dificultad, física y características.
 - Características calculadas desde el documento: agua, arena, césped alto, rampas, alturas, mecanismos y pasos estrechos. La dificultad es una indicación del autor; no una certificación automática.
 - Publicación autenticada en estado **En revisión**. Solo una decisión del moderador la hace pública.
 - Página de creación y enlaces a cada revisión. Una nueva versión no modifica la anterior; si está pendiente, la última aprobada sigue disponible.

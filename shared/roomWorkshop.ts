@@ -4,6 +4,7 @@ import {
   parseWorkshop,
   workshopIssues,
   MAX_WORKSHOP_BYTES,
+  workshopPhysics,
 } from "./workshop";
 
 /** A room fixes one normalized document. Validation is not a playability certificate. */
@@ -35,6 +36,7 @@ export function validateRoomWorkshop(value: unknown) {
     );
   return {
     document,
+    physics: workshopPhysics(document),
     course,
     canonical: JSON.stringify(document),
     cost: { colliders, triangles, mechanisms },
