@@ -498,3 +498,8 @@
 }
 
 .community-physics { display:inline-block; padding:5px 10px; border:1px solid #8ba98c; border-radius:20px; font-size:12px; color:#f4d58d; margin:4px 0 10px; }
+.community-card .community-physics {
+  color: #254d3d;
+  background: #e4ead2;
+  border-color: #708a64;
+}
