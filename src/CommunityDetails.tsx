@@ -1,3 +1,4 @@
+import { workshopPhysicsLabel } from "../shared/workshop";
 import { useEffect, useState } from "react";
 import {
   difficultyLabels,
@@ -116,6 +117,9 @@ export function CommunityDetails({
             {difficultyLabels[entry.difficulty]}
           </span>
           <p>{entry.description}</p>
+          <span className="community-physics">
+            {workshopPhysicsLabel(entry.physics ?? 1)}
+          </span>
           <div className="community-tags">
             {entry.features.map((f) => (
               <span key={f}>{featureLabels[f]}</span>
@@ -209,7 +213,8 @@ export function CommunityDetails({
               aria-current={v.revision === entry.revision ? "page" : undefined}
               onClick={() => onOpen(entry.id, v.revision)}
             >
-              v{v.revision} · {revisionLabels[v.status]}
+              v{v.revision} · {revisionLabels[v.status]} ·{" "}
+              {workshopPhysicsLabel(v.physics ?? 1)}
             </button>
           ))}
         </div>

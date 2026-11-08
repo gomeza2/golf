@@ -10,6 +10,7 @@ import {
   type CommunityActor,
 } from "../../shared/community";
 import type { Principal } from "./auth";
+import { workshopPhysics } from "../../shared/workshop";
 import { COMMUNITY_SCHEMA_VERSION } from "./schema";
 export class CommunityError extends Error {
   constructor(
@@ -23,6 +24,7 @@ const select = `SELECT r.*, c.author_id FROM golf_community.revisions r JOIN gol
 function summary(r: any): CreationSummary {
   return {
     id: r.creation_id,
+    physics: workshopPhysics(r.document),
     revision: r.revision,
     title: r.title,
     description: r.description,
@@ -130,13 +132,14 @@ export class CommunityDatabase {
   }
   async gallery(params: URLSearchParams) {
     const f = galleryFilter(params),
-      where = `($1='' OR position(lower($1) in lower(title||' '||description))>0) AND ($2='' OR position(lower($2) in lower(author_name))>0) AND ($3='' OR difficulty=$3) AND ($4='' OR author_id::text=$4) AND features @> $5::jsonb`;
+      where = `($1='' OR position(lower($1) in lower(title||' '||description))>0) AND ($2='' OR position(lower($2) in lower(author_name))>0) AND ($3='' OR difficulty=$3) AND ($4='' OR author_id::text=$4) AND features @> $5::jsonb AND ($6='' OR COALESCE(document->>'physics','1')=$6)`;
     const values = [
       f.q,
       f.author,
       f.difficulty,
       f.authorId,
       JSON.stringify(f.features),
+      f.physics,
     ];
     const cte = `WITH latest AS (SELECT DISTINCT ON (r.creation_id) r.*,c.author_id FROM golf_community.revisions r JOIN golf_community.creations c ON c.id=r.creation_id WHERE r.status='published' ORDER BY r.creation_id,r.revision DESC)`;
     const total = await this.pool.query(
@@ -144,7 +147,7 @@ export class CommunityDatabase {
       values,
     );
     const result = await this.pool.query(
-      `${cte} SELECT * FROM latest WHERE ${where} ORDER BY published_at DESC,creation_id LIMIT 12 OFFSET $6`,
+      `${cte} SELECT * FROM latest WHERE ${where} ORDER BY published_at DESC,creation_id LIMIT 12 OFFSET $7`,
       [...values, (f.page - 1) * 12],
     );
     return {
@@ -174,7 +177,7 @@ export class CommunityDatabase {
     )
       throw new CommunityError(404, "Creación o versión no disponible.");
     const versions = await this.pool.query(
-      `SELECT revision,status,published_at FROM golf_community.revisions WHERE creation_id=$1 ${privileged ? "" : "AND (status='published' OR (status='withdrawn' AND published_at IS NOT NULL))"} ORDER BY revision DESC`,
+      `SELECT revision,status,published_at,document->>'physics' AS physics FROM golf_community.revisions WHERE creation_id=$1 ${privileged ? "" : "AND (status='published' OR (status='withdrawn' AND published_at IS NOT NULL))"} ORDER BY revision DESC`,
       [id],
     );
     return {
@@ -184,6 +187,7 @@ export class CommunityDatabase {
         : {}),
       versions: versions.rows.map((v) => ({
         revision: v.revision,
+        physics: v.physics === "2" ? (2 as const) : (1 as const),
         status: v.status,
         publishedAt: v.published_at
           ? new Date(v.published_at).toISOString()

@@ -200,6 +200,7 @@ it("buffers private states until its bounded document and SHA-256 are verified, 
   const state = {
     phase: "lobby",
     custom: true,
+    physics: 1,
     workshopHash: hash,
     players: [],
     circuit: "sunset",
@@ -241,5 +242,35 @@ it("ends a session visibly if its custom content never arrives", () => {
   expect(callbacks.onError).toHaveBeenCalledWith(
     expect.stringContaining("No se recibió"),
   );
+  expect(connection.connected).toBe(false);
+});
+
+it("rejects room physics that differ from the exact verified document edition", async () => {
+  vi.useRealTimers();
+  const { privateWorkshop } = await import("./fixtures/workshop");
+  const { withWorkshopPhysics } = await import("../shared/workshop");
+  const { validateRoomWorkshop, workshopFingerprint } =
+    await import("../shared/roomWorkshop");
+  const { connection, callbacks } = connect();
+  fake.fire("connect");
+  fake.fire("session", session);
+  const doc = withWorkshopPhysics(privateWorkshop(), 2),
+    hash = await workshopFingerprint(validateRoomWorkshop(doc).canonical);
+  fake.fire("state", {
+    phase: "lobby",
+    custom: true,
+    workshopHash: hash,
+    physics: 1,
+    players: [],
+    circuit: "sunset",
+    hole: 0,
+  });
+  fake.fire("workshop", { document: doc, hash });
+  await vi.waitFor(() =>
+    expect(callbacks.onError).toHaveBeenCalledWith(
+      expect.stringMatching(/física.*no coincide/),
+    ),
+  );
+  expect(callbacks.onState).not.toHaveBeenCalled();
   expect(connection.connected).toBe(false);
 });

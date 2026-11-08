@@ -1,5 +1,11 @@
 # Evolución del club — golpe normal
 
+## Entrega 0.20.0 — Elección de física para taller y comunidad
+
+La edición actual se puede adoptar mediante una conversión explícita y reversible. Documento 1 conserva identidad y física; documento 2 registra física 2. Editor, almacenamiento, exportación, prueba, comunidad y servidor comparten la elección. El cliente verifica que la física de la sala coincide con el documento autenticado por hash. Revisiones anteriores permanecen inmutables y enlazables. Protocolo 16, esquema de base 1, guardados 1/2 y reglas 7.
+
+Se añaden pruebas de hash legado, conversión, límites, permisos, versiones de base, búsqueda, drives reales, reconexión y revancha. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) detalla el resultado y las verificaciones; continúan pendientes sesiones humanas y rendimiento en dispositivos físicos.
+
 ## Entrega 0.19.0 — Tierras bravas y física de aterrizajes
 
 Fases 1–2: potencia progresiva superior al 75 %, golpe normal sin elevación inicial y rebote de aterrizaje según terreno. Fases 5–8: tres campos extensos de huella abierta con rutas alternativas, salto sobre agua, descenso de ocho metros, compuerta y tres caminos. Guardados en vuelo, honores y puntuación de rondas completas comprobados mediante el motor real.
@@ -8,7 +14,7 @@ Compatibilidad explícita: física 2/guardado 2 para rondas oficiales nuevas; f�
 
 Pendiente: evaluación humana de diversión y riesgo, rendimiento en teléfonos físicos y adopción explícita de física nueva en un futuro documento del taller 2. Comunidad pública requiere servicios reales configurados.
 
-**Estado actual 0.19.0:** 34 hoyos físicos, trece selecciones (Al Filo tiene dos perfiles), escuela, taller, comunidad configurable y servidor público Render. La entrega actual añade Tierras bravas y física 2, con guardados y marcas originales conservados. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.20.0:** 34 hoyos físicos, trece selecciones (Al Filo tiene dos perfiles), escuela, taller, comunidad configurable y servidor público Render. La entrega actual permite elegir y compartir la física de las creaciones, conservando los documentos, guardados y marcas originales. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 

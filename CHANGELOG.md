@@ -1,5 +1,16 @@
 # Hoyo en Uno · Golf Club
 
+## 0.20.0 — Física de las creaciones, de extremo a extremo
+
+- Elección explícita y reversible de física en el taller, con confirmación y conservación de biblioteca/documentos anteriores.
+- Documento 2 incluye física 2 en la identidad SHA-256; documento 1 mantiene su canonicalización y comportamiento.
+- Pruebas 3D, juego individual comunitario y salas usan la edición del documento; la reconexión y revancha la conservan.
+- Cliente rechaza una física de sala que no coincida con la revisión verificada. Protocolo 16.
+- Galería e historial indican edición y permiten buscarla; publicación de una edición nueva sigue requiriendo autor y moderación.
+- Capacidades declaradas por el servidor desactivan publicaciones de documentos no soportados.
+- PostgreSQL mantiene revisiones/ediciones sin alterar cuerpos históricos ni requerir una migración nueva.
+- Se conservan todos los hoyos oficiales, modos, tres controles, guardados, récords y creaciones previas.
+
 ## 0.19.0 — Tierras bravas, saltos y drives largos
 
 - Tres hoyos de 90–160 m con rutas amplias/arriesgadas, agua, salto real, tres niveles, compuerta y puente giratorio; 34 hoyos, 13 selecciones y 38 prácticas.

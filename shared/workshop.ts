@@ -5,7 +5,8 @@ import {
   type Block,
   type Course,
 } from "./courses";
-export const WORKSHOP_VERSION = 1;
+import type { PhysicsEdition } from "./rules";
+export const WORKSHOP_VERSION = 2;
 export const MAX_WORKSHOP_BYTES = 60000;
 export const pieceKinds = [
   "floor",
@@ -28,8 +29,9 @@ export type WorkshopPiece = {
   endHeight: number;
   angle: number;
 };
-export type WorkshopDocument = {
-  version: 1;
+export type WorkshopDocument = (
+  { version: 1; physics?: never } | { version: 2; physics: 2 }
+) & {
   name: string;
   par: number;
   start: { x: number; z: number };
@@ -43,7 +45,9 @@ export function parseWorkshop(value: unknown): WorkshopDocument {
   const v = value as any;
   if (
     !v ||
-    v.version !== 1 ||
+    ![1, 2].includes(v.version) ||
+    (v.version === 1 && v.physics !== undefined) ||
+    (v.version === 2 && v.physics !== 2) ||
     typeof v.name !== "string" ||
     !v.name.trim() ||
     v.name.length > 48 ||
@@ -95,7 +99,9 @@ export function parseWorkshop(value: unknown): WorkshopDocument {
     };
   });
   return {
-    version: 1,
+    ...(v.version === 2
+      ? { version: 2 as const, physics: 2 as const }
+      : { version: 1 as const }),
     name: v.name.trim(),
     par: v.par,
     start: { x: v.start.x, z: v.start.z },
@@ -115,6 +121,27 @@ export function importWorkshop(text: string) {
 }
 export const exportWorkshop = (doc: WorkshopDocument) =>
   JSON.stringify(parseWorkshop(doc), null, 2);
+export const workshopPhysics = (doc: WorkshopDocument): PhysicsEdition =>
+  doc.version === 2 ? 2 : 1;
+export const workshopPhysicsLabel = (physics: PhysicsEdition) =>
+  physics === 2 ? "Física actual" : "Física original";
+/** Explicit, reversible conversion. Original canonical bytes remain unchanged. */
+export function withWorkshopPhysics(
+  input: WorkshopDocument,
+  physics: PhysicsEdition,
+): WorkshopDocument {
+  const {
+    version: _version,
+    physics: _physics,
+    ...fields
+  } = parseWorkshop(input);
+  if (physics !== 1 && physics !== 2) throw Error("Física de cancha inválida.");
+  return parseWorkshop(
+    physics === 2
+      ? { version: 2, physics: 2, ...fields }
+      : { version: 1, ...fields },
+  );
+}
 export function newWorkshop(): WorkshopDocument {
   return {
     version: 1,

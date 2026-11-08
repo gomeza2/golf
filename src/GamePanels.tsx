@@ -1,3 +1,4 @@
+import { workshopPhysicsLabel } from "../shared/workshop";
 import { physicsEdition } from "../shared/rules";
 import { ShotControlFeedback } from "./ShotControlFeedback";
 import type { ShotReview } from "./shotControls";
@@ -229,8 +230,8 @@ export function GamePanels({
             <div className="private-course-summary">
               <strong>{courses[0].name}</strong>
               <p>
-                Cancha del taller · Par {courses[0].par} · Un hoyo · Física
-                original
+                Cancha del taller · Par {courses[0].par} · Un hoyo ·{" "}
+                {workshopPhysicsLabel(physicsEdition(s))}
               </p>
               <p>
                 Creación privada, sin certificación de recorrido. El diseño
@@ -517,7 +518,12 @@ export function GamePanels({
               )}
               <span className="locked-control">
                 {controlModes.find((mode) => mode.id === controlMode)?.name} ·
-                FIJO{physicsEdition(s) === 1 ? " · Física original" : ""}
+                FIJO
+                {s.custom
+                  ? ` · ${workshopPhysicsLabel(physicsEdition(s))}`
+                  : physicsEdition(s) === 1
+                    ? " · Física original"
+                    : ""}
               </span>
               {shotExtras}
               {chargeActive && (

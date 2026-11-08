@@ -206,7 +206,11 @@ io.on("connection", (socket) => {
             : undefined;
           if (published && published.hash !== hash)
             throw Error("La revisión publicada perdió su integridad.");
-          const game = new Game(custom?.course, Boolean(custom));
+          const game = new Game(
+            custom?.course,
+            Boolean(custom),
+            custom?.physics,
+          );
           if (hash) game.state.workshopHash = hash;
           if (published)
             game.state.publication = {

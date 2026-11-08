@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { io, type Socket } from "socket.io-client";
-import { privateWorkshop } from "../fixtures/workshop";
-import { exportWorkshop } from "../../shared/workshop";
+import { privateWorkshop, longWorkshop } from "../fixtures/workshop";
+import { exportWorkshop, withWorkshopPhysics } from "../../shared/workshop";
 import type { State } from "../../shared/game";
 import {
   workshopFingerprint,
@@ -254,5 +254,92 @@ test("two browser friends play a workshop creation, recover its content after re
   } finally {
     await ca.close();
     await cb.close();
+  }
+});
+
+test("the public workshop room keeps current physics through real long drives, reconnect and replay", async () => {
+  test.setTimeout(180000);
+  let a = await open();
+  const b = await open();
+  let previous: Socket | undefined;
+  try {
+    const document = withWorkshopPhysics(longWorkshop(), 2),
+      hash = await workshopFingerprint(
+        validateRoomWorkshop(document).canonical,
+      );
+    const host = await admission(a, {
+      type: "create",
+      name: "Ana",
+      workshop: document,
+      physics: 1,
+    });
+    expect(host.content).toEqual({ document, hash });
+    a.emit("action", { type: "content-ready", hash });
+    const guest = await admission(b, {
+      type: "join",
+      name: "Luis",
+      code: host.session.code,
+    });
+    expect(guest.content).toEqual(host.content);
+    b.emit("action", { type: "content-ready", hash });
+    let pending = state(a, (s) => s.players.every((p) => p.ready));
+    a.emit("action", { type: "ready" });
+    b.emit("action", { type: "ready" });
+    await pending;
+    pending = state(a, (s) => s.phase === "playing");
+    a.emit("action", { type: "start", physics: 1 });
+    expect((await pending).physics).toBe(2);
+    for (const [index, socket] of [
+      [0, a],
+      [1, b],
+    ] as const) {
+      pending = state(b, (s) => !s.moving && s.players[index].strokes === 1);
+      socket.emit("action", { type: "shoot", angle: 0, power: 1, physics: 1 });
+      const settled = await pending;
+      expect(settled.physics).toBe(2);
+      expect(settled.players[index].pos.z).toBeLessThan(-12);
+      expect(settled.players[index].penalties).toBe(0);
+    }
+    previous = a;
+    previous.disconnect();
+    a = await open();
+    const resumed = await admission(a, {
+      type: "resume",
+      code: host.session.code,
+      token: host.session.token,
+    });
+    expect(resumed.content).toEqual(host.content);
+    a.emit("action", { type: "content-ready", hash });
+    let result: State | undefined;
+    for (const [index, socket] of [
+      [0, a],
+      [1, b],
+    ] as const) {
+      pending = state(b, (s) => !s.moving && s.players[index].done);
+      socket.emit("action", {
+        type: "shoot",
+        angle: 0,
+        power: 0.13,
+        physics: 1,
+      });
+      result = await pending;
+      expect(result.physics).toBe(2);
+    }
+    expect(result!.phase).toBe("finished");
+    expect(result!.players.map((p) => p.scores)).toEqual([[2], [2]]);
+    expect(result!.players.every((p) => p.penalties === 0)).toBe(true);
+    pending = state(
+      b,
+      (s) =>
+        s.phase === "playing" && s.players.every((p) => p.scores.length === 0),
+    );
+    (result!.host === host.session.id ? a : b).emit("action", {
+      type: "replay",
+    });
+    expect((await pending).physics).toBe(2);
+  } finally {
+    a.disconnect();
+    b.disconnect();
+    previous?.disconnect();
   }
 });

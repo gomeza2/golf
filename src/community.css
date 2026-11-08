@@ -97,7 +97,7 @@
 }
 .community-search {
   display: grid;
-  grid-template-columns: 2fr 1.25fr 1.25fr auto;
+  grid-template-columns: 2fr 1.1fr 1fr 1fr auto;
   gap: 14px;
   padding: 24px;
   background: #244e3e;
@@ -496,3 +496,5 @@
     transform: none;
   }
 }
+
+.community-physics { display:inline-block; padding:5px 10px; border:1px solid #8ba98c; border-radius:20px; font-size:12px; color:#f4d58d; margin:4px 0 10px; }

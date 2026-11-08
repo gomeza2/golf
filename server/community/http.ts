@@ -48,6 +48,7 @@ export function createCommunity(env: NodeJS.ProcessEnv, origins: string[]) {
     const publishing = Boolean(auth && auth.moderators.length);
     return {
       available: true,
+      documentVersions: [1, 2],
       publishing,
       auth:
         publishing && auth

@@ -1,6 +1,14 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.19.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+Versión **0.20.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+
+## Elige la física de tus creaciones — 0.20.0
+
+**Taller → Física de la cancha** permite conservar la edición original o adoptar la actual: más alcance por encima del 75 % y rebote de aterrizaje según el terreno, siempre con golpe normal. El cambio pide confirmación, se puede deshacer y queda guardado en el archivo. Los diseños existentes y los nuevos empiezan con la edición original hasta que su autor elige convertirlos.
+
+El documento 1 conserva su hash y comportamiento. El documento 2 incluye `physics: 2`: su identidad se verifica al importar, publicar y entrar en una sala. La prueba 3D, el juego comunitario individual y el servidor usan esa misma elección. Galería, revisiones e invitaciones indican la física; la búsqueda permite filtrarla. Cambiar de edición en una publicación requiere enviar una nueva revisión a moderación; los enlaces anteriores permanecen intactos.
+
+Se mantienen los 34 hoyos oficiales, 13 selecciones, 38 prácticas, controles, copas, guardados y récords. Protocolo online **16**: actualiza cliente y servidor juntos. PostgreSQL conserva su esquema 1; no hay nuevas variables, credenciales, dependencias ni migración adicional. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) explica el flujo, compatibilidad y pruebas.
 
 ## Tierras bravas y física de aterrizajes — 0.19.0
 
@@ -50,7 +58,7 @@ npm run community:migrate:production
 
 Dependencias nuevas: `pg` para PostgreSQL, `jose` para verificar JWT/JWKS y `oidc-client-ts` para Authorization Code + PKCE. Ninguna credencial privada se compila en Vite. `VITE_COMMUNITY_SERVER_URL` es solo el origen público de API, fijado por despliegue.
 
-Protocolo online **15**, reglas v7, guardados 1/2 y documento del taller 1. Se conservan los 34 hoyos oficiales, recorridos, tres controles, modos, copas y récords. Las salas siguen siendo temporales; la persistencia de creaciones está en PostgreSQL.
+Protocolo online **16**, reglas v7, guardados 1/2 y documentos del taller 1/2. Se conservan los 34 hoyos oficiales, recorridos, tres controles, modos, copas y récords. Las salas siguen siendo temporales; la persistencia de creaciones está en PostgreSQL.
 
 ## Canchas del taller con amigos — entrega 0.16.0
 
@@ -58,7 +66,7 @@ Protocolo online **15**, reglas v7, guardados 1/2 y documento del taller 1. Se c
 
 Se juega un hoyo fijo con reloj de 30 s, límite de 12 golpes, par propio, resultados, reconexión y revancha. La cancha no se cambia ni se convierte en copa dentro de esa sala; para otro diseño se crea una nueva. La práctica individual del taller sigue sin reloj. Los resultados privados no generan récords oficiales ni sustituyen sus guardados. El contenido viaja al entrar/reconectar, no en cada actualización de posiciones.
 
-El protocolo 13 se introdujo en esta entrega; el vigente es 15. Reglas v7, guardados 1 y documento del taller v1 conservados. Las salas están en memoria y se pierden si el servidor reinicia. Guardar/exportar el diseño lo conserva fuera de la sala. HTTPS o localhost para verificar la revisión. Todavía no hay galería pública ni publicación persistente: [COMMUNITY.md](COMMUNITY.md) define el siguiente paso y sus requisitos. No se agregan servicios, cuentas, secretos o dependencias nuevas.
+El protocolo 13 se introdujo en esta entrega; el vigente es 16. Reglas v7, guardados 1 y documento del taller v1 conservados. Las salas están en memoria y se pierden si el servidor reinicia. Guardar/exportar el diseño lo conserva fuera de la sala. HTTPS o localhost para verificar la revisión. Todavía no hay galería pública ni publicación persistente: [COMMUNITY.md](COMMUNITY.md) define el siguiente paso y sus requisitos. No se agregan servicios, cuentas, secretos o dependencias nuevas.
 
 ## Cumbres y Mareas — 0.15.0
 
@@ -78,7 +86,7 @@ Se conservan el golpe normal y las físicas generales de reglas v7; los desnivel
 
 QA física: vueltas amplias de **4/8/7** golpes y atajos de **3/1/4**, completos sin recolocaciones ni penalizaciones. Para las puertas se espera una ventana real dentro del tiempo de turno; el as oblicuo no se obtiene tirando recto con máxima potencia. Estos son recorridos de prueba, no una guía visible de tiros. La geometría elevada, la espiral y el mundo guardado se verifican con Rapier; la escena usa los mismos datos.
 
-**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. El protocolo 12 se introdujo en esta entrega; el vigente es 15: actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
+**Compatibilidad:** guardado formato 1 y reglas v7; las claves de práctica originales y las cuatro de banderas cruzadas mantienen sus índices. Las tres nuevas se añaden después. El protocolo 12 se introdujo en esta entrega; el vigente es 16: actualizar cliente y servidor juntos. Las salas siguen en memoria y se pierden al reiniciar/desplegar el servicio.
 
 La comunidad de creaciones queda como la siguiente fase: primero partidas privadas con contenido validado por servidor y después publicación persistente/galería. [COMMUNITY.md](COMMUNITY.md) define el contrato, límites y almacenamiento necesarios. Todavía se comparten archivos del taller; no hay galería ni publicación central conectada. La revisión específica de Retroceso y Precisión queda en una fase posterior, como solicitó el usuario.
 
@@ -92,7 +100,7 @@ En **Probar en 3D → Inspeccionar cancha**, gira, inclina y acerca/aleja la cá
 
 **Revisar el diseño** avisa de zonas de arena/rough que no coinciden con suelo a su altura, islas separadas y falta de conexión de suelo entre salida/copa. Usa una cuadrícula aproximada de 0,5 m y la altura superior; no tiene en cuenta paredes, saltos, pasos inferiores ni resuelve tiros. **No bloquea** rutas con saltos y no certifica que una cancha se pueda completar. Los errores estructurales anteriores sí siguen bloqueando la prueba. Se conserva el mismo compilador y la misma física.
 
-El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 15.
+El importador ahora usa un diálogo nativo con fondo inactivo, foco en el JSON y cierre con Escape. Informa de errores al leer archivos. Documento v1, biblioteca, borrador, límite de piezas, registros oficiales, los 28 hoyos y todas las salas/copas siguen compatibles. No se agregan dependencias, ni un motor nuevo, ni creaciones online todavía. Reglas v7, guardados formato 1; protocolo vigente 16.
 
 Código nuevo: `shared/workshopTools.ts` (transformaciones), `shared/workshopDiagnostics.ts` (avisos), `src/WorkshopSelection.tsx` y `src/WorkshopImport.tsx`. Pruebas de herramientas/diagnóstico en `tests/workshop-tools.test.ts`; los casos de navegador comprueban grupos, historial, foco, cámara táctil y embocado después de inspeccionar.
 
@@ -108,7 +116,7 @@ Las plataformas se recortan físicamente alrededor de la copa gris, incluida su 
 
 Formato de documento v1: hasta 80 piezas, nombre de 48 caracteres, par 2–8, alturas 0–4 m, tamaños/posiciones/rotaciones acotados y archivos de hasta 60 KB. No admite código, URL de modelos, mallas arbitrarias ni IDs reservados/duplicados. El compilador produce un `Course` local; `Scene` recibe esa misma geometría explícitamente. El modo de prueba se marca como personalizado y se rechaza en récords, práctica oficial, desafíos y guardado de recuperación oficial. Una prueba del taller no reemplaza una partida local guardada.
 
-**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 15. No se agrega un circuito falso al registro oficial ni se renumeran récords.
+**Conservado:** los 28 hoyos oficiales, diez tarjetas/once selecciones, ambos perfiles de Al Filo, tres controles oficiales, escuela, retos, vueltas 9/18, todas las copas y salas online. Reglas v7, guardados formato 1 y protocolo vigente 16. No se agrega un circuito falso al registro oficial ni se renumeran récords.
 
 **Pendiente:** jugar diseños personalizados con varios participantes, validación/importación de geometría en el servidor, galerías y enlaces de creación duraderos y plataformas que transporten pelotas. Esta entrega permite editar, guardar, compartir archivos y probar individualmente; las creaciones todavía no se admiten en salas online. Persistencia central y pruebas de carga/teléfonos físicos siguen pendientes.
 
@@ -252,7 +260,7 @@ Para probar en una misma máquina usa dos ventanas de incógnito o perfiles dist
 
 ## Recorridos y reglas
 
-**31 hoyos distintos y once tarjetas de recorrido, con dos perfiles de banderas en Al Filo**. **Club del As** incorpora tres pistas con agua, un puente diagonal, carambola y compuerta. Los tres permiten un hoyo en uno comprobado con las físicas reales; también se verifica una vuelta completa sin penalizaciones. Las rondas de 9/18 conservan sus hoyos originales. Club del atardecer y Jardín lunar tienen tres hoyos/par 11; Gran Parque, tres/par 15; Riviera Salvaje, cuatro/par 26; Desafío Maestro, cinco/par 31. **Vuelta completa** enlaza esos 18 hoyos en una única partida y clasificación (par 94). Las canchas crecen desde 12 × 24 m hasta 22 × 72 m. **Vuelta de 9** ofrece los primeros nueve hoyos, con par 37 y puntuación independiente. El catálogo no cuenta dos veces esos hoyos. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
+**34 hoyos distintos, doce tarjetas y trece selecciones de recorrido, con dos perfiles de banderas en Al Filo**. **Club del As** incorpora tres pistas con agua, un puente diagonal, carambola y compuerta. Los tres permiten un hoyo en uno comprobado con las físicas reales; también se verifica una vuelta completa sin penalizaciones. Las rondas de 9/18 conservan sus hoyos originales. Club del atardecer y Jardín lunar tienen tres hoyos/par 11; Gran Parque, tres/par 15; Riviera Salvaje, cuatro/par 26; Desafío Maestro, cinco/par 31. **Vuelta completa** enlaza esos 18 hoyos en una única partida y clasificación (par 94). Las canchas alcanzan 50 × 88 m de extensión y rutas amplias de hasta 160 m. **Vuelta de 9** ofrece los primeros nueve hoyos, con par 37 y puntuación independiente. El catálogo no cuenta dos veces esos hoyos. Las bandas, rampas y obstáculos se definen una sola vez: el render y Rapier comparten dimensiones, rotaciones y movimiento. No hay paredes físicas invisibles más altas que las visibles.
 
 | Recorrido          | Hoyo                   | Diseño                                                  | Par |
 | ------------------ | ---------------------- | ------------------------------------------------------- | --- |
@@ -326,7 +334,7 @@ npm run build
 npm start
 ```
 
-Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (15), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
+Node sirve `dist/`, `/health` y Socket.IO. Publica detrás de un proxy con HTTPS y soporte para WebSocket y HTTP long polling. Configura el proxy para reenviar todos los paths al puerto 3001; permite conexiones de más de 60 segundos y upgrades WebSocket. `GET /health` devuelve estado, protocolo de red (16), reglas locales (7), versión, formatos, plazo de reconexión, commit desplegado cuando está disponible, número de salas y capacidad. El cliente rechaza servidores de protocolos anteriores para evitar reglas incompatibles. El proceso debe permanecer activo: un hosting exclusivamente estático no ejecuta las salas.
 
 Para separar cliente y servidor, configura `VITE_SERVER_URL=https://servidor.tudominio.com` **antes de compilar** y `CLIENT_ORIGIN=https://cliente.tudominio.com` en el servidor. `CLIENT_ORIGIN` admite varios orígenes exactos separados por coma. No contiene rutas ni barras finales. Las variables del cliente son públicas; no pongas secretos en `VITE_*`. Node carga `.env` en desarrollo y producción (reinicia el servidor al cambiarlo); Vite carga sus variables al iniciar/compilar.
 

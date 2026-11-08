@@ -31,7 +31,7 @@ Se añaden al final de los índices: 34 hoyos físicos, 13 selecciones y 38 prá
 - Guardado 2 exige física 2; guardado 1 admite original/sin marcador. Se rechazan combinaciones incoherentes. Clientes viejos rechazan formato 2 en lugar de simularlo con reglas incorrectas.
 - Snapshot genuino de 0.18, capturado durante un golpe: `tests/fixtures/v018-inflight.json`. La prueba compara su trayectoria futura original con la recuperación actual, además de permitir otro golpe con la velocidad original.
 - Los desafíos diarios/semanales c1 mantienen física 1, identidad y resultados anteriores. La evaluación rechaza una ronda con física 2 bajo esas mismas reglas c1.
-- Documentos del taller 1, revisiones publicadas y salas de creaciones mantienen física 1. No se altera el checksum ni se migra geometría/DB. Adoptar física 2 en creaciones necesita un futuro documento versionado y elección explícita del autor.
+- Documentos del taller 1, revisiones publicadas y salas de creaciones mantienen física 1. No se altera el checksum ni se migra geometría/DB. La adopción explícita mediante documento 2 se implementa en 0.20.0: [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md).
 - Récords originales siguen en `club-personal-normal-v7` / `club-practice-v7`; se muestran en «Marcas anteriores · física original». Los nuevos usan sufijo `-p2`. No se mezclan marcas de reglas físicas distintas ni se borran datos. Preferencias, progreso de escuela y nombres permanecen.
 
 ## Verificación reproducible
@@ -44,4 +44,4 @@ Las rutas de prueba no se importan en el juego ni proporcionan ayudas al jugador
 
 ## Pendiente y siguiente fase
 
-Evaluar con personas la comprensión de alturas, la dificultad real de las ventanas y cuánto castiga el agua. Medir rendimiento en teléfonos físicos y varias salas concurrentes. Estudiar documento 2 para adoptar explícitamente física nueva en el taller, sin cambiar versiones publicadas. La comunidad pública sigue necesitando PostgreSQL/OIDC/moderación reales; esta entrega no finge provisionarlos ni agrega variables de entorno.
+Evaluar con personas la comprensión de alturas, la dificultad real de las ventanas y cuánto castiga el agua. Medir rendimiento en teléfonos físicos y varias salas concurrentes. Documento 2 y adopción explícita se completan en 0.20.0; las revisiones publicadas anteriores permanecen intactas. La comunidad pública sigue necesitando PostgreSQL/OIDC/moderación reales; esta entrega no finge provisionarlos ni agrega variables de entorno.

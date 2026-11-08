@@ -1,3 +1,4 @@
+import { withWorkshopPhysics } from "../../shared/workshop";
 import { test, expect } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { io, type Socket } from "socket.io-client";
@@ -85,7 +86,7 @@ const roomCount = async () =>
 test("published revision rooms serialize concurrent admission, use server content and reject stale withdrawn references", async () => {
   const author = await accessToken("author"),
     mod = await accessToken("reviewer");
-  const doc = privateWorkshop();
+  const doc = withWorkshopPhysics(privateWorkshop(), 2);
   doc.name = "La revisión de los sockets";
   const entry = await api("/creations", author, {
     document: doc,
@@ -148,7 +149,9 @@ test("published revision rooms serialize concurrent admission, use server conten
     await update;
     update = event<any>(a, "state", (s) => s.phase === "playing");
     a.emit("action", { type: "start" });
-    expect((await update).publication).toEqual({ id: entry.id, revision: 1 });
+    const started = await update;
+    expect(started.publication).toEqual({ id: entry.id, revision: 1 });
+    expect(started.physics).toBe(2);
     await api(path + "/moderate", mod, {
       status: "withdrawn",
       reason: "Se retira mientras una sala ya está jugando.",
@@ -174,6 +177,7 @@ test("published revision rooms serialize concurrent admission, use server conten
     );
     expect(finished.players.map((p: any) => p.scores)).toEqual([[1], [1]]);
     expect(finished.workshopHash).toBe(document.hash);
+    expect(finished.physics).toBe(2);
   } finally {
     a.disconnect();
     b.disconnect();

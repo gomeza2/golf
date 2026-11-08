@@ -8,7 +8,7 @@ import { io } from "socket.io-client";
 import type { State } from "../shared/game";
 import type { CircuitId } from "../shared/courses";
 import type { MatchFormat } from "../shared/scoring";
-import { NETWORK_PROTOCOL } from "../shared/rules";
+import { NETWORK_PROTOCOL, type PhysicsEdition } from "../shared/rules";
 import { readSession, saveSession, type Session } from "./storage";
 
 export type RoomEntry =
@@ -53,7 +53,8 @@ export function createOnlineConnection(
   let disposed = false,
     admitted = false,
     recovering = entry.type === "resume";
-  let content: { hash: string; course: Course } | undefined;
+  let content:
+    { hash: string; course: Course; physics: PhysicsEdition } | undefined;
   let pending: State | undefined;
   let generation = 0;
   let contentTimer: ReturnType<typeof setTimeout> | undefined;
@@ -193,6 +194,14 @@ export function createOnlineConnection(
         }, 10000);
         return;
       }
+      if (state.physics !== content.physics) {
+        callbacks.onError(
+          "La física de la sala no coincide con la revisión verificada.",
+        );
+        callbacks.onStatus("Cancha no verificada");
+        leave();
+        return;
+      }
       callbacks.onState({ ...state, courseOverride: content.course });
     } else {
       const { courseOverride: _untrusted, ...official } = state;
@@ -217,7 +226,7 @@ export function createOnlineConnection(
         throw Error("La cancha recibida no coincide con su versión");
       clearTimeout(contentTimer);
       contentTimer = undefined;
-      content = { hash, course: validated.course };
+      content = { hash, course: validated.course, physics: validated.physics };
       socket.emit("action", { type: "content-ready", hash });
       callbacks.onStatus("Conectado");
       if (pending) {

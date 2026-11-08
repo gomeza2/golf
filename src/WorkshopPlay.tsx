@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Game, type State } from "../shared/game";
-import { compileWorkshop, type WorkshopDocument } from "../shared/workshop";
+import {
+  compileWorkshop,
+  workshopPhysics,
+  workshopPhysicsLabel,
+  type WorkshopDocument,
+} from "../shared/workshop";
 import { Scene } from "./Scene";
 import { useShotControls } from "./useShotControls";
 import { changeLook, defaultLook, type CameraMargins } from "./camera";
@@ -67,7 +72,7 @@ export function WorkshopPlay({
     [look, setLook] = useState(defaultLook);
   const canShoot = !inspecting && !!s && s.phase === "playing" && !s.moving;
   useEffect(() => {
-    const g = new Game(course);
+    const g = new Game(course, false, workshopPhysics(doc));
     g.add("workshop", playerName);
     g.startPractice(0);
     game.current = g;
@@ -148,7 +153,8 @@ export function WorkshopPlay({
           <p>
             Par {course.par} ·{" "}
             {(s?.phase === "finished" ? p?.scores[0] : p?.strokes) ?? 0} golpes
-            · {p?.penalties ?? 0} penalizaciones · Física original
+            · {p?.penalties ?? 0} penalizaciones ·{" "}
+            {workshopPhysicsLabel(workshopPhysics(doc))}
           </p>
         </div>
         <button onClick={onBack}>{backLabel}</button>
