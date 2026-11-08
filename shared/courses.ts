@@ -10,7 +10,7 @@ export type Block = {
   color?: string;
   moving?: boolean;
   yaw?: number;
-  motion?: "slide" | "lift";
+  motion?: "slide" | "lift" | "spin";
   phase?: number;
   bevel?: number;
 };
@@ -784,9 +784,11 @@ export function blockPose(block: Block, time: number) {
     pos[1] += (1 + Math.sin(phase)) * 0.8;
   const yaw =
     (block.yaw || 0) +
-    (block.moving && block.motion !== "slide" && block.motion !== "lift"
-      ? Math.sin(phase) * 1.25
-      : 0);
+    (block.moving && block.motion === "spin"
+      ? phase
+      : block.moving && block.motion !== "slide" && block.motion !== "lift"
+        ? Math.sin(phase) * 1.25
+        : 0);
   return { pos, yaw };
 }
 

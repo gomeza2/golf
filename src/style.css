@@ -4119,17 +4119,143 @@ button > span {
   }
 }
 
-.legacy-marks { margin: 12px 0; padding: 10px 14px; border: 1px solid #c8d7b333; border-radius: 9px; background: #163c32; font-size: 11px; color: #cbd8cd; }
-.legacy-marks summary { cursor: pointer; min-height: 36px; padding: 8px 0; color: #e8c888; }
-.legacy-marks p, .legacy-marks li { line-height: 1.6; }
+.legacy-marks {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 1px solid #c8d7b333;
+  border-radius: 9px;
+  background: #163c32;
+  font-size: 11px;
+  color: #cbd8cd;
+}
+.legacy-marks summary {
+  cursor: pointer;
+  min-height: 36px;
+  padding: 8px 0;
+  color: #e8c888;
+}
+.legacy-marks p,
+.legacy-marks li {
+  line-height: 1.6;
+}
 
-.workshop-physics { display:grid; grid-template-columns:1fr minmax(240px,1fr); gap:10px 24px; padding:18px 22px; margin:16px 0; border:1px solid #6b8d77; border-radius:14px; background:#214639; }
-.workshop-physics p { margin:6px 0; color:#c3d2bf; font-size:13px; line-height:1.5; }
-.workshop-physics > p { grid-column:1 / -1; }
-.workshop-physics label { display:grid; gap:7px; font-size:13px; }
-.workshop-physics select { width:100%; min-height:44px; }
-.workshop-physics-dialog { width:min(500px,calc(100vw - 32px)); max-height:85svh; overflow:auto; padding:26px; border:1px solid #b5c694; border-radius:18px; background:#173d32; color:#f2eed8; }
-.workshop-physics-dialog::backdrop { background:#071d18b8; }
-.workshop-physics-dialog h2 { margin:0 0 14px; font-size:28px; }
-.workshop-physics-dialog .workshop-actions { margin-top:20px; }
-@media(max-width:600px) { .workshop-physics { grid-template-columns:1fr; padding:16px; } }
+.workshop-physics {
+  display: grid;
+  grid-template-columns: 1fr minmax(240px, 1fr);
+  gap: 10px 24px;
+  padding: 18px 22px;
+  margin: 16px 0;
+  border: 1px solid #6b8d77;
+  border-radius: 14px;
+  background: #214639;
+}
+.workshop-physics p {
+  margin: 6px 0;
+  color: #c3d2bf;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.workshop-physics > p {
+  grid-column: 1 / -1;
+}
+.workshop-physics label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+}
+.workshop-physics select {
+  width: 100%;
+  min-height: 44px;
+}
+.workshop-physics-dialog {
+  width: min(500px, calc(100vw - 32px));
+  max-height: 85svh;
+  overflow: auto;
+  padding: 26px;
+  border: 1px solid #b5c694;
+  border-radius: 18px;
+  background: #173d32;
+  color: #f2eed8;
+}
+.workshop-physics-dialog::backdrop {
+  background: #071d18b8;
+}
+.workshop-physics-dialog h2 {
+  margin: 0 0 14px;
+  font-size: 28px;
+}
+.workshop-physics-dialog .workshop-actions {
+  margin-top: 20px;
+}
+@media (max-width: 600px) {
+  .workshop-physics {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}
+
+.workshop-live-map {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  z-index: 5;
+  pointer-events: none;
+}
+.workshop-live-map .hole-map {
+  position: absolute;
+  top: 0;
+  bottom: auto;
+  left: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.workshop-blueprints {
+  margin: 24px 0;
+  border-block: 1px solid #64836a;
+  padding: 22px 0;
+}
+.workshop-blueprints h2 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
+.workshop-blueprints p {
+  color: #c9d5c0;
+  line-height: 1.5;
+  font-size: 13px;
+}
+.workshop-blueprint-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.workshop-blueprint-grid button {
+  padding: 0;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  text-align: left;
+  overflow: hidden;
+  background: #244d3f;
+}
+.workshop-blueprint-grid svg {
+  width: 90px;
+  height: 190px;
+  border-radius: 0;
+  margin: 0;
+}
+.workshop-blueprint-grid span {
+  padding: 16px;
+}
+.workshop-blueprint-grid strong {
+  font-size: 22px;
+  color: #fae4aa;
+}
+.workshop-blueprint-grid small {
+  color: #f5d48c;
+}
+@media (max-width: 700px) {
+  .workshop-blueprint-grid {
+    grid-template-columns: 1fr;
+  }
+}

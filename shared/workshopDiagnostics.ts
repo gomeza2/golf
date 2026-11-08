@@ -21,7 +21,7 @@ export function diagnoseWorkshop(doc: WorkshopDocument): WorkshopDiagnostic[] {
   const c = compileWorkshop(doc),
     result: WorkshopDiagnostic[] = [];
   for (const p of doc.pieces.filter(
-    (p) => p.kind === "sand" || p.kind === "rough",
+    (p) => p.kind === "sand" || p.kind === "rough" || p.kind === "dirt",
   )) {
     const samples = [
       [0, 0],
@@ -38,7 +38,7 @@ export function diagnoseWorkshop(doc: WorkshopDocument): WorkshopDiagnostic[] {
     )
       result.push({
         kind: "surface",
-        message: `${p.kind === "sand" ? "Arena" : "Césped alto"}: parte de la zona no coincide con un suelo a su altura.`,
+        message: `${p.kind === "sand" ? "Arena" : p.kind === "dirt" ? "Tierra" : "Césped alto"}: parte de la zona no coincide con un suelo a su altura.`,
         pieces: [p.id],
       });
   }

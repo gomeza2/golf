@@ -1,6 +1,14 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.20.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+Versión **0.21.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+
+## Taller con decisiones — 0.21.0
+
+**Barras de giro completo, puertas elevables y tierra física**, con activación explícita del documento 3. Dos diseños editables: **El pulso del puente**, con rodeo y atajo sobre agua, y **La esclusa de tierra**, con subida, puerta y viaducto elevado. El borrador anterior se conserva antes de abrirlos; si no puede guardarse, no se reemplaza. Mapa vivo en prueba 3D y juego comunitario individual.
+
+Los documentos 1/2 y sus hashes siguen intactos; los recursos nuevos requieren física 2. Servidor y cliente usan protocolo **17**, con límites, validación y publicación moderada existentes. Se conservan los 34 hoyos oficiales, 13 selecciones, 38 prácticas, controles, modos y datos previos. [Detalle y pruebas](WORKSHOP-RESOURCES.md).
+
+Para activar la comunidad sin contratar servicios de pago: [guía Neon Free + Auth0 Free](FREE-COMMUNITY-SETUP.md). Incluye preparación opcional de PostgreSQL al arrancar en Render sin Shell y diagnóstico sin datos privados con `npm run community:check`. El propietario debe crear/configurar sus cuentas; no se presenta esa infraestructura como activa todavía.
 
 ## Elige la física de tus creaciones — 0.20.0
 

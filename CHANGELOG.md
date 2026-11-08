@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.21.0 — Taller con riesgo y comunidad preparada para planes gratuitos
+
+- Documento 3 explícito: barra de giro completo, puerta elevable y tierra con física real; conserva documentos 1/2.
+- Dos diseños editables con rutas alternativas sobre agua y alturas, recuperación del borrador y límite de biblioteca protegido.
+- Mapa vivo en prueba de taller y juego individual comunitario; nuevos recursos publicados con las validaciones/permisos existentes.
+- Preparación opcional de PostgreSQL al arrancar, sin datos ficticios, y diagnóstico de configuración sin secretos.
+- Guía Neon Free + Auth0 Free para el Render existente; requiere cuentas/configuración reales del propietario.
+- Protocolo 17; sin nuevas dependencias, edición física, migración de datos ni pérdida de modos/recorridos.
+
 ## 0.20.0 — Física de las creaciones, de extremo a extremo
 
 - Elección explícita y reversible de física en el taller, con confirmación y conservación de biblioteca/documentos anteriores.

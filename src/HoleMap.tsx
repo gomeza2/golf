@@ -92,7 +92,9 @@ export function HoleMap({ s }: { s: State }) {
               aria-label={
                 b.motion === "lift"
                   ? `Compuerta ${pose.pos[1] - b.pos[1] > 0.55 ? "abierta" : "cerrada"}`
-                  : undefined
+                  : b.motion === "spin"
+                    ? "Barra giratoria"
+                    : undefined
               }
               x={-b.size[0] / 2}
               y={-b.size[2] / 2}

@@ -755,3 +755,59 @@ test("the released workshop converts an original creation explicitly and physica
     `PAGES WORKSHOP EDITIONS VERIFIED: version ${APP_VERSION}, explicit conversion, real full drive and two-stroke finish, physics 2: ${baseURL}`,
   );
 });
+
+test("the published advanced blueprint keeps its live rotor and completes the safe water crossing", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(150000);
+  const { safeClock } = await import("../fixtures/blueprints");
+  await page.addInitScript(() =>
+    localStorage.setItem("golf-graphics-mode", "low"),
+  );
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
+    .click();
+  await page.getByRole("button", { name: /El pulso del puente/ }).click();
+  await page.getByRole("button", { name: "Probar en 3D", exact: true }).click();
+  await page.getByRole("button", { name: "Mapa", exact: true }).click();
+  const rotor = page.locator('.hole-map [aria-label="Barra giratoria"]');
+  await expect(rotor).toBeVisible();
+  const pose = await rotor.getAttribute("transform");
+  await expect.poll(() => rotor.getAttribute("transform")).not.toBe(pose);
+  await page.getByRole("button", { name: "Cerrar mapa", exact: true }).click();
+  for (const [a, p] of safeClock) {
+    await expect(
+      page.getByRole("button", { name: "Golpear prueba", exact: true }),
+    ).toBeEnabled({ timeout: 20000 });
+    await page
+      .getByRole("slider", { name: "Ángulo de prueba", exact: true })
+      .fill(String(Number(a.toFixed(10))));
+    await page
+      .getByRole("slider", { name: "Potencia de prueba", exact: true })
+      .fill(String(Number(p.toFixed(10))));
+    await page
+      .getByRole("button", { name: "Golpear prueba", exact: true })
+      .click();
+    await expect(page.getByRole("status")).toHaveText("Pelota en movimiento");
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeHidden({ timeout: 25000 });
+  }
+  await expect(
+    page.getByText("Embocado en 4 golpes", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".workshop-test-top")).toContainText(
+    "0 penalizaciones",
+  );
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("club-personal-normal-v7-p2"),
+    ),
+  ).toBeNull();
+  await page.screenshot({ path: "work/pages-workshop-resources.png" });
+  console.log(
+    `PAGES RESOURCES VERIFIED: version ${APP_VERSION}, live full rotation, four physical strokes over water and no penalties: ${baseURL}`,
+  );
+});

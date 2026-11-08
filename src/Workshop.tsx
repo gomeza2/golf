@@ -1,3 +1,8 @@
+import { WorkshopBlueprints } from "./WorkshopBlueprints";
+import {
+  workshopBlueprint,
+  type WorkshopBlueprintId,
+} from "../shared/workshopBlueprints";
 import { WorkshopPhysics } from "./WorkshopPhysics";
 import type { PublicationTarget } from "./CommunityPublisher";
 import { validateRoomWorkshop } from "../shared/roomWorkshop";
@@ -12,6 +17,8 @@ import { WorkshopSelection } from "./WorkshopSelection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compileWorkshop,
+  withWorkshopResources,
+  isAdvancedPiece,
   withWorkshopPhysics,
   workshopPhysics,
   workshopPhysicsLabel,
@@ -45,6 +52,9 @@ const names: Record<PieceKind, string> = {
   rough: "Césped alto",
   water: "Agua",
   gate: "Compuerta",
+  rotor: "Barra giratoria",
+  lift: "Puerta elevable",
+  dirt: "Tierra",
 };
 const colors: Record<PieceKind, string> = {
   floor: "#5e9673",
@@ -54,6 +64,9 @@ const colors: Record<PieceKind, string> = {
   rough: "#657541",
   water: "#299bac",
   gate: "#ecb16e",
+  rotor: "#e6a466",
+  lift: "#9bc8bd",
+  dirt: "#967352",
 };
 function Numeric({
   label,
@@ -288,8 +301,8 @@ export function Workshop({
         id,
         kind: tool,
         ...p,
-        width: tool === "wall" || tool === "gate" ? 4 : 6,
-        length: tool === "wall" || tool === "gate" ? 0.6 : 8,
+        width: ["wall", "gate", "rotor", "lift"].includes(tool) ? 4 : 6,
+        length: ["wall", "gate", "rotor", "lift"].includes(tool) ? 0.6 : 8,
         height: 0,
         endHeight: tool === "ramp" ? 2 : 0,
         angle: 0,
@@ -363,6 +376,39 @@ export function Workshop({
       "Archivo exportado. Se puede importar en otro dispositivo; no es un circuito online.",
     );
   }
+  function openBlueprint(id: WorkshopBlueprintId) {
+    try {
+      const current = history.present;
+      const exists = library.some(
+        (s) => JSON.stringify(s.doc) === JSON.stringify(current),
+      );
+      const pristine =
+        JSON.stringify(current) === JSON.stringify(newWorkshop());
+      if (!exists && !pristine) {
+        const next = [
+          {
+            id: crypto.randomUUID(),
+            updated: new Date().toISOString(),
+            doc: current,
+          },
+          ...library,
+        ];
+        saveWorkshopLibrary(next);
+        setLibrary(next);
+      }
+      onDetachPublication?.();
+      edit(workshopBlueprint(id));
+      setSaveId(null);
+      setSelected(null);
+      setGroupIds([]);
+      setTool("select");
+      setNotice(
+        "Diseño editable abierto. Tu trabajo anterior se conserva en la biblioteca; también puedes deshacer.",
+      );
+    } catch (e) {
+      setNotice(`No se reemplazó el borrador: ${(e as Error).message}`);
+    }
+  }
   function loadText(text: string) {
     try {
       const d = importWorkshop(text);
@@ -400,6 +446,12 @@ export function Workshop({
       </div>
       <WorkshopPhysics
         document={history.present}
+        onEnableResources={() => {
+          edit(withWorkshopResources(history.present));
+          setNotice(
+            "Recursos avanzados activados. Puedes deshacer esta conversión.",
+          );
+        }}
         onChange={(physics) => {
           edit(withWorkshopPhysics(history.present, physics));
           setNotice(
@@ -492,6 +544,7 @@ export function Workshop({
             ? "Borrador recuperable en este navegador. Guarda una copia en la biblioteca o exporta el archivo."
             : "No se puede guardar el borrador. Exporta el archivo para conservarlo.")}
       </p>
+      <WorkshopBlueprints onOpen={openBlueprint} />
       <div className="workshop-layout">
         <aside className="workshop-tools">
           <h2>Construir</h2>
@@ -526,7 +579,16 @@ export function Workshop({
             Seleccionar todas las piezas
           </button>
           <div className="workshop-palette">
-            {(["select", "start", "cup", ...pieceKinds] as const).map((k) => (
+            {(
+              [
+                "select",
+                "start",
+                "cup",
+                ...pieceKinds.filter(
+                  (k) => doc.version === 3 || !isAdvancedPiece(k),
+                ),
+              ] as const
+            ).map((k) => (
               <button
                 key={k}
                 aria-pressed={tool === k}
@@ -671,7 +733,7 @@ export function Workshop({
               <g
                 key={p.id}
                 data-piece={p.id}
-                transform={`translate(${p.x} ${p.z}) rotate(${-(p.kind === "floor" ? Math.round(p.angle / 90) * 90 : p.kind === "water" || p.kind === "sand" || p.kind === "rough" ? 0 : p.angle)})`}
+                transform={`translate(${p.x} ${p.z}) rotate(${-(p.kind === "floor" ? Math.round(p.angle / 90) * 90 : p.kind === "water" || p.kind === "sand" || p.kind === "rough" || p.kind === "dirt" ? 0 : p.angle)})`}
               >
                 <rect
                   x={-p.width / 2}
@@ -688,6 +750,25 @@ export function Workshop({
                   strokeOpacity={selection.includes(p.id) ? 1 : 0.5}
                   strokeWidth={selection.includes(p.id) ? 0.14 : 0.035}
                 />
+                {p.kind === "rotor" && (
+                  <circle
+                    r={Math.hypot(p.width, p.length) / 2}
+                    fill="none"
+                    stroke="#efcd87"
+                    strokeDasharray=".3 .25"
+                    strokeWidth=".06"
+                    pointerEvents="none"
+                  />
+                )}
+                {p.kind === "lift" && (
+                  <path
+                    d="M0 1.1V-1.1M-.4-.6L0-1.1L.4-.6"
+                    stroke="#e3f0d1"
+                    strokeWidth=".12"
+                    fill="none"
+                    pointerEvents="none"
+                  />
+                )}
                 {p.kind === "ramp" && (
                   <path
                     d={`M0 ${p.length / 3}L0 ${-p.length / 3}M-0.4 ${-p.length / 3 + 0.5}L0 ${-p.length / 3}L0.4 ${-p.length / 3 + 0.5}`}
@@ -795,7 +876,7 @@ export function Workshop({
                 max={44}
                 onChange={(length) => patchPiece({ length })}
               />
-              {!["water", "sand", "rough"].includes(piece.kind) && (
+              {!["water", "sand", "rough", "dirt"].includes(piece.kind) && (
                 <Numeric
                   label={
                     piece.kind === "floor"
@@ -928,8 +1009,8 @@ export function Workshop({
             {doc.pieces.length}/80 piezas · {library.length}/12 copias
           </p>
           <small>
-            Diseños locales y archivos compartibles. Todavía no se pueden usar
-            en salas online ni publicar en una galería.
+            Puedes guardar y exportar diseños o jugarlos en salas privadas.
+            Publicarlos requiere que la comunidad esté configurada.
           </small>
         </aside>
       </div>

@@ -32,6 +32,7 @@ jobs:
             work/controls-*.png
             work/wildlands-*.png
             work/workshop-editions-*.png
+            work/workshop-resources-*.png
           retention-days: 7
           if-no-files-found: ignore
       - name: Build for GitHub Pages
