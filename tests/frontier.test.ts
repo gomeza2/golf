@@ -681,7 +681,8 @@ it.each(shortcutRoutes)(
     for (const [targetIndex, target] of targets.entries()) {
       let successfulShots = 0;
       while (
-        lane(current).progress < target.fraction - 0.025 &&
+        (lane(current).progress < target.fraction - 0.025 ||
+          distance(current, target) > target.radius) &&
         successfulShots < 5
       ) {
         const baseAngle = Math.atan2(
