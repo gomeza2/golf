@@ -517,11 +517,12 @@ const shortcutRoutes: ShortcutRoute[] = [
       { x: -18, y: 0, z: 42 },
       { x: 5, y: 0, z: 42 },
       { x: 10, y: 3, z: 18 },
+      { x: 16, y: 5, z: 12 },
       { x: 22, y: 7, z: 7 },
       { x: 25, y: 7, z: 1 },
     ],
     width: 1.7,
-    checkpoints: [0.13, 0.338, 0.554, 0.784, 0.937, 0.985],
+    checkpoints: [0.13, 0.338, 0.554, 0.784, 0.87, 0.937, 0.985],
   },
   {
     name: "Archipiélago azul",

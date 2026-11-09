@@ -121,7 +121,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
     {
       name: "Dunas de cobre",
       subtitle:
-        "Sube por las terrazas de arena, cruza el oasis y elige entre el camino ancho o una diagonal de riesgo.",
+        "Sube por las terrazas de arena, cruza el oasis y elige entre el camino ancho o la cornisa estrecha del borde norte.",
       par: 9,
       routeLength: 196,
       dimensions: { width: 96, length: 176 },
@@ -153,6 +153,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(-18, 42, 2.8, 2.8, 0),
         deck(5, 42, 2.8, 2.8, 0),
         deck(10, 18, 2.8, 2.8, 3),
+        deck(16, 12, 3.8, 3.8, 5),
         // The raised diagonal climbs over the terraces and joins the final
         // platform at its eastern edge.
         ...spans(
@@ -163,6 +164,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
             { x: -18, y: 0, z: 42 },
             { x: 5, y: 0, z: 42 },
             { x: 10, y: 3, z: 18 },
+            { x: 16, y: 5, z: 12 },
             { x: 22, y: 7, z: 7 },
             { x: 25, y: 7, z: 1 },
           ],
@@ -193,7 +195,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
       ],
       strategy: {
         safe: "Avanza por las terrazas escalonadas. La arena frena los tiros largos, pero cada subida necesita preparación.",
-        risk: "La diagonal de la cresta ahorra dos giros y cruza el oasis por arriba; la plataforma de llegada es pequeña.",
+        risk: "La cornisa exterior evita varios giros, con puentes angostos y descansos pequeños antes de la subida final.",
         skill: "Potencia, desnivel y aterrizajes sobre arena y roca",
       },
     },
