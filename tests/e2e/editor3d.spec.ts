@@ -193,6 +193,34 @@ test("a real 3D selection can be moved by its rendered gizmo and undo restores t
   await page.keyboard.press("Escape");
   await page.mouse.up();
   expect(await draft(page)).toEqual(before);
+  const originalPiece = before.pieces.find((p: any) => p.id === "soil");
+  const validPivot = [originalPiece.x, originalPiece.height, originalPiece.z];
+  await expect
+    .poll(async () =>
+      JSON.parse((await canvas.getAttribute("data-editor-pivot"))!),
+    )
+    .toEqual(validPivot);
+  const invalidHandle = JSON.parse(
+    (await canvas.getAttribute("data-editor-handles"))!,
+  ).X;
+  const invalidRect = (await canvas.boundingBox())!;
+  await page.mouse.move(
+    invalidRect.x + invalidHandle.x,
+    invalidRect.y + invalidHandle.y,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    invalidRect.x + invalidHandle.x + 180,
+    invalidRect.y + invalidHandle.y,
+    { steps: 12 },
+  );
+  await page.mouse.up();
+  expect(await draft(page)).toEqual(before);
+  await expect
+    .poll(async () =>
+      JSON.parse((await canvas.getAttribute("data-editor-pivot"))!),
+    )
+    .toEqual(validPivot);
   await page.screenshot({
     path: "work/editor3d-gizmo-desktop.png",
     fullPage: true,

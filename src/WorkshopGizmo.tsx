@@ -88,6 +88,10 @@ export function Manipulator({
           value.step,
         );
         proposed.current = next;
+        if (c.mode === "translate") {
+          const pivot = selectionPivot(next, value.ids);
+          object.position.set(pivot.x, pivot.y, pivot.z);
+        }
         value.onPreview(next);
       } catch (e) {
         proposed.current = null;
@@ -101,6 +105,11 @@ export function Manipulator({
       drag.current = false;
       latest.current.onTransforming(false);
       if (orbit.current) orbit.current.enabled = true;
+      const result = proposed.current ?? initial.current ?? latest.current.doc;
+      const pivot = selectionPivot(result, latest.current.ids);
+      object.position.set(pivot.x, pivot.y, pivot.z);
+      object.rotation.set(0, 0, 0);
+      object.scale.set(1, 1, 1);
       if (proposed.current) latest.current.onCommit(proposed.current);
       latest.current.onPreview(null);
       initial.current = null;
@@ -161,7 +170,8 @@ export function Manipulator({
     object.rotation.set(0, 0, 0);
     object.scale.set(1, 1, 1);
     c.setMode(mode);
-    c.setTranslationSnap(step);
+    // The shared transform snaps deltas once, preserving fractional group offsets.
+    c.setTranslationSnap(null);
     c.setRotationSnap(
       doc.pieces.some(
         (p) =>
@@ -198,6 +208,9 @@ export function Manipulator({
         };
     }
     gl.domElement.dataset.editorHandles = JSON.stringify(points);
+    gl.domElement.dataset.editorPivot = JSON.stringify(
+      object.position.toArray(),
+    );
   });
   return null;
 }
