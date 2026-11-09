@@ -101,12 +101,20 @@ it("connects both ends of every expedition ramp to real deck support or the cup 
     expect(ramps.length, course.name).toBeGreaterThan(0);
     for (const ramp of ramps) {
       const yaw = ramp.yaw || 0;
+      const pitch = ramp.rotation || 0;
       for (const side of [-1, 1]) {
-        const localZ = side * ramp.size[2] / 2;
+        // Convert the ramp's 3D edge to its horizontal projection before
+        // asking the shared collision-height function for the endpoint.
+        const localZ =
+          side * Math.cos(pitch) * ramp.size[2] / 2 +
+          Math.sin(pitch) * ramp.size[1] / 2;
         const x = ramp.pos[0] + Math.sin(yaw) * localZ;
         const z = ramp.pos[2] + Math.cos(yaw) * localZ;
         const height = surfaceHeight(ramp, x, z);
-        expect(height, course.name).not.toBeNull();
+        expect(
+          height,
+          `${course.name}: ramp edge side=${side} yaw=${yaw.toFixed(3)} pitch=${pitch.toFixed(3)} pos=${ramp.pos.join(",")} size=${ramp.size.join(",")}`,
+        ).not.toBeNull();
         const supportedByDeck = surfaces.some((surface) => {
           if (surface === ramp || Math.abs(surface.rotation || 0) > 1e-5)
             return false;
