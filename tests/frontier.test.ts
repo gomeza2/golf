@@ -7,6 +7,7 @@ import {
   rollingResistance,
   surfaceAt,
   surfaceFriction,
+  surfaceHeight,
   type Course,
   type SurfaceKind,
 } from "../shared/courses";
@@ -89,6 +90,42 @@ it("keeps every playable expedition platform above the out-of-world limit", () =
         surface.pos[1] + surface.size[1] / 2,
         `${course.name}: platform rises beyond the intended build envelope`,
       ).toBeLessThan(18);
+    }
+  }
+});
+
+it("connects both ends of every expedition ramp to real deck support or the cup green", () => {
+  for (const course of frontierCourses) {
+    const surfaces = geometry(course).surfaces;
+    const ramps = surfaces.filter((surface) => Math.abs(surface.rotation || 0) > 1e-5);
+    expect(ramps.length, course.name).toBeGreaterThan(0);
+    for (const ramp of ramps) {
+      const yaw = ramp.yaw || 0;
+      for (const side of [-1, 1]) {
+        const localZ = side * ramp.size[2] / 2;
+        const x = ramp.pos[0] + Math.sin(yaw) * localZ;
+        const z = ramp.pos[2] + Math.cos(yaw) * localZ;
+        const height = surfaceHeight(ramp, x, z);
+        expect(height, course.name).not.toBeNull();
+        const supportedByDeck = surfaces.some((surface) => {
+          if (surface === ramp || Math.abs(surface.rotation || 0) > 1e-5)
+            return false;
+          const deckHeight = surfaceHeight(surface, x, z);
+          return deckHeight !== null && Math.abs(deckHeight - height!) < 0.3;
+        });
+        const green = course.greenBounds;
+        const supportedByGreen =
+          !!green &&
+          x >= green.minX - 0.15 &&
+          x <= green.maxX + 0.15 &&
+          z >= green.minZ - 0.15 &&
+          z <= green.maxZ + 0.15 &&
+          Math.abs(height! - course.cup.y) < 0.3;
+        expect(
+          supportedByDeck || supportedByGreen,
+          `${course.name}: ramp endpoint (${x.toFixed(2)}, ${height!.toFixed(2)}, ${z.toFixed(2)}) has no matching playable support`,
+        ).toBe(true);
+      }
     }
   }
 });
