@@ -93,6 +93,7 @@ export function Workshop({
     propertiesRef = useRef<HTMLElement>(null),
     stageRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [editorView, setEditorView] = useState<"2d" | "3d">("2d");
   useEffect(() => {
     const change = () =>
       setFullscreen(
@@ -726,14 +727,15 @@ export function Workshop({
         <aside ref={toolsRef} className="workshop-tools">
           <div className="workshop-panel-links">
             <button
-              onClick={() =>
+              onClick={() => {
+                setEditorView("3d");
                 stageRef.current?.scrollIntoView({
                   behavior: "smooth",
                   block: "start",
-                })
-              }
+                });
+              }}
             >
-              Volver a la escena 3D
+              Abrir vista 3D
             </button>
           </div>
           <h2>Construir</h2>
@@ -909,24 +911,73 @@ export function Workshop({
             ))
           )}
         </aside>
-        <div ref={stageRef} className="workshop-map">
-          <Workshop3D
-            cameraMemory={cameraMemory}
-            onTransforming={setTransforming}
-            doc={doc}
-            selected={selected}
-            selection={selection}
-            locked={history.editor.locked}
-            step={gridStep}
-            graphicsMode={graphicsMode}
-            placing={tool !== "select" || !!structureTool}
-            buildHeight={buildHeight}
-            onSelect={select3D}
-            onPlace={placeAt}
-            onPreview={setDragDoc}
-            onCommit={edit}
-            onError={setNotice}
-          />
+        <div ref={stageRef} className={`workshop-map workshop-map--${editorView}`}>
+          <div className="workshop-view-switch" role="group" aria-label="Modo de edición">
+            <div>
+              <strong>Editar cancha</strong>
+              <span>El plano y la escena usan el mismo diseño, guardado e historial.</span>
+            </div>
+            <div className="workshop-view-options">
+              <button
+                type="button"
+                aria-pressed={editorView === "2d"}
+                onClick={() => setEditorView("2d")}
+              >
+                Vista 2D
+              </button>
+              <button
+                type="button"
+                aria-pressed={editorView === "3d"}
+                onClick={() => setEditorView("3d")}
+              >
+                Vista 3D
+              </button>
+            </div>
+          </div>
+          {editorView === "3d" ? (
+            <Workshop3D
+              cameraMemory={cameraMemory}
+              onTransforming={setTransforming}
+              doc={doc}
+              selected={selected}
+              selection={selection}
+              locked={history.editor.locked}
+              step={gridStep}
+              graphicsMode={graphicsMode}
+              placing={tool !== "select" || !!structureTool}
+              buildHeight={buildHeight}
+              onSelect={select3D}
+              onPlace={placeAt}
+              onPreview={setDragDoc}
+              onCommit={edit}
+              onError={setNotice}
+            />
+          ) : (
+            <div className="workshop-2d-stage" aria-label="Edición en dos dimensiones">
+              <div className="workshop-2d-guide">
+                <div>
+                  <strong>Plano superior</strong>
+                  <span>Selecciona, arrastra o coloca piezas. Para revisar alturas y estructuras, cambia a Vista 3D.</span>
+                </div>
+              </div>
+              <WorkshopPlan
+                doc={doc}
+                selection={selection}
+                selected={selected}
+                pointerDown={pointerDown}
+                pointerMove={pointerMove}
+                pointerUp={(e) => {
+                  if (drag.current?.pointer === e.pointerId) finishDrag();
+                }}
+                pointerCancel={(e) => {
+                  if (drag.current?.pointer === e.pointerId) finishDrag(true);
+                }}
+              />
+              <p className="workshop-map-note">
+                24 × 48 m · La salida aparece en dorado y la copa en gris. Usa la cuadrícula para colocar con precisión.
+              </p>
+            </div>
+          )}
           <div className="workshop-panel-links">
             <button
               onClick={() =>
@@ -946,39 +997,22 @@ export function Workshop({
                 })
               }
             >
-              Editar selección
+              Propiedades de selección
             </button>
           </div>
-          <h2>Plano 2D de precisión</h2>
-          <WorkshopPlan
-            doc={doc}
-            selection={selection}
-            selected={selected}
-            pointerDown={pointerDown}
-            pointerMove={pointerMove}
-            pointerUp={(e) => {
-              if (drag.current?.pointer === e.pointerId) finishDrag();
-            }}
-            pointerCancel={(e) => {
-              if (drag.current?.pointer === e.pointerId) finishDrag(true);
-            }}
-          />
-          <p>
-            24 × 48 m · Copa gris y salida dorada. Las plataformas se recortan
-            alrededor de la copa.
-          </p>
         </div>
         <aside ref={propertiesRef} className="workshop-properties">
           <div className="workshop-panel-links">
             <button
-              onClick={() =>
+              onClick={() => {
+                setEditorView("3d");
                 stageRef.current?.scrollIntoView({
                   behavior: "smooth",
                   block: "start",
-                })
-              }
+                });
+              }}
             >
-              Volver a la escena 3D
+              Ver selección en 3D
             </button>
           </div>
           <h2>

@@ -66,12 +66,12 @@ it.each(["safe", "risk"] as const)(
   },
 );
 it("keeps the existing practice keys while appending three new physical holes", () => {
-  expect(uniqueCourses).toHaveLength(34);
+  expect(uniqueCourses).toHaveLength(38);
   expect(practiceKey("rift", 0, "classic")).toBe("24:classic");
   expect(practiceKey("rift-alt", 0, "classic")).toBe("28:classic");
   expect(practiceKey("rift-alt", 3, "classic")).toBe("31:classic");
   expect(practiceKey("cumbres", 0, "classic")).toBe("32:classic");
-  expect(practiceLayouts).toHaveLength(38);
+  expect(practiceLayouts).toHaveLength(42);
 });
 it("the spiral has real ascending support and open water gaps", () => {
   const g = create(1);

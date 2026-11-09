@@ -1,6 +1,14 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.22.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+Versión **0.23.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+
+## Fase 2: Grandes travesías — 0.23.0
+
+Se agrega **Grandes travesías**, una nueva selección independiente con cuatro recorridos largos: **La ruta de los arrayanes** (bosque y puente angosto), **Dunas de cobre** (terrazas de arena y diagonal elevada), **Archipiélago azul** (islas y pasarelas sobre agua) y **La cresta del cóndor** (cuatro niveles de montaña). Las rutas miden aproximadamente entre 156 y 243 m, sumando los tramos jugables entre salida y copa y usan plataformas, rampas y puentes con colisión real compartida por el render y Rapier.
+
+Césped, rough, tierra, arena, piedra, madera y suelo húmedo tienen clasificación, rodamiento, contacto y respuesta de aterrizaje diferenciados en la física actual. Los terrenos de piedra, madera y humedad también reciben materiales procedurales propios. La vegetación, las formaciones rocosas y los hitos se instancian según el ambiente y respetan la calidad gráfica adaptable.
+
+Los cuatro hoyos se agregan al final de los índices de práctica y como circuito separado. El catálogo pasa de **34 a 38 campos únicos**, de **13 a 14 selecciones** y de **38 a 42 distribuciones de práctica**; las 34 canchas anteriores, las vueltas oficiales de 9/18 y sus récords mantienen sus identidades e índices. El protocolo de salas pasa a **18** para que cliente y servidor reconozcan la nueva selección. [Informe, límites y pruebas de Fase 2](PHASE2-EXPEDITIONS.md).
 
 ## Fase 1: construir en 3D — 0.22.0
 
@@ -8,7 +16,7 @@ El taller incorpora **cámara orbital, cuatro vistas, selección en la escena y 
 
 Plataformas, puentes, túneles transitables, pasarelas y rampas curvas por tramos se construyen con piezas físicas existentes. **Laboratorio en altura** permite editarlos y probar el circuito real. Volver de la prueba conserva la construcción, organización y cámara. Los avisos distinguen niveles y detectan algunos huecos estrechos o techos bajos.
 
-El proyecto editable `.golf.project.json` lleva grupos y bloqueos; el archivo jugable `.golf.json` mantiene sus documentos y hashes anteriores. No cambia el protocolo, la física ni el contenido oficial. [Informe completo de la Fase 1](EDITOR-3D-PHASE1.md). La fase 2 no se inicia automáticamente.
+El proyecto editable `.golf.project.json` lleva grupos y bloqueos; el archivo jugable `.golf.json` mantiene sus documentos y hashes anteriores. No cambia el protocolo, la física ni el contenido oficial. [Informe completo de la Fase 1](EDITOR-3D-PHASE1.md). La fase 2 se desarrolla en la entrega 0.23.0.
 
 ## Taller con decisiones — 0.21.0
 

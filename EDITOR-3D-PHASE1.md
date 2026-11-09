@@ -12,15 +12,18 @@ La organización del editor queda separada de la cancha jugable. Los grupos y bl
 
 ## Construir y observar en tres dimensiones
 
-**Taller → Construir en 3D** es el área principal de trabajo. El plano 2D anterior permanece disponible debajo para ajustes exactos.
+El taller abre en **Vista 2D**, con el plano como espacio inicial, y permite cambiar en cualquier momento a **Vista 3D** desde el selector de la parte superior. No son dos documentos: ambas vistas editan el mismo diseño, comparten selección, historial, herramientas, propiedades, guardado y prueba. La vista activa ocupa el área central sin obligar a desplazarse entre un plano y una escena apilados.
 
 - **Editar escena:** clic o toque selecciona una pieza. Sus manipuladores permiten mover X/Y/Z, girar sobre Y y escalar X/Z. Seleccionar por sí solo no mueve objetos.
-- **Navegar cámara:** arrastrar orbita; botón derecho desplaza; rueda acerca/aleja. En táctil, un dedo orbita y dos permiten desplazar y pellizcar. Los botones de cámara ofrecen alternativas accesibles.
+- **Navegar cámara:** en el modo de cámara, arrastrar con el botón izquierdo orbita; botón derecho desplaza y la rueda acerca/aleja. En modo de edición, el botón izquierdo sigue seleccionando y arrastrando; el derecho ya puede desplazar la cámara sin cambiar de modo. En táctil, un dedo selecciona/edita o orbita en modo cámara; dos dedos desplazan y acercan.
+- **Movimiento vertical y libre:** los límites de inclinación permiten llegar casi a la vista cenital y girar hasta ver la escena desde abajo. Hay controles separados para orbitar, inclinar, subir/bajar, desplazar y acercar/alejar. Durante Navegar cámara, flechas giran/inclinan, W/A/S/D desplazan, E sube, Q baja y +/− ajusta el zoom.
 - **Superior, Frontal, Lateral, Perspectiva:** encuadres reales de la cámara. Encuadrar cancha recupera la vista si se pierde el recorrido.
 - **Cuadrícula:** pasos de 0,1/0,5/1 m y plano a la altura elegida, con regla de referencia de 0–4 m.
 - **Alt + clic:** alterna intersecciones reales para acceder a piezas superpuestas. Aislar selección permite observarlas sin las demás. Objetos y grupos ofrece una lista de acceso directo, también a una pieza individual dentro de un grupo.
 - **Shift/Ctrl + clic:** añade o retira piezas de la selección. Una selección de grupo mueve el conjunto; los bloqueos impiden modificar sus miembros bloqueados.
-- **Esc**, pérdida de captura o de foco cancela un arrastre. Las vistas, desplazamientos y acercamientos de cámara no modifican el documento.
+- **Esc**, pérdida de captura o de foco cancela un arrastre. Las vistas, desplazamientos, inclinación y elevación de cámara no modifican el documento.
+- Los paneles de herramientas y propiedades tienen desplazamiento independiente en escritorio; en móvil pasan a una disposición de una columna y los controles de cámara se agrupan para evitar botones diminutos.
+- El plano 2D ya no queda debajo de la escena 3D: se cambia de vista con un control explícito, evitando una página de edición demasiado larga.
 
 Las plataformas conservan sus giros válidos de 90°. Las demás piezas permiten los giros admitidos por el documento; el manipulador usa pasos de 5°. Las superficies rectangulares intercambian dimensiones al girar en cuartos de vuelta. El escalado oblicuo no puede introducir deformaciones que el formato no representa: usa Ancho/Largo o escalado uniforme. No hay un eje de escala vertical ficticio; las alturas se ajustan moviendo Y o mediante los campos.
 

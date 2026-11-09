@@ -1,0 +1,84 @@
+# Fase 2 — Grandes travesías y superficies
+
+Entrega de fase: **0.23.0**. Rama de trabajo: `feat/v023-expedition-worlds`.
+
+## Qué se agrega
+
+El circuito nuevo **Grandes travesías** contiene cuatro campos largos. Se añade después de las selecciones anteriores y no se inserta en las vueltas oficiales existentes.
+
+| Campo | Recorrido previsto | Huella | Ambiente y decisión |
+|---|---:|---:|---|
+| La ruta de los arrayanes | 156 m | 80 × 160 m | Bosque, laguna, zigzag de plataformas y puente angosto de madera |
+| Dunas de cobre | 196 m | 96 × 176 m | Terrazas de arena, oasis, subida a roca y diagonal estrecha |
+| Archipiélago azul | 176 m | 100 × 176 m | Islas sobre agua, pasarelas de madera y muelle transversal |
+| La cresta del cóndor | 243 m | 112 × 192 m | Cuatro alturas, terrazas rocosas y atajo de cornisa |
+
+Las longitudes de catálogo se estiman sumando la línea central de cada plataforma, transición y salida hacia la copa (redondeadas al metro). Las huellas jugables se describen en `shared/frontierCourses.ts`. Las plataformas, transiciones inclinadas, obstáculos y zonas de agua son datos `Course` normales: no hay una ruta decorativa separada de la física. El mismo compilador de geometría alimenta la escena y el mundo Rapier.
+
+Los nuevos campos tienen plataformas amplias de recuperación y atajos sensiblemente más angostos. Las mediciones `routeLength` son valores de recorrido previstos para el catálogo; no son distancias calculadas automáticamente por un planificador.
+
+## Superficies y físicas
+
+Se mantienen los materiales históricos y se agregan `stone`, `wood` y `wet`. La clasificación toma la altura de la zona además de la posición X/Z para no aplicar el material de una isla a una plataforma que pasa por arriba o por abajo.
+
+| Superficie | Resistencia al rodamiento | Fricción de contacto (física 2) | Restitución al aterrizar (física 2) |
+|---|---:|---:|---:|
+| Grass | 0.016 | 0.020 | 0.32 |
+| Rough | 0.040 | 0.020 (sin cambio) | 0.18 |
+| Dirt | 0.055 | 0.020 (sin cambio) | 0.40 |
+| Sand | 0.085 | 0.020 (sin cambio) | 0.08 |
+| Stone | 0.012 | 0.025 | 0.22 |
+| Wood | 0.024 | 0.050 | 0.18 |
+| Wet | 0.010 | 0.012 | 0.06 |
+
+Las superficies anteriores conservan el coeficiente de contacto histórico de 0.020; solo piedra, madera y humedad introducen nuevos coeficientes. Rapier combina el material de la pelota con el del collider del suelo. La edición física 1 conserva el comportamiento de contacto histórico. La edición 2 selecciona la fricción por material y conserva el frenado tangencial por resistencia al rodamiento.
+
+Los materiales de piedra, madera y humedad se dibujan con texturas procedurales. El agua continúa siendo una zona de penalización real, no una superficie sólida. Las superficies de madera y piedra son piezas de suelo físicas y se pintan con el mismo centro, tamaño y altura usados por la simulación.
+
+## Ambientes y rendimiento
+
+`src/AdventureScenery.tsx` incorpora variantes instanciadas para bosque, desierto, costa y montaña. Cada ambiente tiene una silueta base y una segunda capa de elementos naturales instanciados, con un presupuesto que depende del nivel de detalle; bosque, desierto, costa y montaña ya no dependen de una única malla decorativa repetida. La costa conserva su faro como punto de referencia. Las nuevas piezas quedan fuera de los límites de juego y no crean colisiones. Se reutilizan geometrías y materiales y se mantienen las opciones de calidad automática, ahorro y alta existentes. No se incorporan modelos externos ni descargas de recursos durante la partida.
+
+Cada ambiente suma un landmark de silueta clara fuera del recorrido: pino antiguo en el bosque, arco de cañón en el desierto, faro en la costa y picos nevados en la montaña. Son elementos visuales estáticos sin collider, separados de la superficie física y del espacio de golpe. La prueba de navegador identifica el landmark propio de cada ambiente.
+
+Esta capa mejora la lectura a distancia, pero todavía no equivale a un paisaje artístico final: faltan revisión visual en capturas grandes, más detalles locales alrededor de cada circuito y mediciones en teléfonos físicos. Tampoco se confunde decoración con geometría jugable.
+
+## Compatibilidad
+
+- Las 13 selecciones anteriores y los circuitos originales permanecen en su orden.
+- Las vueltas oficiales de 9 y 18 hoyos siguen teniendo 9 y 18 hoyos.
+- Los 4 campos nuevos se agregan al final de `uniqueCourses` y `practiceLayouts`, para no desplazar índices de prácticas o récords antiguos.
+- No cambian los formatos de guardado, reglas de puntuación ni documentos del taller.
+- El protocolo online pasa de 17 a **18** porque el servidor debe reconocer el nuevo identificador `expeditions`. Cliente y servidor deben desplegarse juntos.
+
+## Pruebas incluidas
+
+- `tests/frontier.test.ts`: catálogo y dimensiones, compatibilidad de las vueltas anteriores, zonas y coeficientes de los siete materiales, respuesta real de fricción/rodamiento con Rapier, geometría finita, altura válida de plataformas, soporte y espacio libre de rampas, raycasts sobre cinco puntos por rampa, abertura de copa, un tiro real de tee y una ruta segura completa por cada uno de los cuatro campos usando tiros continuos sin recolocar la pelota.
+- `tests/e2e/expeditions.spec.ts`: selección del circuito, carga de escena del bosque, encuadre general dentro del viewport y un golpe real en escritorio y móvil.
+- CI ejecuta `npm test`, `npm run build`, `npm run test:e2e` y `npm run test:pages`.
+
+## Verificación pendiente y límites conocidos
+
+Las pruebas automatizadas actuales cubren la construcción Rapier de cada campo, la posición física de la salida, la copa abierta y un tiro inicial por hoyo. También comprueban que el bosque se carga y recibe un primer golpe en escritorio/móvil y que los cuatro ambientes se dibujan en práctica móvil. **Esto todavía no es una validación de una ronda completa.** No certifica que las plataformas, las uniones de rampas, las diagonales estrechas y los obstáculos móviles permitan completar todas las rutas previstas con tiros normales.
+
+Pendiente para cerrar la fase:
+- Recorrer los cuatro atajos estrechos con tiros reales, registrar golpes/penalizaciones y corregir cualquier tramo que obligue a un tiro imposible o a una recuperación accidental. Las rutas seguras ya tienen una prueba continua automatizada; los atajos todavía no.
+- Verificar varios ángulos y potencias alrededor de cada transición, no solo un tiro inicial.
+- Comprobar que las superficies se clasifican correctamente en bordes, solapes y plataformas a distinta altura.
+- Revisar capturas reales de cada ambiente en escritorio y móvil; el uso de instancias evita miles de meshes, pero todavía falta medir FPS/memoria en teléfonos físicos.
+- Ajustar la identidad visual del bosque/desierto/costa/montaña: la versión actual usa decoración instanciada compartida y todavía no representa un paisaje escultórico detallado ni un set único de landmarks por hoyo.
+
+El CI de GitHub debe pasar en el Pull Request antes de integrar la fase en `main`. La publicación del juego y la compatibilidad del servidor online se comprueban después del despliegue conjunto. La evaluación humana y la prueba en teléfonos físicos siguen siendo necesarias aunque CI termine verde.
+
+## Seguimiento QA — 9 de noviembre de 2026
+
+La primera ejecución con simulación de atajos encontró problemas físicos reales; se corrigieron por geometría, sin cambiar la exigencia de continuidad:
+
+- El atajo de Archipiélago se desvió para rodear la roca del primer tramo y pasar por fuera de la transición elevada. La última ejecución que llegó a Vitest ya no reportó ese atajo como fallo.
+- En Dunas se detectó una rampa sin plataforma de llegada y una entrada demasiado estrecha en la bajada segura. Se añadieron descansos físicos y se ajustó la anchura de la conexión segura.
+- La prueba posterior dejó un único fallo: el atajo diagonal pasaba debajo de la terraza segura. El trazado se desplazó ahora hacia el borde exterior de la terraza, para evitar golpes contra su parte inferior.
+- Se agregaron detalles ambientales instanciados junto al recorrido, con presupuesto adaptable al nivel gráfico y una comprobación E2E de presencia en los cuatro ambientes.
+
+**Estado honesto:** la ejecución anterior llegó a 282/283 pruebas unitarias; el último cambio de geometría y decoración aún debe pasar todas las comprobaciones. Esta versión no se declara terminada ni fusionada. Tampoco se considera validada una ronda completa solo porque el primer golpe funcione.
+
+Pendientes para completar la Fase 2: comprobar los atajos actualizados con tiros continuos; probar distintos ángulos y potencias en rampas y aterrizajes; verificar los materiales en solapes y bordes; revisar capturas grandes y móviles; medir dispositivos físicos; y cerrar solo con CI verde más inspección manual de las rutas.

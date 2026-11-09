@@ -1,5 +1,14 @@
 # Hoyo en Uno · Golf Club
 
+## 0.23.0 — Grandes travesías, nuevos ambientes y superficies
+
+- Nuevo circuito independiente **Grandes travesías** con cuatro hoyos de recorrido estimado entre 156 y 243 m: bosque, desierto, archipiélago y montaña.
+- Plataformas y rampas conectadas con geometría física real, rutas amplias y atajos estrechos de riesgo.
+- Superficies físicas nuevas de piedra, madera y suelo húmedo, además de césped, rough, tierra y arena; respuesta de fricción, rodamiento y aterrizaje por material en física 2.
+- Materiales procedurales diferenciados para piedra, vetas de madera y humedad; hitos instanciados para bosque, desierto, costa y montaña.
+- Pruebas de clasificación de materiales, geometría, soporte de salida, copa abierta, tiro real de salida y navegación de escritorio/móvil.
+- El catálogo pasa a 38 campos únicos, 14 selecciones y 42 distribuciones de práctica. Los 34 campos anteriores, sus índices, vueltas oficiales de 9/18, guardados y récords permanecen sin cambios. Protocolo online 18.
+
 ## 0.22.0 — Fase 1: editor 3D y construcción avanzada
 
 - Escena de edición con cámara orbital, zoom/desplazamiento y encuadres superior, frontal, lateral y perspectiva.
