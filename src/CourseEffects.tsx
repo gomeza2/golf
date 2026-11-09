@@ -233,10 +233,29 @@ function SurfacePatch({ zone }: { zone: SurfacePatchData }) {
   const roughness =
     zone.kind === "wet" ? 0.24 : zone.kind === "wood" ? 0.76 : 0.95;
   const metalness = zone.kind === "wet" ? 0.16 : 0;
+  // Surface classification has a deterministic priority in surfaceAt().
+  // Tiny vertical offsets keep intentionally overlapping coatings from z-fighting.
+  const surfaceLayer = {
+    rough: 0.008,
+    dirt: 0.01,
+    sand: 0.012,
+    stone: 0.014,
+    wood: 0.016,
+    wet: 0.018,
+  }[zone.kind];
+  const renderOrder = {
+    rough: 1,
+    dirt: 2,
+    sand: 3,
+    stone: 4,
+    wood: 5,
+    wet: 6,
+  }[zone.kind];
   return (
     <mesh
-      position={[zone.x, zone.y + 0.008, zone.z]}
+      position={[zone.x, zone.y + surfaceLayer, zone.z]}
       rotation={[-Math.PI / 2, 0, 0]}
+      renderOrder={renderOrder}
       receiveShadow
     >
       <planeGeometry args={[zone.width, zone.length]} />

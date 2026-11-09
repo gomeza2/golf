@@ -76,6 +76,26 @@ it("adds four long expeditions without changing the championship, nine-hole or p
   frontierCourses.forEach(assertFiniteCourse);
 });
 
+it("resolves overlapping surface patches using the same priority as the ball physics", () => {
+  const coast = frontierCourses.find((course) => course.ambience === "coast")!;
+  expect(
+    surfaceAt(coast, { x: 32, y: 0.22, z: -49 }),
+  ).toBe("stone"); // The stone landing sits on the sandy island.
+  expect(
+    surfaceAt(coast, { x: 32, y: 1.22, z: -49 }),
+  ).toBe("grass"); // A ball above the deck must not inherit its ground material.
+
+  const mountain = frontierCourses.find(
+    (course) => course.ambience === "mountain",
+  )!;
+  expect(
+    surfaceAt(mountain, { x: 0, y: 2.22, z: -35 }),
+  ).toBe("wet"); // A small wet patch overlays the stone terrace.
+  expect(
+    surfaceAt(mountain, { x: 0, y: 3.22, z: -35 }),
+  ).toBe("grass");
+});
+
 it("keeps every playable expedition platform above the out-of-world limit", () => {
   for (const course of frontierCourses) {
     const surfaces = geometry(course).surfaces;

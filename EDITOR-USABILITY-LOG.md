@@ -59,6 +59,7 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Se agregó una prueba de altura física mínima/máxima para todas las plataformas de los cuatro campos.
 - Se agregó una prueba de ambos extremos de cada rampa para comprobar que encuentre soporte de una plataforma o el green.
 - Se amplió la decoración instanciada con una segunda capa diferenciada por ambiente y una comprobación de navegador para asegurar que la capa esté presente en los cuatro escenarios.
+- La revisión de superficies detectó zonas de piedra/arena en la costa y piedra/mojado en la montaña que se solapan deliberadamente. Los planos se dibujaban a la misma altura y podían parpadear por z-fighting. Se añadió una prioridad visual con separaciones mínimas, y una prueba comprueba que el motor seleccione el mismo material que se ve en esos solapes.
 
 ### Pendientes de verdad
 1. Rondas físicas completas en los cuatro hoyos y validación separada de ruta segura/atajo.
