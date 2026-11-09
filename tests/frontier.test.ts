@@ -288,6 +288,14 @@ it("completes the forest safe route with continuous real shots and no reposition
       let best:
         | { angle: number; power: number; position: { x: number; y: number; z: number }; score: number }
         | undefined;
+      const candidateDiagnostics: {
+        angle: number;
+        power: number;
+        position: { x: number; y: number; z: number };
+        penalties: number;
+        supported: boolean;
+        score: number | null;
+      }[] = [];
       const startingScore = distance(current, target);
 
       for (const offset of offsets) {
@@ -297,13 +305,29 @@ it("completes the forest safe route with continuous real shots and no reposition
           expect(game.shoot("route-player", angle, power)).toBe(true);
           let frames = 0;
           while (game.state.moving && frames++ < 720) game.tick();
-          if (game.state.moving) continue;
-
           const player = game.state.players[0];
-          if (player.penalties > 0) continue;
           const position = { ...player.pos };
+          if (game.state.moving || player.penalties > 0) {
+            candidateDiagnostics.push({
+              angle: Number(angle.toFixed(3)),
+              power,
+              position,
+              penalties: player.penalties,
+              supported: false,
+              score: null,
+            });
+            continue;
+          }
           if (player.done) {
             best = { angle, power, position, score: 0 };
+            candidateDiagnostics.push({
+              angle: Number(angle.toFixed(3)),
+              power,
+              position,
+              penalties: 0,
+              supported: true,
+              score: 0,
+            });
             break;
           }
           const support = game.world.castRay(
@@ -318,9 +342,17 @@ it("completes the forest safe route with continuous real shots and no reposition
             undefined,
             game.ball,
           );
-          if (!support) continue;
           const score = distance(position, target);
+          candidateDiagnostics.push({
+            angle: Number(angle.toFixed(3)),
+            power,
+            position,
+            penalties: 0,
+            supported: !!support,
+            score: support ? Number(score.toFixed(2)) : null,
+          });
           if (
+            support &&
             score + 0.4 < startingScore &&
             (!best || score < best.score)
           )
@@ -331,7 +363,7 @@ it("completes the forest safe route with continuous real shots and no reposition
 
       expect(
         best,
-        `Forest route stalled before checkpoint ${targetIndex + 1} at ${current.x.toFixed(1)},${current.y.toFixed(1)},${current.z.toFixed(1)}; target ${target.x},${target.y},${target.z}`,
+        `Forest route stalled before checkpoint ${targetIndex + 1} at ${current.x.toFixed(1)},${current.y.toFixed(1)},${current.z.toFixed(1)}; target ${target.x},${target.y},${target.z}; candidates ${JSON.stringify(candidateDiagnostics.sort((a, b) => (a.score ?? 9999) - (b.score ?? 9999)).slice(0, 12))}`,
       ).toBeDefined();
 
       // Apply the selected shot to the continuous game state. The ball is
