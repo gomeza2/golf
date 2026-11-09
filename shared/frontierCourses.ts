@@ -23,6 +23,16 @@ function span(
   };
 }
 
+function spans(
+  rampDeck: Build["rampDeck"],
+  points: V3[],
+  width: number,
+): Block[] {
+  return points.slice(1).map((point, index) =>
+    span(rampDeck, points[index], point, width),
+  );
+}
+
 function rock(
   x: number,
   y: number,
@@ -136,8 +146,20 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(1, -38, 22, 14, 3),
         span(rampDeck, { x: 1, y: 3, z: -45 }, { x: 30, y: 0, z: -60 }, 8),
         deck(30, -65, 22, 12),
-        // A direct ridge crossing is shorter, but offers very little landing room.
-        span(rampDeck, { x: -25, y: 0, z: 56 }, { x: 17, y: 7, z: 4 }, 1.7),
+        // The raised diagonal climbs above the broad terrace instead of
+        // passing underneath it, then joins the final platform from its edge.
+        ...spans(
+          rampDeck,
+          [
+            { x: -25, y: 0, z: 56 },
+            { x: -16, y: 2.6, z: 44 },
+            { x: -6, y: 5.3, z: 32 },
+            { x: 8, y: 6.3, z: 18 },
+            { x: 22, y: 8.1, z: 8 },
+            { x: 25, y: 7, z: 1 },
+          ],
+          1.7,
+        ),
       ],
       water: [{ x: 1, z: -37, width: 38, length: 18, y: -1.5 }],
       sand: [
@@ -194,8 +216,17 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         span(rampDeck, { x: 18, y: 1, z: -17 }, { x: 32, y: 0, z: -42 }, 7),
         deck(32, -49, 22, 14),
         span(rampDeck, { x: 32, y: 0, z: -56 }, { x: 34, y: 0, z: -65 }, 8),
-        // The cross-island pier is the shorter, narrower option.
-        span(rampDeck, { x: -27, y: 0, z: 56 }, { x: 28, y: 0, z: -42 }, 1.6),
+        // The narrow pier stays west of the final safe-route ramp and
+        // joins the island at its open western edge.
+        ...spans(
+          rampDeck,
+          [
+            { x: -27, y: 0, z: 56 },
+            { x: 10, y: 0, z: -22 },
+            { x: 24, y: 0, z: -42 },
+          ],
+          1.6,
+        ),
       ],
       water: ocean(100, 176, -1.6),
       sand: [
