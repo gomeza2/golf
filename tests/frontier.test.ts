@@ -330,7 +330,7 @@ it("completes the forest safe route with continuous real shots and no reposition
 
       expect(
         best,
-        \`Forest route stalled before checkpoint \${targetIndex + 1} at \${current.x.toFixed(1)},\${current.y.toFixed(1)},\${current.z.toFixed(1)}; target \${target.x},\${target.y},\${target.z}\`,
+        `Forest route stalled before checkpoint ${targetIndex + 1} at ${current.x.toFixed(1)},${current.y.toFixed(1)},${current.z.toFixed(1)}; target ${target.x},${target.y},${target.z}`,
       ).toBeDefined();
 
       // Apply the selected shot to the continuous game state. The ball is
@@ -348,7 +348,7 @@ it("completes the forest safe route with continuous real shots and no reposition
     if (targetIndex < targets.length - 1)
       expect(
         distance(current, target),
-        \`Forest route did not reach checkpoint \${targetIndex + 1}\`,
+        `Forest route did not reach checkpoint ${targetIndex + 1}`,
       ).toBeLessThanOrEqual(target.radius);
   }
 
