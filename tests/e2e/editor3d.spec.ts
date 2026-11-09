@@ -7,6 +7,7 @@ async function open(page: Page) {
   await page
     .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
     .click();
+  await page.getByRole("button", { name: "Vista 3D", exact: true }).click();
   await expect(page.locator(".editor3d-stage canvas")).toHaveAttribute(
     "data-editor-ready",
     "true",
@@ -61,6 +62,19 @@ test("the editor renders real heights and changes orbit, pan, zoom and every vie
   await expect
     .poll(() => canvas.getAttribute("data-editor-camera"))
     .not.toBe(previous);
+  for (const name of [
+    "Orbitar cámara a la izquierda",
+    "Inclinar cámara hacia arriba",
+    "Subir cámara",
+    "Bajar cámara",
+  ]) {
+    const previousPose = await canvas.getAttribute("data-editor-camera");
+    await page.getByRole("button", { name, exact: true }).click();
+    await expect
+      .poll(() => canvas.getAttribute("data-editor-camera"))
+      .not.toBe(previousPose);
+  }
+  await page.keyboard.press("ArrowDown");
   await page.getByRole("button", { name: "Acercar", exact: true }).click();
   await page
     .getByRole("button", { name: "Desplazar cámara →", exact: true })
@@ -91,6 +105,23 @@ test("the editor renders real heights and changes orbit, pan, zoom and every vie
   expect(await draft(page)).toEqual(before);
   expect(errors).toEqual([]);
 });
+test("the 2D and 3D workspaces switch without changing the same draft", async ({
+  page,
+}) => {
+  await open(page);
+  await input(page);
+  const before = await draft(page);
+  await page.getByRole("button", { name: "Vista 2D", exact: true }).click();
+  await expect(page.getByRole("img", { name: "Plano editable de la cancha" })).toBeVisible();
+  await expect(page.locator(".editor3d-stage")).toHaveCount(0);
+  await page.getByRole("button", { name: "Vista 3D", exact: true }).click();
+  await expect(page.locator(".editor3d-stage canvas")).toHaveAttribute(
+    "data-editor-ready",
+    "true",
+  );
+  expect(await draft(page)).toEqual(before);
+});
+
 test("a real 3D selection can be moved by its rendered gizmo and undo restores the exact piece", async ({
   page,
 }) => {

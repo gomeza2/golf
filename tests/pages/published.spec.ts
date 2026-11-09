@@ -827,6 +827,7 @@ test("the published 3D editor selects actual stacked geometry, moves a gizmo and
   await page
     .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
     .click();
+  await page.getByRole("button", { name: "Vista 3D", exact: true }).click();
   await page.getByRole("button", { name: /Laboratorio en altura/ }).click();
   const canvas = page.locator(".editor3d-stage canvas");
   await expect(canvas).toHaveAttribute("data-editor-ready", "true");

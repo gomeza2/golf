@@ -4460,3 +4460,207 @@ button > span {
     padding: 10px 0;
   }
 }
+
+
+/* Editor workspace refinement: one clear work surface, with an explicit 2D/3D switch. */
+.workshop-layout {
+  grid-template-columns: minmax(190px, 218px) minmax(0, 1fr) minmax(230px, 270px);
+  gap: 14px;
+  align-items: start;
+}
+.workshop-tools,
+.workshop-properties {
+  max-height: min(78vh, 850px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: sticky;
+  top: 12px;
+  scrollbar-gutter: stable;
+}
+.workshop-map {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.workshop-view-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #102f2a;
+  border: 1px solid #527567;
+  border-radius: 10px;
+}
+.workshop-view-switch > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.workshop-view-switch strong {
+  color: #f4dda7;
+  font-size: 14px;
+}
+.workshop-view-switch span {
+  color: #c3d2c5;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.workshop-view-options {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+.workshop-view-options button {
+  min-width: 92px;
+  padding: 9px 15px;
+  background: #1b463a;
+  border: 1px solid #698a78;
+  border-radius: 7px;
+}
+.workshop-view-options button[aria-pressed="true"] {
+  background: #d6bd7d;
+  border-color: #f2dfa8;
+  color: #18382f;
+  font-weight: 700;
+}
+.workshop-2d-stage {
+  min-width: 0;
+  padding: 12px;
+  background: #102f2a;
+  border: 1px solid #527567;
+  border-radius: 10px;
+}
+.workshop-2d-guide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.workshop-2d-guide > div {
+  display: grid;
+  gap: 3px;
+}
+.workshop-2d-guide strong {
+  color: #f4dda7;
+  font-size: 14px;
+}
+.workshop-2d-guide span,
+.workshop-map-note {
+  color: #c3d2c5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.workshop-map--2d .workshop-2d-stage svg {
+  height: min(68vh, 720px);
+  min-height: 460px;
+}
+.workshop-map--3d .editor3d-stage {
+  height: clamp(440px, 64vh, 760px);
+}
+.workshop-map .workshop-panel-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.workshop-map .workshop-panel-links button {
+  min-height: 40px;
+  padding: 8px 13px;
+  background: #173d34;
+  border: 1px solid #597a6b;
+  border-radius: 7px;
+}
+.editor3d-camera-tools {
+  align-items: flex-start;
+  gap: 10px;
+  background: #102f2a;
+  border-top: 1px solid #93aa8f44;
+}
+.editor3d-camera-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding: 2px 6px;
+  border-right: 1px solid #93aa8f33;
+}
+.editor3d-camera-group > span {
+  width: 100%;
+  color: #d6c99f;
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.editor3d-camera-group button {
+  min-width: 38px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid #698a78;
+  border-radius: 6px;
+  background: #1b463a;
+}
+.workshop-tools,
+.workshop-properties {
+  scrollbar-color: #688c78 #102f2a;
+}
+@media (max-width: 1100px) {
+  .workshop-layout {
+    grid-template-columns: minmax(170px, 200px) minmax(0, 1fr);
+  }
+  .workshop-properties {
+    grid-column: 1 / -1;
+    position: static;
+    max-height: none;
+  }
+}
+@media (max-width: 650px) {
+  .workshop {
+    width: calc(100% - 12px);
+    padding: 10px;
+  }
+  .workshop-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .workshop-map {
+    order: -1;
+    width: 100%;
+  }
+  .workshop-tools,
+  .workshop-properties {
+    width: 100%;
+    max-height: none;
+    position: static;
+    overflow: visible;
+  }
+  .workshop-view-switch {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .workshop-view-options button {
+    flex: 1;
+  }
+  .workshop-2d-stage {
+    padding: 7px;
+  }
+  .workshop-map--2d .workshop-2d-stage svg {
+    height: 460px;
+    min-height: 380px;
+  }
+  .workshop-map--3d .editor3d-stage {
+    height: min(62vh, 560px);
+    min-height: 400px;
+  }
+  .editor3d-camera-tools {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .editor3d-camera-group {
+    border-right: 0;
+    border-bottom: 1px solid #93aa8f33;
+    padding: 7px 0;
+  }
+}

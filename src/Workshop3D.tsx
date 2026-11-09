@@ -48,6 +48,8 @@ type Command = {
   id: number;
   view?: EditorView;
   pan?: [number, number, number];
+  orbit?: [number, number];
+  elevate?: number;
   zoom?: number;
 };
 function ConstructionGrid({ height, step }: { height: number; step: number }) {
@@ -123,9 +125,12 @@ function Navigation({
     const control = new OrbitControls(camera, gl.domElement);
     control.enableDamping = true;
     control.dampingFactor = 0.12;
-    control.minDistance = 5;
-    control.maxDistance = 150;
-    control.maxPolarAngle = Math.PI * 0.96;
+    control.minDistance = 3;
+    control.maxDistance = 180;
+    control.minPolarAngle = 0.025;
+    control.maxPolarAngle = Math.PI - 0.025;
+    control.enablePan = true;
+    control.screenSpacePanning = true;
     control.target.set(0, 1, 0);
     if (cameraMemory.current) {
       camera.position.set(...cameraMemory.current.position);
@@ -153,13 +158,96 @@ function Navigation({
   useEffect(() => {
     const c = orbit.current;
     if (!c) return;
+    // Selection stays on the left button in edit mode. Right-drag pans at all
+    // times; camera mode adds left-drag orbit without forcing a mode for pan.
     c.mouseButtons.LEFT = navigation ? THREE.MOUSE.ROTATE : undefined;
-    c.mouseButtons.RIGHT = navigation ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+    c.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+    c.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
     c.touches.ONE = navigation
       ? THREE.TOUCH.ROTATE
       : (undefined as unknown as THREE.TOUCH);
     c.touches.TWO = THREE.TOUCH.DOLLY_PAN;
   }, [navigation]);
+  useEffect(() => {
+    if (!navigation) return;
+    const moveCamera = (event: KeyboardEvent) => {
+      if (
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        (event.target instanceof HTMLElement &&
+          event.target.closest("input,textarea,select,button,[contenteditable=true]"))
+      )
+        return;
+      const c = orbit.current;
+      if (!c) return;
+      const turn = event.shiftKey ? 0.16 : 0.075;
+      const distance = event.shiftKey ? 3 : 1;
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction);
+      direction.y = 0;
+      if (direction.lengthSq() < 1e-6) direction.set(0, 0, -1);
+      direction.normalize();
+      const right = new THREE.Vector3()
+        .crossVectors(direction, new THREE.Vector3(0, 1, 0))
+        .normalize();
+      let handled = true;
+      switch (event.key.toLowerCase()) {
+        case "arrowleft":
+          c.rotateLeft(turn);
+          break;
+        case "arrowright":
+          c.rotateLeft(-turn);
+          break;
+        case "arrowup":
+          c.rotateUp(turn);
+          break;
+        case "arrowdown":
+          c.rotateUp(-turn);
+          break;
+        case "w":
+          camera.position.addScaledVector(direction, distance);
+          c.target.addScaledVector(direction, distance);
+          break;
+        case "s":
+          camera.position.addScaledVector(direction, -distance);
+          c.target.addScaledVector(direction, -distance);
+          break;
+        case "a":
+          camera.position.addScaledVector(right, -distance);
+          c.target.addScaledVector(right, -distance);
+          break;
+        case "d":
+          camera.position.addScaledVector(right, distance);
+          c.target.addScaledVector(right, distance);
+          break;
+        case "q":
+          camera.position.y += distance;
+          c.target.y += distance;
+          break;
+        case "e":
+          camera.position.y -= distance;
+          c.target.y -= distance;
+          break;
+        case "+":
+        case "=":
+          camera.position.sub(c.target).multiplyScalar(0.9).add(c.target);
+          break;
+        case "-":
+        case "_":
+          camera.position.sub(c.target).multiplyScalar(1.1).add(c.target);
+          break;
+        default:
+          handled = false;
+      }
+      if (!handled) return;
+      event.preventDefault();
+      c.update();
+      invalidate();
+    };
+    window.addEventListener("keydown", moveCamera);
+    return () => window.removeEventListener("keydown", moveCamera);
+  }, [navigation, camera, invalidate]);
   useEffect(() => {
     const c = orbit.current;
     if (!c) return;
@@ -178,6 +266,14 @@ function Navigation({
       const delta = new THREE.Vector3(...command.pan);
       camera.position.add(delta);
       c.target.add(delta);
+    }
+    if (command.orbit) {
+      c.rotateLeft(command.orbit[0]);
+      c.rotateUp(command.orbit[1]);
+    }
+    if (command.elevate) {
+      camera.position.y += command.elevate;
+      c.target.y += command.elevate;
     }
     if (command.zoom)
       camera.position.sub(c.target).multiplyScalar(command.zoom).add(c.target);
@@ -544,33 +640,48 @@ export function Workshop3D(p: Props) {
       </div>
       <div
         className="editor3d-camera-tools"
-        aria-label="Desplazar y acercar la cámara"
+        aria-label="Controles de cámara"
       >
-        {(
-          [
-            ["←", [-2, 0, 0]],
-            ["→", [2, 0, 0]],
-            ["↑", [0, 0, -2]],
-            ["↓", [0, 0, 2]],
-          ] as const
-        ).map(([name, pan]) => (
-          <button
-            key={name}
-            aria-label={`Desplazar cámara ${name}`}
-            onClick={() => send({ pan: [...pan] })}
-          >
-            {name}
-          </button>
-        ))}
-        <button onClick={() => send({ zoom: 0.85 })}>Acercar</button>
-        <button onClick={() => send({ zoom: 1.18 })}>Alejar</button>
+        <div className="editor3d-camera-group" role="group" aria-label="Desplazar cámara">
+          <span>Desplazar</span>
+          {(
+            [
+              ["←", [-2, 0, 0]],
+              ["→", [2, 0, 0]],
+              ["↑", [0, 0, -2]],
+              ["↓", [0, 0, 2]],
+            ] as const
+          ).map(([name, pan]) => (
+            <button
+              key={name}
+              aria-label={"Desplazar cámara " + name}
+              onClick={() => send({ pan: [...pan] })}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+        <div className="editor3d-camera-group" role="group" aria-label="Girar e inclinar cámara">
+          <span>Girar / inclinar</span>
+          <button aria-label="Orbitar cámara a la izquierda" onClick={() => send({ orbit: [0.14, 0] })}>↶</button>
+          <button aria-label="Orbitar cámara a la derecha" onClick={() => send({ orbit: [-0.14, 0] })}>↷</button>
+          <button aria-label="Inclinar cámara hacia arriba" onClick={() => send({ orbit: [0, 0.12] })}>⌃</button>
+          <button aria-label="Inclinar cámara hacia abajo" onClick={() => send({ orbit: [0, -0.12] })}>⌄</button>
+        </div>
+        <div className="editor3d-camera-group" role="group" aria-label="Altura y zoom de cámara">
+          <span>Altura / zoom</span>
+          <button aria-label="Subir cámara" onClick={() => send({ elevate: 2 })}>Subir</button>
+          <button aria-label="Bajar cámara" onClick={() => send({ elevate: -2 })}>Bajar</button>
+          <button onClick={() => send({ zoom: 0.85 })}>Acercar</button>
+          <button onClick={() => send({ zoom: 1.18 })}>Alejar</button>
+        </div>
       </div>
       <p className="editor3d-help">
         {navigation
-          ? "Arrastra para orbitar. Dos dedos o botón derecho para desplazar; pellizca o usa la rueda para acercar."
+          ? "Arrastra con el botón izquierdo para orbitar; botón derecho para desplazar. Flechas: girar e inclinar. W/A/S/D: mover; Q/E: subir o bajar; +/−: zoom. En móvil, usa dos dedos para desplazar y acercar."
           : p.placing
-            ? `Toca la escena para construir a ${p.buildHeight} m. Arrastrar no coloca una pieza.`
-            : "Toca para seleccionar; usa los ejes para transformar. Shift añade piezas; Alt alterna objetos superpuestos. Esc cancela el arrastre."}
+            ? `Toca la escena para construir a ${p.buildHeight} m. Arrastrar no coloca una pieza. Botón derecho desplaza la cámara; activa Navegar cámara para orbitar.`
+            : "Toca para seleccionar y usa los ejes para transformar. Botón derecho desplaza la cámara; Navegar cámara activa la órbita con el botón izquierdo. Shift añade piezas; Alt alterna objetos superpuestos. Esc cancela el arrastre."}
       </p>
     </section>
   );

@@ -55,6 +55,14 @@ Los materiales de piedra, madera y humedad se dibujan con texturas procedurales.
 
 ## Verificación pendiente y límites conocidos
 
-Las pruebas automatizadas cubren la construcción Rapier de cada campo y un tiro físico por hoyo, además de la primera experiencia de navegador en escritorio y móvil. **No certifican automáticamente que toda estrategia de principio a fin sea óptima ni sustituyen una ronda humana completa en cada ruta segura y atajo.** Antes de considerar todos los hoyos equilibrados, conviene recorrerlos manualmente con tiros normales y probar especialmente las diagonales estrechas y los cambios de altura.
+Las pruebas automatizadas actuales cubren la construcción Rapier de cada campo, la posición física de la salida, la copa abierta y un tiro inicial por hoyo. También comprueban que el bosque se carga y recibe un primer golpe en escritorio/móvil y que los cuatro ambientes se dibujan en práctica móvil. **Esto todavía no es una validación de una ronda completa.** No certifica que las plataformas, las uniones de rampas, las diagonales estrechas y los obstáculos móviles permitan completar todas las rutas previstas con tiros normales.
 
-El CI de GitHub debe pasar en el Pull Request antes de integrar la fase en `main`. La publicación del juego y la compatibilidad del servidor online se comprueban después del despliegue conjunto.
+Pendiente para cerrar la fase:
+- Completar una vuelta física de principio a fin en los cuatro hoyos, al menos una vez por ruta segura.
+- Recorrer los cuatro atajos, registrar golpes/penalizaciones y corregir cualquier tramo que obligue a un tiro imposible o a una recuperación accidental.
+- Verificar varios ángulos y potencias alrededor de cada transición, no solo un tiro inicial.
+- Comprobar que las superficies se clasifican correctamente en bordes, solapes y plataformas a distinta altura.
+- Revisar capturas reales de cada ambiente en escritorio y móvil; el uso de instancias evita miles de meshes, pero todavía falta medir FPS/memoria en teléfonos físicos.
+- Ajustar la identidad visual del bosque/desierto/costa/montaña: la versión actual usa decoración instanciada compartida y todavía no representa un paisaje escultórico detallado ni un set único de landmarks por hoyo.
+
+El CI de GitHub debe pasar en el Pull Request antes de integrar la fase en `main`. La publicación del juego y la compatibilidad del servidor online se comprueban después del despliegue conjunto. La evaluación humana y la prueba en teléfonos físicos siguen siendo necesarias aunque CI termine verde.
