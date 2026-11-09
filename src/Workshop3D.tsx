@@ -241,12 +241,12 @@ function Navigation({
           c.target.addScaledVector(right, distance);
           break;
         case "q":
-          camera.position.y += distance;
-          c.target.y += distance;
-          break;
-        case "e":
           camera.position.y -= distance;
           c.target.y -= distance;
+          break;
+        case "e":
+          camera.position.y += distance;
+          c.target.y += distance;
           break;
         case "+":
         case "=":
@@ -703,7 +703,7 @@ export function Workshop3D(p: Props) {
       </div>
       <p className="editor3d-help">
         {navigation
-          ? "Arrastra con el botón izquierdo para orbitar; botón derecho para desplazar. Flechas: girar e inclinar. W/A/S/D: mover; Q/E: subir o bajar; +/−: zoom. En móvil, usa dos dedos para desplazar y acercar."
+          ? "Arrastra con el botón izquierdo para orbitar; botón derecho para desplazar. Flechas: girar e inclinar. W/A/S/D: mover; E: subir, Q: bajar; +/−: zoom. En móvil, usa dos dedos para desplazar y acercar."
           : p.placing
             ? `Toca la escena para construir a ${p.buildHeight} m. Arrastrar no coloca una pieza. Botón derecho desplaza la cámara; activa Navegar cámara para orbitar.`
             : "Toca para seleccionar y usa los ejes para transformar. Botón derecho desplaza la cámara; Navegar cámara activa la órbita con el botón izquierdo. Shift añade piezas; Alt alterna objetos superpuestos. Esc cancela el arrastre."}

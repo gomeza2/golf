@@ -97,6 +97,16 @@ test("the editor renders real heights and changes orbit, pan, zoom and every vie
   await expect
     .poll(() => canvas.getAttribute("data-editor-camera"))
     .not.toBe(keyboardPose);
+  let verticalPose = await canvas.getAttribute("data-editor-camera");
+  await page.keyboard.press("e");
+  await expect
+    .poll(() => canvas.getAttribute("data-editor-camera"))
+    .not.toBe(verticalPose);
+  verticalPose = await canvas.getAttribute("data-editor-camera");
+  await page.keyboard.press("q");
+  await expect
+    .poll(() => canvas.getAttribute("data-editor-camera"))
+    .not.toBe(verticalPose);
   await page.getByRole("button", { name: "Acercar", exact: true }).click();
   await page
     .getByRole("button", { name: "Desplazar cámara →", exact: true })
