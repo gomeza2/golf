@@ -566,6 +566,7 @@ it.each(shortcutRoutes)(
     const from = point(0.1);
     const targets = [0.32, 0.54, 0.76, 0.94].map((fraction) => ({
       ...point(fraction),
+      fraction,
       radius: 3.0,
     }));
     const initial = game.state.players[0];
@@ -604,7 +605,7 @@ it.each(shortcutRoutes)(
     for (const [targetIndex, target] of targets.entries()) {
       let successfulShots = 0;
       while (
-        distance(current, target) > target.radius &&
+        lane(current).progress < target.fraction - 0.025 &&
         successfulShots < 5
       ) {
         const baseAngle = Math.atan2(
@@ -685,9 +686,10 @@ it.each(shortcutRoutes)(
         successfulShots++;
       }
       expect(
-        distance(current, target),
-        name + ": did not traverse shortcut section " + (targetIndex + 1),
-      ).toBeLessThanOrEqual(target.radius);
+        lane(current).progress,
+        name + ": did not advance to shortcut section " + (targetIndex + 1),
+      ).toBeGreaterThanOrEqual(target.fraction - 0.025);
+      expect(lane(current).lateral).toBeLessThan(width / 2 - 0.2);
     }
 
     expect(game.state.players[0].penalties).toBe(0);

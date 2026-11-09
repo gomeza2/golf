@@ -150,7 +150,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
       wood: [{ x: 25, z: -65, width: 7, length: 4, y: 0 }],
       blocks: [
         rock(-22, 0, 68, 3.4, 2.8, 4, "#96724d"),
-        rock(-1, 4, 30, 3.8, 2.5, 3, "#a17a4e"),
+        rock(5, 4, 30, 3.8, 2.5, 3, "#a17a4e"),
         rock(25, 7, -2, 2.4, 2.2, 3, "#79634d"),
         {
           pos: [10, 7.5, -7],
