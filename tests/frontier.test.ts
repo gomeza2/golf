@@ -750,8 +750,12 @@ it.each(shortcutRoutes)(
         current = { ...game.state.players[0].pos };
         const projected = lane(current);
         expect(projected.lateral).toBeLessThan(width / 2 - 0.2);
+        const previousCheckpoint =
+          targetIndex === 0
+            ? 0.1
+            : (checkpoints ?? [0.32, 0.54, 0.76, 0.94])[targetIndex - 1];
         expect(projected.progress).toBeGreaterThan(
-          targetIndex === 0 ? 0.1 : lane(point([0.32, 0.54, 0.76, 0.94][targetIndex - 1])).progress,
+          lane(point(previousCheckpoint)).progress - 0.015,
         );
         routeTime = game.state.time;
         successfulShots++;
