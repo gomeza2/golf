@@ -154,7 +154,8 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(5, 42, 2.8, 2.8, 0),
         // Landing pads overlap the ramp ends by more than the ball radius.
         deck(10, 18, 4.8, 4.8, 3),
-        deck(16, 12, 4.8, 4.8, 5),
+        deck(16, 18, 4.8, 4.8, 4),
+        deck(22, 12, 4.8, 4.8, 6),
         // The raised diagonal climbs over the terraces and joins the final
         // platform at its eastern edge.
         ...spans(
@@ -165,9 +166,9 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
             { x: -18, y: 0, z: 42 },
             { x: 5, y: 0, z: 42 },
             { x: 10, y: 3, z: 18 },
-            { x: 16, y: 5, z: 12 },
-            { x: 22, y: 7, z: 7 },
-            { x: 25, y: 7, z: 1 },
+            { x: 16, y: 4, z: 18 },
+            { x: 22, y: 6, z: 12 },
+            { x: 25, y: 7, z: 7 },
           ],
           1.7,
         ),

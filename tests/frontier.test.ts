@@ -496,6 +496,7 @@ type ShortcutRoute = {
   points: V3[];
   width: number;
   checkpoints?: number[];
+  checkpointRadii?: number[];
   shotOffsets?: number[];
 };
 
@@ -518,12 +519,13 @@ const shortcutRoutes: ShortcutRoute[] = [
       { x: -18, y: 0, z: 42 },
       { x: 5, y: 0, z: 42 },
       { x: 10, y: 3, z: 18 },
-      { x: 16, y: 5, z: 12 },
-      { x: 22, y: 7, z: 7 },
-      { x: 25, y: 7, z: 1 },
+      { x: 16, y: 4, z: 18 },
+      { x: 22, y: 6, z: 12 },
+      { x: 25, y: 7, z: 7 },
     ],
     width: 1.7,
-    checkpoints: [0.13, 0.338, 0.554, 0.784, 0.87, 0.937, 0.985],
+    checkpoints: [0.13, 0.34, 0.56, 0.795, 0.852, 0.933, 0.985],
+    checkpointRadii: [1.7, 1.7, 1.7, 0.85, 1.5, 1.5, 1.5],
     shotOffsets: [-0.14, -0.1, -0.06, -0.03, 0, 0.03, 0.06, 0.1, 0.14],
   },
   {
@@ -551,7 +553,7 @@ const shortcutRoutes: ShortcutRoute[] = [
 
 it.each(shortcutRoutes)(
   "$name narrow shortcut can be traversed by continuous real shots",
-  ({ name, index, points, width, checkpoints, shotOffsets }) => {
+  ({ name, index, points, width, checkpoints, checkpointRadii, shotOffsets }) => {
     const game = new Game();
     games.push(game);
     game.selectCircuit("expeditions");
@@ -637,10 +639,10 @@ it.each(shortcutRoutes)(
 
     const from = point(0.1);
     const targets = (checkpoints ?? [0.32, 0.54, 0.76, 0.94]).map(
-      (fraction) => ({
+      (fraction, index) => ({
         ...point(fraction),
         fraction,
-        radius: 3.0,
+        radius: checkpointRadii?.[index] ?? 3.0,
       }),
     );
     const initial = game.state.players[0];
