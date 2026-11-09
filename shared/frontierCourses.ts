@@ -153,9 +153,11 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(-18, 42, 2.8, 2.8, 0),
         deck(5, 42, 2.8, 2.8, 0),
         // Landing pads overlap the ramp ends by more than the ball radius.
-        deck(10, 18, 4.8, 4.8, 3),
-        deck(16, 18, 4.8, 4.8, 4),
-        deck(22, 12, 4.8, 4.8, 6),
+        deck(10, 18, 4, 4.8, 3),
+        // Turn platforms begin at the end of the preceding ramp instead of
+        // sitting above the approach. The next ramp climbs away from them.
+        { ...deck(18, 18, 4, 4.8, 4), yaw: Math.PI / 2 },
+        deck(22, 10, 3.4, 4, 6),
         // The raised diagonal climbs over the terraces and joins the final
         // platform at its eastern edge.
         ...spans(
@@ -168,7 +170,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
             { x: 10, y: 3, z: 18 },
             { x: 16, y: 4, z: 18 },
             { x: 22, y: 6, z: 12 },
-            { x: 25, y: 7, z: 7 },
+            { x: 25, y: 7, z: 5 },
           ],
           1.7,
         ),
@@ -228,14 +230,23 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         span(rampDeck, { x: 18, y: 1, z: -17 }, { x: 32, y: 0, z: -42 }, 7),
         deck(32, -49, 22, 14),
         span(rampDeck, { x: 32, y: 0, z: -56 }, { x: 34, y: 0, z: -65 }, 8),
-        // The narrow pier stays west of the final safe-route ramp and
-        // joins the island at its open western edge.
+        // Narrow landings split the exposed pier into shots that can be
+        // controlled on the real water crossing.
+        deck(-8, 18, 3.2, 3.2),
+        deck(-4, 4, 3.2, 3.2),
+        deck(1, -10, 3.2, 3.2),
+        deck(9, -22, 3.2, 3.2),
+        // The pier stays west of the final safe-route ramp and joins the
+        // island at its open western edge.
         ...spans(
           rampDeck,
           [
             { x: -27, y: 0, z: 56 },
             { x: -12, y: 0, z: 32 },
-            { x: 4, y: 0, z: -20 },
+            { x: -8, y: 0, z: 18 },
+            { x: -4, y: 0, z: 4 },
+            { x: 1, y: 0, z: -10 },
+            { x: 9, y: 0, z: -22 },
             { x: 15, y: 0, z: -30 },
             { x: 24, y: 0, z: -42 },
           ],
