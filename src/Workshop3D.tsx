@@ -107,6 +107,25 @@ function ConstructionGrid({ height, step }: { height: number; step: number }) {
     </group>
   );
 }
+function rotateCameraAroundTarget(
+  camera: THREE.Camera,
+  controls: OrbitControls,
+  thetaDelta: number,
+  phiDelta: number,
+) {
+  const offset = camera.position.clone().sub(controls.target);
+  const spherical = new THREE.Spherical().setFromVector3(offset);
+  spherical.theta += thetaDelta;
+  spherical.phi = THREE.MathUtils.clamp(
+    spherical.phi + phiDelta,
+    controls.minPolarAngle,
+    controls.maxPolarAngle,
+  );
+  offset.setFromSpherical(spherical);
+  camera.position.copy(controls.target).add(offset);
+  camera.lookAt(controls.target);
+  controls.update();
+}
 function Navigation({
   navigation,
   command,
@@ -194,16 +213,16 @@ function Navigation({
       let handled = true;
       switch (event.key.toLowerCase()) {
         case "arrowleft":
-          c.rotateLeft(turn);
+          rotateCameraAroundTarget(camera, c, -turn, 0);
           break;
         case "arrowright":
-          c.rotateLeft(-turn);
+          rotateCameraAroundTarget(camera, c, turn, 0);
           break;
         case "arrowup":
-          c.rotateUp(turn);
+          rotateCameraAroundTarget(camera, c, 0, -turn);
           break;
         case "arrowdown":
-          c.rotateUp(-turn);
+          rotateCameraAroundTarget(camera, c, 0, turn);
           break;
         case "w":
           camera.position.addScaledVector(direction, distance);
@@ -267,10 +286,8 @@ function Navigation({
       camera.position.add(delta);
       c.target.add(delta);
     }
-    if (command.orbit) {
-      c.rotateLeft(command.orbit[0]);
-      c.rotateUp(command.orbit[1]);
-    }
+    if (command.orbit)
+      rotateCameraAroundTarget(camera, c, command.orbit[0], command.orbit[1]);
     if (command.elevate) {
       camera.position.y += command.elevate;
       c.target.y += command.elevate;
@@ -668,10 +685,10 @@ export function Workshop3D(p: Props) {
         </div>
         <div className="editor3d-camera-group" role="group" aria-label="Girar e inclinar cámara">
           <span>Girar / inclinar</span>
-          <button aria-label="Orbitar cámara a la izquierda" onClick={() => send({ orbit: [0.14, 0] })}>↶</button>
-          <button aria-label="Orbitar cámara a la derecha" onClick={() => send({ orbit: [-0.14, 0] })}>↷</button>
-          <button aria-label="Inclinar cámara hacia arriba" onClick={() => send({ orbit: [0, 0.12] })}>⌃</button>
-          <button aria-label="Inclinar cámara hacia abajo" onClick={() => send({ orbit: [0, -0.12] })}>⌄</button>
+          <button aria-label="Orbitar cámara a la izquierda" onClick={() => send({ orbit: [-0.14, 0] })}>↶</button>
+          <button aria-label="Orbitar cámara a la derecha" onClick={() => send({ orbit: [0.14, 0] })}>↷</button>
+          <button aria-label="Inclinar cámara hacia arriba" onClick={() => send({ orbit: [0, -0.12] })}>⌃</button>
+          <button aria-label="Inclinar cámara hacia abajo" onClick={() => send({ orbit: [0, 0.12] })}>⌄</button>
         </div>
         <div className="editor3d-camera-group" role="group" aria-label="Altura y zoom de cámara">
           <span>Altura / zoom</span>

@@ -2,6 +2,7 @@ import { afterEach, beforeAll, expect, it } from "vitest";
 import R from "@dimforge/rapier3d-compat";
 import {
   frontierCourses,
+  geometry,
   getCircuit,
   rollingResistance,
   surfaceAt,
@@ -72,6 +73,24 @@ it("adds four long expeditions without changing the championship, nine-hole or p
   expect(getCircuit("nine").courses).toHaveLength(9);
   expect(getCircuit("wildlands").courses).toHaveLength(3);
   frontierCourses.forEach(assertFiniteCourse);
+});
+
+it("keeps every playable expedition platform above the out-of-world limit", () => {
+  for (const course of frontierCourses) {
+    const surfaces = geometry(course).surfaces;
+    expect(surfaces.length, course.name).toBeGreaterThan(0);
+    for (const surface of surfaces) {
+      const lowestPoint = surface.pos[1] - surface.size[1] / 2;
+      expect(
+        lowestPoint,
+        `${course.name}: platform at ${surface.pos.join(", ")} falls below the world boundary`,
+      ).toBeGreaterThan(-4);
+      expect(
+        surface.pos[1] + surface.size[1] / 2,
+        `${course.name}: platform rises beyond the intended build envelope`,
+      ).toBeLessThan(18);
+    }
+  }
 });
 
 it("gives every new surface a matching physical classification and distinct contact response", () => {

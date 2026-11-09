@@ -30,6 +30,10 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Playwright: apertura explícita de 3D para pruebas de escena, alternancia 2D/3D sin cambiar el borrador, y cambios de pose en controles de órbita, inclinación y elevación.
 - La prueba enfoca el canvas antes de probar las flechas; no depende del botón que quedó seleccionado.
 - La suite de producción vuelve a entrar explícitamente en 3D antes de seleccionar geometría.
+- CI del commit `b74a4ce`: `npm test` pasó, pero la compilación encontró que `OrbitControls` no expone `rotateLeft/rotateUp` en sus tipos públicos.
+- Causa: se intentó usar métodos internos de OrbitControls para rotar; la interfaz pública no los declara.
+- Corrección: la rotación ahora calcula la posición relativa al punto de enfoque con `THREE.Spherical`, aplica límites polares y actualiza la cámara sin métodos privados.
+- También se añadió al mismo cambio una prueba de altura mínima de todas las plataformas jugables de los cuatro campos, que habría detectado las rampas del bosque que caían por debajo del límite del mundo.
 - Pendiente confirmar que el siguiente CI completa build y las suites de navegador.
 
 ### Pendiente
