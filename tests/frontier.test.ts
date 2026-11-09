@@ -242,6 +242,7 @@ it("completes the forest safe route with continuous real shots and no reposition
     { x: -8, y: 2.22, z: 31, radius: 6.5 },
     { x: 18, y: 0.22, z: -18, radius: 6.5 },
     { x: 24, y: 3.22, z: -47, radius: 6.5 },
+    { x: 24, y: 3.22, z: -54, radius: 4.8 },
     { x: 26, y: 0.22, z: -68, radius: 1.2 },
   ];
   const resetTrial = (
@@ -274,7 +275,7 @@ it("completes the forest safe route with continuous real shots and no reposition
   let current = { ...game.state.players[0].pos };
   let routeTime = game.state.time;
   const offsets = [-0.55, -0.27, 0, 0.27, 0.55];
-  const powers = [0.38, 0.52, 0.66, 0.8, 0.94];
+  const powers = [0.12, 0.2, 0.28, 0.38, 0.52, 0.66, 0.8, 0.94];
 
   for (const [targetIndex, target] of targets.entries()) {
     let successfulShots = 0;
