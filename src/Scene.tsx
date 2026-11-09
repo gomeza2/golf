@@ -45,7 +45,7 @@ import {
 } from "./graphics";
 import { RenderQuality } from "./RenderQuality";
 import { ClubFlag, CourseScenery } from "./CourseScenery";
-function Box({
+export function Box({
   b,
   time,
   grass,
@@ -97,7 +97,7 @@ function Box({
     </mesh>
   );
 }
-function FloorSurface({
+export function FloorSurface({
   data,
   color,
 }: {
@@ -137,7 +137,7 @@ function FloorSurface({
     </mesh>
   );
 }
-function Green({
+export function Green({
   course,
   color,
 }: {
@@ -177,7 +177,7 @@ function Green({
     </mesh>
   );
 }
-function CupLiner() {
+export function CupLiner() {
   const shape = useMemo(() => {
     const shape = new THREE.CylinderGeometry(
       CUP_RADIUS,
@@ -207,7 +207,11 @@ function CupLiner() {
     </mesh>
   );
 }
-function GreenSupport({ course }: { course: ReturnType<typeof getCourse> }) {
+export function GreenSupport({
+  course,
+}: {
+  course: ReturnType<typeof getCourse>;
+}) {
   return (
     <group>
       {greenSideSupports(course).map((b, i) => (
@@ -226,6 +230,41 @@ function GreenSupport({ course }: { course: ReturnType<typeof getCourse> }) {
           />
         </mesh>
       ))}
+    </group>
+  );
+}
+export function CourseCup({
+  course: c,
+  accent,
+  animated,
+}: {
+  course: ReturnType<typeof getCourse>;
+  accent: string;
+  animated: boolean;
+}) {
+  return (
+    <group position={[c.cup.x, c.cup.y + 0.015, c.cup.z]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[CUP_RADIUS, CUP_RADIUS + 0.12, 64]} />
+        <meshStandardMaterial
+          color="#cbd0d0"
+          roughness={0.35}
+          metalness={0.25}
+        />
+      </mesh>
+      <mesh
+        position={[0, -CUP_DEPTH - 0.005, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <circleGeometry args={[CUP_RADIUS, 40]} />
+        <meshBasicMaterial color="#81969e" />
+      </mesh>
+      <CupLiner />
+      <mesh position={[0, 1.2, 0]}>
+        <cylinderGeometry args={[0.025, 0.025, 2.4, 8]} />
+        <meshStandardMaterial color="#f8ead3" />
+      </mesh>
+      <ClubFlag color={accent} animated={animated} />
     </group>
   );
 }
@@ -625,35 +664,14 @@ function World({
       {blocks.map((b, i) => (
         <Box key={i} b={b} time={s.time} />
       ))}
-      <group position={[c.cup.x, c.cup.y + 0.015, c.cup.z]}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[CUP_RADIUS, CUP_RADIUS + 0.12, 64]} />
-          <meshStandardMaterial
-            color="#cbd0d0"
-            roughness={0.35}
-            metalness={0.25}
-          />
-        </mesh>
-        <mesh
-          position={[0, -CUP_DEPTH - 0.005, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <circleGeometry args={[CUP_RADIUS, 40]} />
-          <meshBasicMaterial color="#81969e" />
-        </mesh>
-        <CupLiner />
-        <mesh position={[0, 1.2, 0]}>
-          <cylinderGeometry args={[0.025, 0.025, 2.4, 8]} />
-          <meshStandardMaterial color="#f8ead3" />
-        </mesh>
-        <ClubFlag
-          color={theme.accent}
-          animated={
-            rendering.detail > 0 &&
-            !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          }
-        />
-      </group>
+      <CourseCup
+        course={c}
+        accent={theme.accent}
+        animated={
+          rendering.detail > 0 &&
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        }
+      />
       {s.players.length ? (
         s.players.map((p, i) => (
           <Ball

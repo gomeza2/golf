@@ -1,3 +1,4 @@
+import { insertStructure } from "./workshopStructures";
 import {
   newWorkshop,
   withWorkshopResources,
@@ -18,9 +19,47 @@ export const workshopBlueprints = [
     description:
       "Espera la puerta del camino ancho o sube al puente estrecho. La tierra frena de verdad: la altura también cambia tu estrategia.",
   },
+  {
+    id: "laboratory",
+    name: "Laboratorio en altura",
+    description:
+      "Un diseño de construcción completo: curva por tramos, rampa, pasarela, túnel de dos niveles, tierra y puerta. Edítalo y prueba sus rutas reales.",
+  },
 ] as const;
 export type WorkshopBlueprintId = (typeof workshopBlueprints)[number]["id"];
 export function workshopBlueprint(id: WorkshopBlueprintId): WorkshopDocument {
+  if (id === "laboratory") {
+    let n = 0;
+    let doc = workshopBlueprint("lock");
+    doc.name = "Laboratorio en altura";
+    doc = insertStructure(doc, "tunnel", 6, 0, 2, () => `tunnel-${++n}`).doc;
+    doc = insertStructure(doc, "curve", -3, 8, 0, () => `curve-${++n}`).doc;
+    doc.pieces.push(
+      {
+        id: "curve-entry",
+        kind: "floor",
+        x: 1,
+        z: 10,
+        width: 3,
+        length: 4,
+        height: 0,
+        endHeight: 0,
+        angle: 0,
+      },
+      {
+        id: "curve-exit",
+        kind: "ramp",
+        x: -5,
+        z: 5,
+        width: 2.5,
+        length: Math.sqrt(20) + 0.04,
+        height: 1.2,
+        endHeight: 0,
+        angle: (Math.atan2(4, -2) * 180) / Math.PI,
+      },
+    );
+    return parseWorkshop(doc);
+  }
   const piece = (
     id: string,
     kind: WorkshopPiece["kind"],

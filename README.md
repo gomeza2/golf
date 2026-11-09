@@ -1,6 +1,14 @@
 # Hoyo en Uno · Golf Club — Minigolf competitivo
 
-Versión **0.21.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+Versión **0.22.0** de minigolf 3D competitivo, en español. React + TypeScript + Three.js/React Three Fiber; físicas Rapier; servidor Node + Socket.IO con simulación autoritativa. Geometría procedural y fuentes incluidas. El juego oficial y las salas del taller no exigen cuentas ni base de datos; la comunidad persistente usa PostgreSQL y protege publicación/moderación con OIDC.
+
+## Fase 1: construir en 3D — 0.22.0
+
+El taller incorpora **cámara orbital, cuatro vistas, selección en la escena y manipuladores reales de movimiento, giro y escala**. Cuadrícula y regla de altura, acceso a objetos superpuestos, grupos con nombre, bloqueos, copiar/pegar, alineación e historial. El plano 2D y las propiedades anteriores permanecen disponibles.
+
+Plataformas, puentes, túneles transitables, pasarelas y rampas curvas por tramos se construyen con piezas físicas existentes. **Laboratorio en altura** permite editarlos y probar el circuito real. Volver de la prueba conserva la construcción, organización y cámara. Los avisos distinguen niveles y detectan algunos huecos estrechos o techos bajos.
+
+El proyecto editable `.golf.project.json` lleva grupos y bloqueos; el archivo jugable `.golf.json` mantiene sus documentos y hashes anteriores. No cambia el protocolo, la física ni el contenido oficial. [Informe completo de la Fase 1](EDITOR-3D-PHASE1.md). La fase 2 no se inicia automáticamente.
 
 ## Taller con decisiones — 0.21.0
 

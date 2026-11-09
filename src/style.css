@@ -4259,3 +4259,204 @@ button > span {
     grid-template-columns: 1fr;
   }
 }
+
+/* The editor renders on demand; the playable scene is unchanged. */
+.workshop {
+  width: min(1560px, calc(100% - 32px));
+  max-width: none;
+}
+.workshop-layout {
+  grid-template-columns: 210px minmax(300px, 1fr) 250px;
+  gap: 16px;
+}
+.workshop-map > svg {
+  height: 300px;
+}
+.workshop-editor3d {
+  border: 1px solid #6c9286;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #163a36;
+}
+.editor3d-bar,
+.editor3d-transform,
+.editor3d-camera-tools {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px;
+}
+.editor3d-bar strong {
+  width: 100%;
+  color: #efd49a;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+.editor3d-bar label,
+.editor3d-transform label {
+  margin: 0;
+  font-size: 12px;
+}
+.editor3d-bar select {
+  min-height: 44px;
+  background: #173e34;
+  color: #eee7d2;
+  border: 1px solid #719181;
+  border-radius: 6px;
+}
+.editor3d-transform {
+  border-block: 1px solid #93aa8f44;
+}
+.editor3d-transform label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+}
+.editor3d-transform input {
+  width: 18px;
+  height: 18px;
+}
+.editor3d-stage {
+  height: clamp(360px, 58vh, 680px);
+  width: 100%;
+  touch-action: none;
+  position: relative;
+}
+.editor3d-help {
+  margin: 0;
+  padding: 10px 14px;
+  color: #c2d2be;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.workshop-piece-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.workshop-piece-fields:disabled {
+  opacity: 0.6;
+}
+.workshop-structures {
+  display: grid;
+  gap: 6px;
+  margin: 18px 0;
+  padding: 10px;
+  border: 1px solid #6c8d7144;
+  border-radius: 8px;
+}
+.workshop-structures legend {
+  font-size: 13px;
+  color: #f3d18a;
+  padding: 0 4px;
+}
+.workshop-edit-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 0;
+  border-block: 1px solid #b7c29d33;
+  margin-top: 14px;
+}
+.workshop-objects {
+  padding: 10px 0;
+  margin: 12px 0;
+}
+.workshop-objects summary {
+  cursor: pointer;
+  color: #edcf89;
+  min-height: 44px;
+}
+.workshop-objects button {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 5px;
+}
+@media (max-width: 1100px) {
+  .workshop-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .workshop-properties {
+    grid-column: 1/-1;
+  }
+  .workshop-piece-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+@media (max-width: 650px) {
+  .workshop {
+    width: calc(100% - 16px);
+    padding: 12px;
+  }
+  .workshop-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .workshop-map {
+    order: -1;
+    width: 100%;
+  }
+  .editor3d-stage {
+    height: 440px;
+  }
+  .workshop-tools,
+  .workshop-properties {
+    width: 100%;
+  }
+  .workshop-piece-fields {
+    display: block;
+  }
+  .workshop-map > svg {
+    height: 260px;
+  }
+}
+.workshop-category {
+  margin: 12px 0;
+  padding: 8px 0;
+  border: 0;
+  border-top: 1px solid #a3b79833;
+  min-width: 0;
+}
+.workshop-category legend {
+  color: #cfdbbd;
+  font-size: 12px;
+  padding-right: 8px;
+}
+@media (min-width: 1101px) {
+  .workshop-tools,
+  .workshop-properties {
+    position: sticky;
+    top: 110px;
+    max-height: calc(100dvh - 125px);
+    overflow-y: auto;
+    scrollbar-color: #8eab87 #173c32;
+  }
+}
+.workshop-blueprint-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+.workshop-panel-links {
+  display: none;
+}
+.workshop:fullscreen {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: auto;
+  background: #143a31;
+}
+@media (max-width: 650px) {
+  .workshop-panel-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+  }
+}

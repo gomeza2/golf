@@ -7,6 +7,7 @@ import {
 } from "./courses";
 import type { PhysicsEdition } from "./rules";
 export const WORKSHOP_VERSION = 3;
+export const WORKSHOP_WATER_LEVEL = -1.4;
 export const MAX_WORKSHOP_BYTES = 60000;
 export const pieceKinds = [
   "floor",
@@ -305,7 +306,7 @@ export function compileWorkshop(input: WorkshopDocument): Course {
         z: p.z,
         width: p.width,
         length: p.length,
-        y: p.kind === "water" ? -1.4 : p.height,
+        y: p.kind === "water" ? WORKSHOP_WATER_LEVEL : p.height,
       });
     }
   }

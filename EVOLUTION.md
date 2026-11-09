@@ -1,5 +1,11 @@
 # Evolución del club — golpe normal
 
+## Entrega 0.22.0 — Fase 1 de construcción tridimensional
+
+El editor pasa a construir directamente sobre una escena con geometría compartida, cámara orbital y manipuladores nativos. Conserva el plano, las propiedades y las reglas de juego. Estructuras compuestas, biblioteca/proyecto con organización, deshacer conjunto y diagnóstico de varios niveles. Laboratorio con túnel, curva, rampas y ruta física comprobada.
+
+Documento jugable 1/2/3 intacto, protocolo 17 y físicas 1/2. El archivo editable añade solo metadatos de construcción. [EDITOR-3D-PHASE1.md](EDITOR-3D-PHASE1.md) documenta la entrega. No se inicia la fase 2.
+
 ## Entrega 0.21.0 — Recursos que cambian la decisión
 
 Fases de variedad/taller: giro completo, puerta elevable y tierra reutilizan mecanismos/superficies físicos del motor. Documento 3 de activación explícita, barrido completo validado, ejemplos con rutas reales y mapa vivo; se conservan las identidades anteriores. Comunidad admite nuevos recursos con permisos, revisiones y filtros reales. Protocolo 17, física 1/2, reglas 7 y guardados 1/2.
@@ -20,7 +26,7 @@ Compatibilidad explícita: física 2/guardado 2 para rondas oficiales nuevas; f�
 
 Pendiente: evaluación humana de diversión y riesgo, rendimiento en teléfonos físicos y adopción explícita de física nueva en un futuro documento del taller 2. Comunidad pública requiere servicios reales configurados.
 
-**Estado actual 0.21.0:** 34 hoyos físicos, trece selecciones (Al Filo tiene dos perfiles), escuela, taller, comunidad configurable y servidor público Render. La entrega actual amplía recursos físicos del taller y prepara la activación gratuita de comunidad, conservando los documentos, guardados y marcas originales. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
+**Estado actual 0.22.0:** 34 hoyos físicos, trece selecciones (Al Filo tiene dos perfiles), escuela, taller, comunidad configurable y servidor público Render. La entrega actual incorpora construcción y manipulación 3D en el taller, conservando los documentos, guardados y marcas originales. Los apartados anteriores conservan el estado histórico de cada entrega; sus pendientes de hosting fueron resueltos en 0.7.0. La auditoría y el plan vigente están en [ROADMAP.md](ROADMAP.md).
 
 Esta versión sigue el plan solicitado. Cada bloque depende de las comprobaciones del anterior; no se declara completado el refinamiento continuo ni un despliegue online inexistente.
 

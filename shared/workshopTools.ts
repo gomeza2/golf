@@ -7,6 +7,7 @@ export type SelectionAction =
   | "rotate"
   | "alignX"
   | "alignZ"
+  | "alignHeight"
   | "duplicate"
   | "delete";
 export function moveWorkshopPieces(
@@ -41,6 +42,10 @@ export function transformWorkshopSelection(
   if (!pieces.length) return { doc, ids: [] };
   if (!Number.isFinite(step) || step <= 0 || step > 1)
     throw Error("El paso debe estar entre 0 y 1 m.");
+  if (action === "alignHeight" && pieces.some((p) => p.kind === "water"))
+    throw Error(
+      "El agua tiene una cota fija. Alinea alturas sin incluir el agua.",
+    );
   if (["left", "right", "up", "down"].includes(action))
     return {
       doc: moveWorkshopPieces(
@@ -89,7 +94,20 @@ export function transformWorkshopSelection(
         if (!ids.includes(p.id)) return p;
         if (action === "alignX") return { ...p, x: cx };
         if (action === "alignZ") return { ...p, z: cz };
-        const zone = ["water", "sand", "rough"].includes(p.kind);
+        if (action === "alignHeight")
+          return {
+            ...p,
+            height: pieces[0].height,
+            ...(p.kind === "ramp"
+              ? {
+                  endHeight:
+                    Math.round(
+                      (p.endHeight + pieces[0].height - p.height) * 1e6,
+                    ) / 1e6,
+                }
+              : {}),
+          };
+        const zone = ["water", "sand", "rough", "dirt"].includes(p.kind);
         return {
           ...p,
           x: cx + (p.z - cz),

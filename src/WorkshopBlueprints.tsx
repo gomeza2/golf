@@ -14,8 +14,8 @@ export function WorkshopBlueprints({
       <div>
         <h2>Parte de una idea. Hazla tuya.</h2>
         <p>
-          Dos diseños editables con decisiones de riesgo. Tu borrador anterior
-          se conserva en la biblioteca antes de abrirlos.
+          Diseños editables con decisiones de riesgo y construcción. Tu borrador
+          anterior se conserva en la biblioteca antes de abrirlos.
         </p>
       </div>
       <div className="workshop-blueprint-grid">

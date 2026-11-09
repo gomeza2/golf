@@ -18,6 +18,7 @@ export function WorkshopSelection({
     ["rotate", "Girar grupo 90°"],
     ["alignX", "Alinear centros X"],
     ["alignZ", "Alinear centros Z"],
+    ["alignHeight", "Alinear alturas"],
     ["duplicate", "Duplicar grupo"],
     ["delete", "Eliminar grupo"],
   ];
