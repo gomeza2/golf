@@ -222,7 +222,9 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
           rampDeck,
           [
             { x: -27, y: 0, z: 56 },
-            { x: 10, y: 0, z: -22 },
+            { x: -12, y: 0, z: 32 },
+            { x: 4, y: 0, z: -20 },
+            { x: 15, y: 0, z: -30 },
             { x: 24, y: 0, z: -42 },
           ],
           1.6,
