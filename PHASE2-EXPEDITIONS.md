@@ -53,7 +53,7 @@ Esta capa mejora la lectura a distancia, pero todavía no equivale a un paisaje 
 
 ## Pruebas incluidas
 
-- `tests/frontier.test.ts`: catálogo y dimensiones, compatibilidad de las vueltas anteriores, zonas y coeficientes de los siete materiales, geometría finita, soporte físico de salida, abertura de copa y un tiro real de tee por cada campo.
+- `tests/frontier.test.ts`: catálogo y dimensiones, compatibilidad de las vueltas anteriores, zonas y coeficientes de los siete materiales, respuesta real de fricción/rodamiento con Rapier, geometría finita, altura válida de plataformas, soporte y espacio libre de rampas, raycasts sobre cinco puntos por rampa, abertura de copa, un tiro real de tee y una ruta segura completa por cada uno de los cuatro campos usando tiros continuos sin recolocar la pelota.
 - `tests/e2e/expeditions.spec.ts`: selección del circuito, carga de escena del bosque, encuadre general dentro del viewport y un golpe real en escritorio y móvil.
 - CI ejecuta `npm test`, `npm run build`, `npm run test:e2e` y `npm run test:pages`.
 
@@ -62,8 +62,7 @@ Esta capa mejora la lectura a distancia, pero todavía no equivale a un paisaje 
 Las pruebas automatizadas actuales cubren la construcción Rapier de cada campo, la posición física de la salida, la copa abierta y un tiro inicial por hoyo. También comprueban que el bosque se carga y recibe un primer golpe en escritorio/móvil y que los cuatro ambientes se dibujan en práctica móvil. **Esto todavía no es una validación de una ronda completa.** No certifica que las plataformas, las uniones de rampas, las diagonales estrechas y los obstáculos móviles permitan completar todas las rutas previstas con tiros normales.
 
 Pendiente para cerrar la fase:
-- Completar una vuelta física de principio a fin en los cuatro hoyos, al menos una vez por ruta segura.
-- Recorrer los cuatro atajos, registrar golpes/penalizaciones y corregir cualquier tramo que obligue a un tiro imposible o a una recuperación accidental.
+- Recorrer los cuatro atajos estrechos con tiros reales, registrar golpes/penalizaciones y corregir cualquier tramo que obligue a un tiro imposible o a una recuperación accidental. Las rutas seguras ya tienen una prueba continua automatizada; los atajos todavía no.
 - Verificar varios ángulos y potencias alrededor de cada transición, no solo un tiro inicial.
 - Comprobar que las superficies se clasifican correctamente en bordes, solapes y plataformas a distinta altura.
 - Revisar capturas reales de cada ambiente en escritorio y móvil; el uso de instancias evita miles de meshes, pero todavía falta medir FPS/memoria en teléfonos físicos.

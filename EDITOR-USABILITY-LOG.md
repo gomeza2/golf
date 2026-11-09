@@ -65,13 +65,15 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Se agregó una prueba de ambos extremos de cada rampa para comprobar que encuentre soporte de una plataforma o el green.
 - Se amplió la decoración instanciada con una segunda capa diferenciada por ambiente y una comprobación de navegador para asegurar que la capa esté presente en los cuatro escenarios.
 - La revisión de superficies detectó zonas de piedra/arena en la costa y piedra/mojado en la montaña que se solapan deliberadamente. Los planos se dibujaban a la misma altura y podían parpadear por z-fighting. Se añadió una prioridad visual con separaciones mínimas, y una prueba comprueba que el motor seleccione el mismo material que se ve en esos solapes.
+- Se agregó un simulador de ruta segura en el motor real: el test compara combinaciones de ángulo/potencia, aplica solamente el tiro seleccionado y mantiene la posición física continua entre checkpoints. La batería cubre ya las cuatro rutas seguras, sin recolocaciones entre plataformas.
+- En el primer intento de parametrizar la batería, dos plantillas de diagnóstico quedaron escapadas y Vitest no pudo transformar el archivo. Se corrigieron ambas plantillas y una revisión literal confirmó que no quedan marcadores escapados dentro del bloque de prueba.
 
 ### Pendientes de verdad
-1. Rondas físicas completas en los cuatro hoyos y validación separada de ruta segura/atajo.
-2. Tiros de prueba en transiciones y superficies limítrofes.
-3. Ajuste de obstáculos, aterrizajes y accesibilidad de cada plataforma.
-4. Landmarks únicos diseñados por hoyo, revisión de capturas y ajuste de luz/materiales.
-5. Medición de rendimiento en teléfonos reales.
+1. Recorrer los atajos estrechos de los cuatro campos y medir golpes/penalizaciones; la ruta segura ya está cubierta por tiros continuos en los cuatro.
+2. Probar variantes de ángulo/potencia en rampas, aterrizajes y superficies limítrofes.
+3. Ajustar obstáculos, aterrizajes y accesibilidad de cada plataforma.
+4. Revisar capturas/landmarks, iluminación y materiales en tamaños reales.
+5. Medición de rendimiento en teléfonos físicos.
 6. CI verde del último commit y corrección de todo fallo reproducible.
 
 ## Reglas para las próximas revisiones
