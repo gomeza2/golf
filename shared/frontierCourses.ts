@@ -139,7 +139,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
       terrain: [
         deck(-34, 65, 20, 18),
         span(rampDeck, { x: -34, y: 0, z: 56 }, { x: -10, y: 4, z: 36 }, 8),
-        deck(-10, 29, 22, 14, 4),
+        deck(-10, 29, 26, 14, 4),
         // A broad entry keeps the full terrace connected to the safe descent.
         span(rampDeck, { x: -2, y: 4, z: 22 }, { x: 18, y: 7, z: 4 }, 9),
         deck(18, -1, 20, 16, 7),
