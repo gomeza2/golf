@@ -459,7 +459,7 @@ it.each(expeditionSafeRoutes)(
 
         expect(
           best,
-          \`\${_courseName}: safe route stalled before checkpoint \${targetIndex + 1} at \${current.x.toFixed(1)},\${current.y.toFixed(1)},\${current.z.toFixed(1)}; target \${target.x},\${target.y},\${target.z}; candidates \${JSON.stringify(candidateDiagnostics.sort((a, b) => (a.score ?? 9999) - (b.score ?? 9999)).slice(0, 12))}\`,
+          `${_courseName}: safe route stalled before checkpoint ${targetIndex + 1} at ${current.x.toFixed(1)},${current.y.toFixed(1)},${current.z.toFixed(1)}; target ${target.x},${target.y},${target.z}; candidates ${JSON.stringify(candidateDiagnostics.sort((a, b) => (a.score ?? 9999) - (b.score ?? 9999)).slice(0, 12))}`,
         ).toBeDefined();
 
         // Candidate trials compare shots. Only the selected shot is applied
