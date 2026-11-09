@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { MAX_WORKSHOP_BYTES } from "../shared/workshop";
+import { MAX_PROJECT_BYTES } from "../shared/workshopProject";
 export function WorkshopImport({
   text,
   onText,
@@ -38,7 +38,8 @@ export function WorkshopImport({
     >
       <h2>Importar cancha</h2>
       <p>
-        Archivo .golf.json del taller, hasta 60 KB. Se valida antes de abrir.
+        Cancha .golf.json (60 KB) o proyecto editable con grupos y bloqueos (80
+        KB). Se valida antes de abrir.
       </p>
       <input
         aria-label="Archivo de diseño"
@@ -47,8 +48,8 @@ export function WorkshopImport({
         onChange={async (e) => {
           const f = e.target.files?.[0];
           if (!f) return;
-          if (f.size > MAX_WORKSHOP_BYTES) {
-            onError("El archivo supera 60 KB.");
+          if (f.size > MAX_PROJECT_BYTES) {
+            onError("El proyecto supera 80 KB.");
             return;
           }
           try {
@@ -60,7 +61,7 @@ export function WorkshopImport({
       />
       <textarea
         aria-label="JSON del diseño"
-        maxLength={MAX_WORKSHOP_BYTES}
+        maxLength={MAX_PROJECT_BYTES}
         value={text}
         onChange={(e) => onText(e.target.value)}
       />

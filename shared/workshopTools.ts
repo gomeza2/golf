@@ -7,6 +7,7 @@ export type SelectionAction =
   | "rotate"
   | "alignX"
   | "alignZ"
+  | "alignHeight"
   | "duplicate"
   | "delete";
 export function moveWorkshopPieces(
@@ -89,7 +90,20 @@ export function transformWorkshopSelection(
         if (!ids.includes(p.id)) return p;
         if (action === "alignX") return { ...p, x: cx };
         if (action === "alignZ") return { ...p, z: cz };
-        const zone = ["water", "sand", "rough"].includes(p.kind);
+        if (action === "alignHeight")
+          return {
+            ...p,
+            height: pieces[0].height,
+            ...(p.kind === "ramp"
+              ? {
+                  endHeight:
+                    Math.round(
+                      (p.endHeight + pieces[0].height - p.height) * 1e6,
+                    ) / 1e6,
+                }
+              : {}),
+          };
+        const zone = ["water", "sand", "rough", "dirt"].includes(p.kind);
         return {
           ...p,
           x: cx + (p.z - cz),

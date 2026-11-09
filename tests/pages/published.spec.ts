@@ -811,3 +811,103 @@ test("the published advanced blueprint keeps its live rotor and completes the sa
     `PAGES RESOURCES VERIFIED: version ${APP_VERSION}, live full rotation, four physical strokes over water and no penalties: ${baseURL}`,
   );
 });
+
+test("the published 3D editor selects actual stacked geometry, moves a gizmo and plays the saved construction laboratory", async ({
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(150000);
+  const { riskLock } = await import("../fixtures/blueprints");
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.addInitScript(() =>
+    localStorage.setItem("golf-graphics-mode", "low"),
+  );
+  await page.goto(baseURL!);
+  await page
+    .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
+    .click();
+  await page.getByRole("button", { name: /Laboratorio en altura/ }).click();
+  const canvas = page.locator(".editor3d-stage canvas");
+  await expect(canvas).toHaveAttribute("data-editor-ready", "true");
+  await page
+    .getByRole("combobox", { name: "Vista del editor", exact: true })
+    .selectOption("top");
+  await canvas.scrollIntoViewIfNeeded();
+  const r = (await canvas.boundingBox())!,
+    point = await canvas.evaluate(
+      (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!).soil,
+    );
+  await page.mouse.click(r.x + point.x, r.y + point.y);
+  await page.keyboard.down("Alt");
+  await page.mouse.click(r.x + point.x, r.y + point.y);
+  await page.keyboard.up("Alt");
+  await expect(page.locator(".workshop-properties h2").first()).toHaveText(
+    "Tierra",
+  );
+  const original = await page.evaluate(() =>
+    localStorage.getItem("club-workshop-draft-v1"),
+  );
+  await canvas.scrollIntoViewIfNeeded();
+  await expect
+    .poll(async () =>
+      Object.keys(
+        JSON.parse((await canvas.getAttribute("data-editor-handles")) || "{}"),
+      ),
+    )
+    .toContain("X");
+  const h = JSON.parse((await canvas.getAttribute("data-editor-handles"))!).X,
+    box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + h.x, box.y + h.y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + h.x + 30, box.y + h.y, { steps: 12 });
+  await page.mouse.up();
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("club-workshop-draft-v1")),
+    )
+    .not.toBe(original);
+  await page.getByRole("button", { name: "Deshacer", exact: true }).click();
+  expect(
+    await page.evaluate(() => localStorage.getItem("club-workshop-draft-v1")),
+  ).toBe(original);
+  await page
+    .getByRole("button", { name: "Guardar diseño", exact: true })
+    .click();
+  await page.screenshot({ path: "work/pages-editor3d.png", fullPage: true });
+  await page.getByRole("button", { name: "Probar en 3D", exact: true }).click();
+  for (const [a, p] of riskLock) {
+    await expect(
+      page.getByRole("button", { name: "Golpear prueba", exact: true }),
+    ).toBeEnabled({ timeout: 20000 });
+    await page
+      .getByRole("slider", { name: "Ángulo de prueba", exact: true })
+      .fill(String(Number(a.toFixed(10))));
+    await page
+      .getByRole("slider", { name: "Potencia de prueba", exact: true })
+      .fill(String(p));
+    await page
+      .getByRole("button", { name: "Golpear prueba", exact: true })
+      .click();
+    await expect(page.getByRole("status")).toHaveText("Pelota en movimiento");
+    await expect(
+      page.getByText("Pelota en movimiento", { exact: true }),
+    ).toBeHidden({ timeout: 25000 });
+  }
+  await expect(
+    page.getByText("Embocado en 3 golpes", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".workshop-test-top")).toContainText(
+    "0 penalizaciones",
+  );
+  await page
+    .getByRole("button", { name: "Volver al diseño", exact: true })
+    .click();
+  await expect(
+    page.getByRole("textbox", { name: "Nombre del diseño", exact: true }),
+  ).toHaveValue("Laboratorio en altura");
+  expect(errors).toEqual([]);
+  console.log(
+    `PAGES EDITOR 3D VERIFIED: version ${APP_VERSION}, native picking/gizmo, editable project preserved, real three-shot tunnel/ramp route: ${baseURL}`,
+  );
+});

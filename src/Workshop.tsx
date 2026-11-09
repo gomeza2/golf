@@ -1,3 +1,32 @@
+import { WorkshopOrganization } from "./WorkshopOrganization";
+import { WorkshopPlan } from "./WorkshopPlan";
+import { names, paletteSections } from "./workshopLabels";
+import { Numeric } from "./WorkshopNumeric";
+import { transformWorkshop3D } from "../shared/workshopTransform3D";
+import { Workshop3D, type EditorCameraMemory } from "./Workshop3D";
+import {
+  structures,
+  insertStructure,
+  type StructureId,
+} from "../shared/workshopStructures";
+import {
+  cleanEditor,
+  emptyEditor,
+  groupSelection,
+  selectedGroup,
+  assertUnlocked,
+  exportWorkshopProject,
+  importWorkshopProject,
+  type WorkshopEditor,
+} from "../shared/workshopProject";
+import {
+  projectEdit as workshopEdit,
+  projectUndo as workshopUndo,
+  projectRedo as workshopRedo,
+  readEditor,
+  saveProject,
+  type ProjectHistory as WorkshopHistory,
+} from "./workshopProjectStorage";
 import { WorkshopBlueprints } from "./WorkshopBlueprints";
 import {
   workshopBlueprint,
@@ -17,6 +46,7 @@ import { WorkshopSelection } from "./WorkshopSelection";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compileWorkshop,
+  parseWorkshop,
   withWorkshopResources,
   isAdvancedPiece,
   withWorkshopPhysics,
@@ -31,82 +61,14 @@ import {
   type WorkshopDocument,
   type WorkshopPiece,
 } from "../shared/workshop";
-import { CourseFootprint } from "./CourseFootprint";
 import { WorkshopPlay } from "./WorkshopPlay";
 import {
   readWorkshopDraft,
   readWorkshopLibrary,
   saveWorkshopDraft,
   saveWorkshopLibrary,
-  workshopEdit,
-  workshopRedo,
-  workshopUndo,
-  type WorkshopHistory,
 } from "./workshopStorage";
 import type { GraphicsMode } from "./graphics";
-const names: Record<PieceKind, string> = {
-  floor: "Plataforma",
-  wall: "Pared",
-  ramp: "Rampa",
-  sand: "Arena",
-  rough: "Césped alto",
-  water: "Agua",
-  gate: "Compuerta",
-  rotor: "Barra giratoria",
-  lift: "Puerta elevable",
-  dirt: "Tierra",
-};
-const colors: Record<PieceKind, string> = {
-  floor: "#5e9673",
-  wall: "#ddcba6",
-  ramp: "#b0c47f",
-  sand: "#d9bf86",
-  rough: "#657541",
-  water: "#299bac",
-  gate: "#ecb16e",
-  rotor: "#e6a466",
-  lift: "#9bc8bd",
-  dirt: "#967352",
-};
-function Numeric({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  onChange: (v: number) => void;
-}) {
-  const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(Number(value.toFixed(3)))), [value]);
-  return (
-    <label>
-      {label}
-      <input
-        type="number"
-        aria-label={label}
-        value={text}
-        min={min}
-        max={max}
-        step="0.5"
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => {
-          const n = Number(text);
-          if (text !== "" && Number.isFinite(n))
-            onChange(Math.max(min, Math.min(max, n)));
-          else setText(String(value));
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") e.currentTarget.blur();
-        }}
-      />
-    </label>
-  );
-}
 export function Workshop({
   onClose,
   graphicsMode,
@@ -126,10 +88,25 @@ export function Workshop({
   publicationStatus?: string;
   onRefreshPublication?: () => void;
 }) {
+  const sectionRef = useRef<HTMLElement>(null),
+    toolsRef = useRef<HTMLElement>(null),
+    propertiesRef = useRef<HTMLElement>(null),
+    stageRef = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  useEffect(() => {
+    const change = () =>
+      setFullscreen(document.fullscreenElement === sectionRef.current);
+    document.addEventListener("fullscreenchange", change);
+    return () => document.removeEventListener("fullscreenchange", change);
+  }, []);
+  const cameraMemory = useRef<EditorCameraMemory | null>(null);
   const [history, setHistory] = useState<WorkshopHistory>(() => ({
     past: [],
     present: readWorkshopDraft() ?? newWorkshop(),
     future: [],
+    editor: readEditor(readWorkshopDraft() ?? newWorkshop()),
+    pastEditors: [],
+    futureEditors: [],
   }));
   const [library, setLibrary] = useState(readWorkshopLibrary),
     [saveId, setSaveId] = useState<string | null>(null),
@@ -144,6 +121,17 @@ export function Workshop({
     [draftStored, setDraftStored] = useState(true),
     [testing, setTesting] = useState(false),
     [json, setJson] = useState<string | null>(null);
+  useEffect(() => {
+    propertiesRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [selected]);
+  const [buildHeight, setBuildHeight] = useState(0),
+    [structureTool, setStructureTool] = useState<StructureId | null>(null);
+  const [deleteIds, setDeleteIds] = useState<string[] | null>(null);
+  const deleteDialog = useRef<HTMLDialogElement>(null);
+  const clipboard = useRef<WorkshopPiece[] | null>(null);
+  useEffect(() => {
+    if (deleteIds) deleteDialog.current?.showModal();
+  }, [deleteIds]);
   const [dragDoc, setDragDoc] = useState<WorkshopDocument | null>(null);
   const drag = useRef<{
     id: string;
@@ -154,7 +142,6 @@ export function Workshop({
     moved: boolean;
   } | null>(null);
   const doc = dragDoc ?? history.present,
-    course = useMemo(() => compileWorkshop(doc), [doc]),
     issues = useMemo(() => workshopIssues(doc), [doc]);
   const piece = doc.pieces.find((p) => p.id === selected);
   const selection = groupIds.filter((id) =>
@@ -166,13 +153,33 @@ export function Workshop({
   );
   function groupAction(action: SelectionAction, step = gridStep) {
     try {
+      if (action !== "duplicate") assertUnlocked(history.editor, selection);
+      if (
+        action === "delete" &&
+        (selection.length > 1 ||
+          history.editor.groups.some((g) =>
+            g.pieces.some((id) => selection.includes(id)),
+          ) ||
+          history.present.pieces.some(
+            (p) =>
+              selection.includes(p.id) && ["floor", "ramp"].includes(p.kind),
+          ))
+      ) {
+        setDeleteIds(selection);
+        return;
+      }
       const result = transformWorkshopSelection(
         history.present,
         selection,
         action,
         step,
       );
-      edit(result.doc);
+      edit(
+        result.doc,
+        action === "duplicate" && result.ids.length > 1
+          ? groupSelection(result.doc, history.editor, result.ids)
+          : undefined,
+      );
       setGroupIds(result.ids);
       setSelected(result.ids[0] ?? null);
     } catch (e) {
@@ -183,6 +190,7 @@ export function Workshop({
     const key = (e: KeyboardEvent) => {
       if (
         testing ||
+        document.querySelector("dialog[open]") ||
         json !== null ||
         drag.current ||
         (e.target as HTMLElement).closest(
@@ -198,6 +206,16 @@ export function Workshop({
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
         e.preventDefault();
         setHistory(workshopRedo);
+        return;
+      }
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        ["c", "v", "d"].includes(e.key.toLowerCase())
+      ) {
+        e.preventDefault();
+        if (e.key.toLowerCase() === "c") copySelection();
+        else if (e.key.toLowerCase() === "v") pasteSelection();
+        else groupAction("duplicate");
         return;
       }
       if (!selection.length || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -218,19 +236,142 @@ export function Workshop({
     return () => window.removeEventListener("keydown", key);
   }, [history, groupIds, gridStep, testing, json]);
   useEffect(() => {
-    setDraftStored(saveWorkshopDraft(history.present));
-  }, [history.present]);
-  function edit(d: WorkshopDocument) {
-    setHistory((h) => workshopEdit(h, d));
+    setDraftStored(saveProject(history.present, history.editor));
+  }, [history.present, history.editor]);
+  function edit(d: WorkshopDocument, metadata?: WorkshopEditor) {
+    const clean = parseWorkshop(d);
+    setHistory((h) => workshopEdit(h, clean, metadata ?? h.editor));
     setNotice("");
   }
   function patchPiece(patch: Partial<WorkshopPiece>) {
+    if (selected && history.editor.locked.includes(selected)) {
+      setNotice("Desbloquea esta pieza antes de modificarla.");
+      return;
+    }
     edit({
       ...history.present,
       pieces: history.present.pieces.map((p) =>
         p.id === selected ? { ...p, ...patch } : p,
       ),
     });
+  }
+  function copySelection() {
+    clipboard.current = structuredClone(
+      history.present.pieces.filter((p) => selection.includes(p.id)),
+    );
+    setNotice(
+      `${clipboard.current.length} piezas copiadas. Usa Pegar piezas para crear una copia independiente.`,
+    );
+  }
+  function pasteSelection() {
+    if (!clipboard.current?.length) {
+      setNotice("Primero copia una selección.");
+      return;
+    }
+    try {
+      const copies = clipboard.current.map((p) => ({
+        ...p,
+        id: crypto.randomUUID(),
+        x: p.x + gridStep,
+        z: p.z + gridStep,
+      }));
+      const next = {
+        ...history.present,
+        pieces: [...history.present.pieces, ...copies],
+      };
+      const validated = parseWorkshop(next);
+      edit(
+        validated,
+        copies.length > 1
+          ? groupSelection(
+              validated,
+              history.editor,
+              copies.map((p) => p.id),
+            )
+          : undefined,
+      );
+      setGroupIds(copies.map((p) => p.id));
+      setSelected(copies[0].id);
+    } catch (e) {
+      setNotice(`No se pegó la selección: ${(e as Error).message}`);
+    }
+  }
+  function select3D(id: string, multiple: boolean) {
+    if (id === "start" || id === "cup") {
+      setSelected(id);
+      setGroupIds([]);
+      return;
+    }
+    const ids = selectedGroup(history.editor, id);
+    const next =
+      multiple || multiSelect
+        ? selection.includes(id)
+          ? selection.filter((p) => !ids.includes(p))
+          : [...new Set([...selection, ...ids])]
+        : ids;
+    setGroupIds(next);
+    setSelected(next[0] ?? null);
+  }
+  function placeAt(x: number, z: number) {
+    const point = {
+      x: Math.max(-11, Math.min(11, Math.round(x / gridStep) * gridStep)),
+      z: Math.max(-23, Math.min(23, Math.round(z / gridStep) * gridStep)),
+    };
+    try {
+      if (structureTool) {
+        const result = insertStructure(
+          history.present,
+          structureTool,
+          point.x,
+          point.z,
+          buildHeight,
+        );
+        const nextEditor =
+          result.ids.length > 1
+            ? groupSelection(result.doc, history.editor, result.ids)
+            : history.editor;
+        edit(result.doc, nextEditor);
+        setSelected(result.ids[0]);
+        setGroupIds(result.ids);
+        setStructureTool(null);
+        setTool("select");
+        return;
+      }
+      if (tool === "start") {
+        edit({ ...doc, start: point });
+        setSelected("start");
+        setGroupIds([]);
+      } else if (tool === "cup") {
+        edit({ ...doc, cup: { ...point, height: buildHeight } });
+        setSelected("cup");
+        setGroupIds([]);
+      } else if (tool !== "select") {
+        const thin = ["wall", "gate", "rotor", "lift"].includes(tool),
+          id = crypto.randomUUID();
+        edit({
+          ...doc,
+          pieces: [
+            ...doc.pieces,
+            {
+              id,
+              kind: tool,
+              ...point,
+              width: thin ? 4 : 6,
+              length: thin ? 0.6 : 8,
+              height: buildHeight,
+              endHeight:
+                tool === "ramp" ? Math.min(4, buildHeight + 2) : buildHeight,
+              angle: 0,
+            },
+          ],
+        });
+        setSelected(id);
+        setGroupIds([id]);
+      }
+      setTool("select");
+    } catch (e) {
+      setNotice(`No se construyó la pieza: ${(e as Error).message}`);
+    }
   }
   function point(e: React.PointerEvent<SVGSVGElement>) {
     const svg = e.currentTarget,
@@ -250,7 +391,7 @@ export function Workshop({
     const target = (e.target as Element)
       .closest("[data-piece]")
       ?.getAttribute("data-piece");
-    if (tool === "select") {
+    if (tool === "select" && !structureTool) {
       if (
         target &&
         doc.pieces.some((v) => v.id === target) &&
@@ -269,12 +410,19 @@ export function Workshop({
             ? selection
             : [target]
           : [];
-      setGroupIds(ids);
+      const grouped =
+        target &&
+        !multiSelect &&
+        history.editor.groups.some((g) => g.pieces.includes(target))
+          ? selectedGroup(history.editor, target)
+          : ids;
+      const nextIds = grouped.length ? grouped : ids;
+      setGroupIds(nextIds);
       setSelected(target ?? null);
-      if (target) {
+      if (target && !nextIds.some((id) => history.editor.locked.includes(id))) {
         drag.current = {
           id: target,
-          ids,
+          ids: nextIds,
           pointer: e.pointerId,
           from: p,
           doc: history.present,
@@ -284,35 +432,9 @@ export function Workshop({
       }
       return;
     }
-    setGroupIds([]);
-    if (tool === "start") {
-      edit({ ...doc, start: p });
-      setSelected("start");
-    } else if (tool === "cup") {
-      edit({ ...doc, cup: { ...p, height: doc.cup.height } });
-      setSelected("cup");
-    } else {
-      if (doc.pieces.length >= 80) {
-        setNotice("Máximo de 80 piezas.");
-        return;
-      }
-      const id = crypto.randomUUID();
-      const next: WorkshopPiece = {
-        id,
-        kind: tool,
-        ...p,
-        width: ["wall", "gate", "rotor", "lift"].includes(tool) ? 4 : 6,
-        length: ["wall", "gate", "rotor", "lift"].includes(tool) ? 0.6 : 8,
-        height: 0,
-        endHeight: tool === "ramp" ? 2 : 0,
-        angle: 0,
-      };
-      edit({ ...doc, pieces: [...doc.pieces, next] });
-      setSelected(id);
-      setGroupIds([id]);
-    }
-    setTool("select");
+    placeAt(p.x, p.z);
   }
+
   function pointerMove(e: React.PointerEvent<SVGSVGElement>) {
     const active = drag.current;
     if (!active || !e.isPrimary || active.pointer !== e.pointerId) return;
@@ -349,7 +471,12 @@ export function Workshop({
     try {
       const id = saveId ?? crypto.randomUUID();
       const next = [
-        { id, updated: new Date().toISOString(), doc: history.present },
+        {
+          id,
+          updated: new Date().toISOString(),
+          doc: history.present,
+          editor: history.editor,
+        },
         ...library.filter((v) => v.id !== id),
       ];
       saveWorkshopLibrary(next);
@@ -390,6 +517,7 @@ export function Workshop({
             id: crypto.randomUUID(),
             updated: new Date().toISOString(),
             doc: current,
+            editor: history.editor,
           },
           ...library,
         ];
@@ -397,7 +525,30 @@ export function Workshop({
         setLibrary(next);
       }
       onDetachPublication?.();
-      edit(workshopBlueprint(id));
+      const document = workshopBlueprint(id);
+      const editor =
+        id === "laboratory"
+          ? cleanEditor(document, {
+              locked: [],
+              groups: [
+                {
+                  id: "lab-tunnel",
+                  name: "Túnel de dos niveles",
+                  pieces: document.pieces
+                    .filter((p) => p.id.startsWith("tunnel-"))
+                    .map((p) => p.id),
+                },
+                {
+                  id: "lab-curve",
+                  name: "Curva por tramos",
+                  pieces: document.pieces
+                    .filter((p) => p.id.startsWith("curve-"))
+                    .map((p) => p.id),
+                },
+              ],
+            })
+          : emptyEditor();
+      edit(document, editor);
       setSaveId(null);
       setSelected(null);
       setGroupIds([]);
@@ -411,8 +562,8 @@ export function Workshop({
   }
   function loadText(text: string) {
     try {
-      const d = importWorkshop(text);
-      edit(d);
+      const project = importWorkshopProject(text);
+      edit(project.doc, project.editor);
       setSaveId(null);
       setSelected(null);
       setGroupIds([]);
@@ -431,7 +582,7 @@ export function Workshop({
       />
     );
   return (
-    <section className="workshop" aria-label="Taller de hoyos">
+    <section ref={sectionRef} className="workshop" aria-label="Taller de hoyos">
       <div className="workshop-heading">
         <div>
           <small>CREAR · PROBAR · COMPARTIR ARCHIVO</small>
@@ -443,22 +594,23 @@ export function Workshop({
           </p>
         </div>
         <button onClick={onClose}>Volver al club</button>
+        <button
+          disabled={!document.fullscreenEnabled}
+          onClick={async () => {
+            try {
+              if (document.fullscreenElement === sectionRef.current)
+                await document.exitFullscreen();
+              else await sectionRef.current?.requestFullscreen();
+            } catch {
+              setNotice(
+                "El navegador no permitió ampliar el editor. Puedes seguir editando aquí.",
+              );
+            }
+          }}
+        >
+          {fullscreen ? "Salir de pantalla completa" : "Ampliar editor"}
+        </button>
       </div>
-      <WorkshopPhysics
-        document={history.present}
-        onEnableResources={() => {
-          edit(withWorkshopResources(history.present));
-          setNotice(
-            "Recursos avanzados activados. Puedes deshacer esta conversión.",
-          );
-        }}
-        onChange={(physics) => {
-          edit(withWorkshopPhysics(history.present, physics));
-          setNotice(
-            "Física cambiada. Prueba tus rutas; puedes deshacer este cambio.",
-          );
-        }}
-      />
       {versionTarget && (
         <div className="private-course-summary">
           <strong>
@@ -488,6 +640,25 @@ export function Workshop({
         </button>
         <button onClick={save}>Guardar diseño</button>
         <button onClick={download}>Exportar archivo</button>
+        <button
+          onClick={() => {
+            const blob = new Blob(
+                [exportWorkshopProject(history.present, history.editor)],
+                { type: "application/json" },
+              ),
+              url = URL.createObjectURL(blob),
+              a = document.createElement("a");
+            a.href = url;
+            a.download = "cancha.golf.project.json";
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            setNotice(
+              "Proyecto exportado con grupos y bloqueos; el archivo de cancha sigue disponible por separado.",
+            );
+          }}
+        >
+          Exportar proyecto editable
+        </button>
         <button
           onClick={() => {
             setNotice("");
@@ -544,10 +715,32 @@ export function Workshop({
             ? "Borrador recuperable en este navegador. Guarda una copia en la biblioteca o exporta el archivo."
             : "No se puede guardar el borrador. Exporta el archivo para conservarlo.")}
       </p>
-      <WorkshopBlueprints onOpen={openBlueprint} />
       <div className="workshop-layout">
-        <aside className="workshop-tools">
+        <aside ref={toolsRef} className="workshop-tools">
+          <div className="workshop-panel-links">
+            <button
+              onClick={() =>
+                stageRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+            >
+              Volver a la escena 3D
+            </button>
+          </div>
           <h2>Construir</h2>
+          <Numeric
+            label="Altura de construcción"
+            value={buildHeight}
+            min={0}
+            max={4}
+            onChange={setBuildHeight}
+          />
+          <p>
+            Las estructuras elevadas añaden su altura a este plano. Usa 0 m para
+            su posición inicial.
+          </p>
           <label>
             Ajuste de cuadrícula
             <select
@@ -578,36 +771,63 @@ export function Workshop({
           >
             Seleccionar todas las piezas
           </button>
-          <div className="workshop-palette">
-            {(
-              [
-                "select",
-                "start",
-                "cup",
-                ...pieceKinds.filter(
-                  (k) => doc.version === 3 || !isAdvancedPiece(k),
-                ),
-              ] as const
-            ).map((k) => (
+          {paletteSections.map((category) => (
+            <fieldset className="workshop-category" key={category.name}>
+              <legend>{category.name}</legend>
+              <div className="workshop-palette">
+                {category.tools
+                  .filter(
+                    (k) =>
+                      k === "select" ||
+                      k === "start" ||
+                      k === "cup" ||
+                      doc.version === 3 ||
+                      !isAdvancedPiece(k),
+                  )
+                  .map((k) => (
+                    <button
+                      key={k}
+                      aria-pressed={tool === k && !structureTool}
+                      onClick={() => {
+                        setTool(k);
+                        setStructureTool(null);
+                        if (k === "cup") setBuildHeight(doc.cup.height);
+                      }}
+                    >
+                      {k === "select"
+                        ? "Seleccionar"
+                        : k === "start"
+                          ? "Salida"
+                          : k === "cup"
+                            ? "Copa"
+                            : names[k]}
+                    </button>
+                  ))}
+              </div>
+            </fieldset>
+          ))}
+          <fieldset className="workshop-structures">
+            <legend>Estructuras combinables</legend>
+            {structures.map((s) => (
               <button
-                key={k}
-                aria-pressed={tool === k}
-                onClick={() => setTool(k)}
+                key={s.id}
+                title={s.detail}
+                aria-pressed={structureTool === s.id}
+                onClick={() => {
+                  setStructureTool(s.id);
+                  setTool("select");
+                }}
               >
-                {k === "select"
-                  ? "Seleccionar"
-                  : k === "start"
-                    ? "Salida"
-                    : k === "cup"
-                      ? "Copa"
-                      : names[k]}
+                {s.name}
               </button>
             ))}
-          </div>
+          </fieldset>
           <p>
-            {tool === "select"
-              ? `Toca una pieza para editarla; arrastra para moverla. Cuadrícula de ${gridStep} m. Shift o Selección múltiple para agrupar.`
-              : "Toca el mapa para colocar. Después puedes ajustar su tamaño y posición."}
+            {structureTool
+              ? structures.find((s) => s.id === structureTool)?.detail
+              : tool === "select"
+                ? `Toca una pieza para editarla; arrastra para moverla. Cuadrícula de ${gridStep} m. Shift o Selección múltiple para agrupar.`
+                : "Toca el mapa para colocar. Después puedes ajustar su tamaño y posición."}
           </p>
           <label>
             Nombre del diseño
@@ -637,7 +857,7 @@ export function Workshop({
           <button
             onClick={() => {
               onDetachPublication?.();
-              edit(newWorkshop());
+              edit(newWorkshop(), emptyEditor());
               setSaveId(null);
               setSelected(null);
               setGroupIds([]);
@@ -652,7 +872,7 @@ export function Workshop({
               <div className="workshop-save" key={s.id}>
                 <button
                   onClick={() => {
-                    edit(s.doc);
+                    edit(s.doc, s.editor ?? emptyEditor());
                     setSaveId(s.id);
                     setSelected(null);
                     setGroupIds([]);
@@ -682,152 +902,77 @@ export function Workshop({
             ))
           )}
         </aside>
-        <div className="workshop-map">
-          <svg
-            aria-label="Plano editable de la cancha"
-            role="img"
-            viewBox="-12 -24 24 48"
-            onPointerDown={pointerDown}
-            onPointerMove={pointerMove}
-            onPointerUp={(e) => {
+        <div ref={stageRef} className="workshop-map">
+          <Workshop3D
+            cameraMemory={cameraMemory}
+            doc={doc}
+            selected={selected}
+            selection={selection}
+            locked={history.editor.locked}
+            step={gridStep}
+            graphicsMode={graphicsMode}
+            placing={tool !== "select" || !!structureTool}
+            buildHeight={buildHeight}
+            onSelect={select3D}
+            onPlace={placeAt}
+            onPreview={setDragDoc}
+            onCommit={edit}
+            onError={setNotice}
+          />
+          <div className="workshop-panel-links">
+            <button
+              onClick={() =>
+                toolsRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+            >
+              Herramientas de construcción
+            </button>
+            <button
+              onClick={() =>
+                propertiesRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+            >
+              Editar selección
+            </button>
+          </div>
+          <h2>Plano 2D de precisión</h2>
+          <WorkshopPlan
+            doc={doc}
+            selection={selection}
+            selected={selected}
+            pointerDown={pointerDown}
+            pointerMove={pointerMove}
+            pointerUp={(e) => {
               if (drag.current?.pointer === e.pointerId) finishDrag();
             }}
-            onPointerCancel={(e) => {
+            pointerCancel={(e) => {
               if (drag.current?.pointer === e.pointerId) finishDrag(true);
             }}
-            onLostPointerCapture={(e) => {
-              if (drag.current?.pointer === e.pointerId) finishDrag(true);
-            }}
-          >
-            <defs>
-              <pattern
-                id="workshop-grid"
-                width="1"
-                height="1"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 1 0 L 0 0 0 1"
-                  fill="none"
-                  stroke="#aac2bd"
-                  strokeOpacity="0.14"
-                  strokeWidth="0.025"
-                />
-              </pattern>
-            </defs>
-            <rect x="-12" y="-24" width="24" height="48" fill="#173f46" />
-            {doc.pieces
-              .filter((p) => p.kind === "water")
-              .map((p) => (
-                <rect
-                  key={p.id}
-                  x={p.x - p.width / 2}
-                  y={p.z - p.length / 2}
-                  width={p.width}
-                  height={p.length}
-                  fill={colors.water}
-                />
-              ))}
-            <CourseFootprint course={course} color="#58896c" />
-            {doc.pieces.map((p) => (
-              <g
-                key={p.id}
-                data-piece={p.id}
-                transform={`translate(${p.x} ${p.z}) rotate(${-(p.kind === "floor" ? Math.round(p.angle / 90) * 90 : p.kind === "water" || p.kind === "sand" || p.kind === "rough" || p.kind === "dirt" ? 0 : p.angle)})`}
-              >
-                <rect
-                  x={-p.width / 2}
-                  y={-p.length / 2}
-                  width={p.width}
-                  height={p.length}
-                  fill={
-                    p.kind === "floor" || p.kind === "ramp"
-                      ? "transparent"
-                      : colors[p.kind]
-                  }
-                  fillOpacity={0.8}
-                  stroke={selection.includes(p.id) ? "#ffe19a" : "#b4c6a5"}
-                  strokeOpacity={selection.includes(p.id) ? 1 : 0.5}
-                  strokeWidth={selection.includes(p.id) ? 0.14 : 0.035}
-                />
-                {p.kind === "rotor" && (
-                  <circle
-                    r={Math.hypot(p.width, p.length) / 2}
-                    fill="none"
-                    stroke="#efcd87"
-                    strokeDasharray=".3 .25"
-                    strokeWidth=".06"
-                    pointerEvents="none"
-                  />
-                )}
-                {p.kind === "lift" && (
-                  <path
-                    d="M0 1.1V-1.1M-.4-.6L0-1.1L.4-.6"
-                    stroke="#e3f0d1"
-                    strokeWidth=".12"
-                    fill="none"
-                    pointerEvents="none"
-                  />
-                )}
-                {p.kind === "ramp" && (
-                  <path
-                    d={`M0 ${p.length / 3}L0 ${-p.length / 3}M-0.4 ${-p.length / 3 + 0.5}L0 ${-p.length / 3}L0.4 ${-p.length / 3 + 0.5}`}
-                    fill="none"
-                    stroke="#fae0a2"
-                    strokeWidth="0.12"
-                  />
-                )}
-              </g>
-            ))}
-            <rect
-              x="-12"
-              y="-24"
-              width="24"
-              height="48"
-              fill="url(#workshop-grid)"
-              pointerEvents="none"
-            />
-            <circle
-              data-piece="start"
-              cx={doc.start.x}
-              cy={doc.start.z}
-              r="0.45"
-              fill="#ffe19a"
-              stroke={selected === "start" ? "white" : "#244743"}
-              strokeWidth="0.12"
-            />
-            <text
-              x={doc.start.x + 0.7}
-              y={doc.start.z + 0.2}
-              fontSize="0.65"
-              fill="white"
-              pointerEvents="none"
-            >
-              SALIDA
-            </text>
-            <g data-piece="cup">
-              <circle
-                cx={doc.cup.x}
-                cy={doc.cup.z}
-                r="0.5"
-                fill="#c0cacb"
-                stroke={selected === "cup" ? "#ffe19a" : "#fff"}
-                strokeWidth="0.12"
-              />
-              <path
-                d={`M${doc.cup.x} ${doc.cup.z}v-1.6h1v0.7h-1`}
-                stroke="white"
-                strokeWidth="0.12"
-                fill="#f3ca79"
-              />
-            </g>
-          </svg>
+          />
           <p>
             24 × 48 m · Copa gris y salida dorada. Las plataformas se recortan
             alrededor de la copa.
           </p>
         </div>
-        <aside className="workshop-properties">
+        <aside ref={propertiesRef} className="workshop-properties">
+          <div className="workshop-panel-links">
+            <button
+              onClick={() =>
+                stageRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+            >
+              Volver a la escena 3D
+            </button>
+          </div>
           <h2>
             {selection.length > 1
               ? "Grupo"
@@ -847,7 +992,10 @@ export function Workshop({
               canDuplicate={doc.pieces.length + selection.length <= 80}
             />
           ) : piece ? (
-            <>
+            <fieldset
+              disabled={history.editor.locked.includes(piece.id)}
+              className="workshop-piece-fields"
+            >
               <Numeric
                 label="Posición X"
                 value={piece.x}
@@ -916,6 +1064,19 @@ export function Workshop({
               )}
               <button
                 onClick={() => {
+                  if (history.editor.locked.includes(piece.id)) {
+                    setNotice("Desbloquea esta pieza antes de eliminarla.");
+                    return;
+                  }
+                  if (
+                    ["floor", "ramp"].includes(piece.kind) ||
+                    history.editor.groups.some((g) =>
+                      g.pieces.includes(piece.id),
+                    )
+                  ) {
+                    setDeleteIds([piece.id]);
+                    return;
+                  }
                   edit({
                     ...doc,
                     pieces: doc.pieces.filter((p) => p.id !== selected),
@@ -942,7 +1103,7 @@ export function Workshop({
               >
                 Duplicar pieza
               </button>
-            </>
+            </fieldset>
           ) : selected === "start" || selected === "cup" ? (
             <>
               <Numeric
@@ -978,6 +1139,37 @@ export function Workshop({
           ) : (
             <p>Selecciona una pieza, la salida o la copa en el mapa.</p>
           )}
+          <WorkshopOrganization
+            doc={history.present}
+            editor={history.editor}
+            selection={selection}
+            onCopy={copySelection}
+            onPaste={pasteSelection}
+            onScale={(scale) => {
+              try {
+                assertUnlocked(history.editor, selection);
+                edit(
+                  transformWorkshop3D(
+                    history.present,
+                    selection,
+                    { scaleX: scale, scaleZ: scale },
+                    gridStep,
+                  ),
+                );
+              } catch (e) {
+                setNotice((e as Error).message);
+              }
+            }}
+            onEditor={(editor) => edit(history.present, editor)}
+            onSelect={(ids) => {
+              setGroupIds(ids);
+              setSelected(ids[0] ?? null);
+              setTool("select");
+              setStructureTool(null);
+            }}
+            onError={setNotice}
+          />
+
           <h2>Antes de probar</h2>
           {diagnostics.length > 0 && (
             <div className="workshop-diagnostics">
@@ -988,8 +1180,9 @@ export function Workshop({
                 ))}
               </ul>
               <small>
-                Son avisos aproximados: no consideran paredes ni resuelven
-                tiros. No bloquean las rutas con saltos.
+                Son avisos aproximados de suelo y altura libre, no una
+                certificación de jugabilidad. Prueba paredes, pasos y saltos con
+                la pelota real.
               </small>
             </div>
           )}
@@ -1014,6 +1207,59 @@ export function Workshop({
           </small>
         </aside>
       </div>
+      <WorkshopPhysics
+        document={history.present}
+        onEnableResources={() => {
+          edit(withWorkshopResources(history.present));
+          setNotice(
+            "Recursos avanzados activados. Puedes deshacer esta conversión.",
+          );
+        }}
+        onChange={(physics) => {
+          edit(withWorkshopPhysics(history.present, physics));
+          setNotice(
+            "Física cambiada. Prueba tus rutas; puedes deshacer este cambio.",
+          );
+        }}
+      />
+      <WorkshopBlueprints onOpen={openBlueprint} />
+      {deleteIds && (
+        <dialog
+          ref={deleteDialog}
+          className="workshop-import"
+          aria-label="Confirmar eliminación"
+          onCancel={() => setDeleteIds(null)}
+        >
+          <h2>¿Eliminar {deleteIds.length} piezas?</h2>
+          <p>
+            Eliminar suelo o grupos puede desconectar el recorrido. Puedes
+            deshacer la operación.
+          </p>
+          <button autoFocus onClick={() => setDeleteIds(null)}>
+            Conservar piezas
+          </button>
+          <button
+            onClick={() => {
+              try {
+                assertUnlocked(history.editor, deleteIds);
+                edit({
+                  ...history.present,
+                  pieces: history.present.pieces.filter(
+                    (p) => !deleteIds.includes(p.id),
+                  ),
+                });
+                setGroupIds([]);
+                setSelected(null);
+              } catch (e) {
+                setNotice((e as Error).message);
+              }
+              setDeleteIds(null);
+            }}
+          >
+            Confirmar eliminación
+          </button>
+        </dialog>
+      )}
       {json !== null && (
         <WorkshopImport
           text={json}

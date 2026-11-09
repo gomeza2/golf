@@ -28,6 +28,12 @@ function startupManifest(): Plugin {
 }
 export default defineConfig({
   plugins: [startupManifest()],
+  optimizeDeps: {
+    include: [
+      "three/addons/controls/OrbitControls.js",
+      "three/addons/controls/TransformControls.js",
+    ],
+  },
   base: process.env.PAGES_BASE_PATH || "/",
   server: {
     proxy: {

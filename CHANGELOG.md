@@ -1,5 +1,15 @@
 # Hoyo en Uno · Golf Club
 
+## 0.22.0 — Fase 1: editor 3D y construcción avanzada
+
+- Escena de edición con cámara orbital, zoom/desplazamiento y encuadres superior, frontal, lateral y perspectiva.
+- Selección 3D y de capas superpuestas, manipuladores nativos, cuadrícula, regla de altura y cancelación segura de arrastres.
+- Grupos nombrables, bloqueos, copiar/pegar, alineación de alturas e historial conjunto con geometría.
+- Plataformas, puentes, túneles, pasarelas y rampas curvas por tramos; laboratorio editable y físicamente jugable.
+- Archivo de proyecto para conservar metadatos sin cambiar documentos jugables, hashes, protocolo o física.
+- Prueba física con regreso al diseño/cámara, avisos de varias alturas y espacios estrechos, navegación móvil y pantalla completa real.
+- Plano, biblioteca, importaciones/exportaciones, comunidad y todas las funciones anteriores conservadas. Fase 2 sin iniciar.
+
 ## 0.21.0 — Taller con riesgo y comunidad preparada para planes gratuitos
 
 - Documento 3 explícito: barra de giro completo, puerta elevable y tierra con física real; conserva documentos 1/2.

@@ -1,3 +1,4 @@
+import { readEditor } from "./workshopProjectStorage";
 import { workshopPhysics, workshopPhysicsLabel } from "../shared/workshop";
 import { physicsEdition } from "../shared/rules";
 import {
@@ -281,6 +282,7 @@ function App() {
               id: crypto.randomUUID(),
               updated: new Date().toISOString(),
               doc: current,
+              editor: readEditor(current),
             },
           ]);
         }

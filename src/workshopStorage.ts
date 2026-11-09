@@ -1,3 +1,4 @@
+import { cleanEditor, type WorkshopEditor } from "../shared/workshopProject";
 import { parseWorkshop, type WorkshopDocument } from "../shared/workshop";
 export const WORKSHOP_LIBRARY_KEY = "club-workshop-library-v1";
 export const WORKSHOP_DRAFT_KEY = "club-workshop-draft-v1";
@@ -5,6 +6,7 @@ export type WorkshopSave = {
   id: string;
   updated: string;
   doc: WorkshopDocument;
+  editor?: WorkshopEditor;
 };
 export function readWorkshopLibrary(): WorkshopSave[] {
   try {
@@ -21,7 +23,15 @@ export function readWorkshopLibrary(): WorkshopSave[] {
             !Number.isFinite(Date.parse(s.updated))
           )
             return [];
-          return [{ id: s.id, updated: s.updated, doc: parseWorkshop(s.doc) }];
+          const doc = parseWorkshop(s.doc);
+          return [
+            {
+              id: s.id,
+              updated: s.updated,
+              doc,
+              ...(s.editor ? { editor: cleanEditor(doc, s.editor) } : {}),
+            },
+          ];
         } catch {
           return [];
         }
@@ -38,7 +48,13 @@ export function saveWorkshopLibrary(saves: WorkshopSave[]) {
     );
   localStorage.setItem(
     WORKSHOP_LIBRARY_KEY,
-    JSON.stringify(saves.map((s) => ({ ...s, doc: parseWorkshop(s.doc) }))),
+    JSON.stringify(
+      saves.map((s) => ({
+        ...s,
+        doc: parseWorkshop(s.doc),
+        ...(s.editor ? { editor: cleanEditor(s.doc, s.editor) } : {}),
+      })),
+    ),
   );
 }
 export function readWorkshopDraft(): WorkshopDocument | null {

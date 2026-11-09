@@ -310,6 +310,9 @@ test("multiple selection transforms whole groups with precision, keyboard undo, 
   await page
     .getByRole("button", { name: "Eliminar grupo", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Confirmar eliminación", exact: true })
+    .click();
   await expect(svg.locator("[data-piece]")).toHaveCount(5);
   await page.getByRole("button", { name: "Deshacer", exact: true }).click();
   await expect(svg.locator("[data-piece]")).toHaveCount(7);

@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.21.0, recursos del taller y activación gratuita
+## Entrega actual — 0.22.0, Fase 1 del editor 3D
+
+La prioridad solicitada concentra la entrega en editor, construcción y visualización. Se añade área 3D orbital con cuatro vistas, selección real, manipuladores y acceso a capas superpuestas. La edición conserva plano, propiedades e historial; grupos/bloqueos se guardan en un proyecto separado del documento jugable. Estructuras reutilizables y laboratorio con ruta física comprobada, avisos por niveles, alturas libres y pasos estrechos. El regreso de la prueba conserva construcción y cámara.
+
+Se conservan documentos 1/2/3, protocolo 17, física 1/2, reglas 7, guardados/records, 34 hoyos oficiales y las funciones previas. [EDITOR-3D-PHASE1.md](EDITOR-3D-PHASE1.md) reúne auditoría, implementación, pruebas, compatibilidad y límites.
+
+**Cierre:** no se inicia la fase 2. Quedan para evaluación manual la comodidad con personas, teléfonos físicos y sesiones largas con estructuras complejas. La activación de comunidad gratuita sigue pendiente de cuentas/variables del propietario, sin bloquear el editor ni convertirse en una nueva fase automática.
+
+## Entrega anterior — 0.21.0, recursos del taller y activación gratuita
 
 Tres recursos físicos nuevos con adopción explícita del documento 3: giro completo, puerta elevable y tierra. Dos ejemplos editables con rutas seguras/arriesgadas comprobadas, conservación del borrador y mapa de mecanismos en vivo. La nueva geometría comparte compilación, pose y presupuesto con Rapier/Scene/servidor. Documentos 1/2 mantienen hashes y comportamiento; 34 hoyos oficiales, todos los modos y datos intactos. Protocolo 17, física 1/2, reglas 7 y esquema PostgreSQL 1.
 
