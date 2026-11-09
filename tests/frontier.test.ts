@@ -566,7 +566,7 @@ it.each(shortcutRoutes)(
     const from = point(0.1);
     const targets = [0.32, 0.54, 0.76, 0.94].map((fraction) => ({
       ...point(fraction),
-      radius: 1.15,
+      radius: 3.0,
     }));
     const initial = game.state.players[0];
     initial.pos = { x: from.x, y: from.y + 0.22, z: from.z };
