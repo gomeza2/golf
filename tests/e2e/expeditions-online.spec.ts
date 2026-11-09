@@ -78,6 +78,44 @@ test("two authoritative online clients can start the new expedition circuit with
         [player.pos.x, player.pos.y, player.pos.z].every(Number.isFinite),
       ),
     ).toBe(true);
+
+    const hostIndex = current.players.findIndex(
+      (player: any) => player.id === session.id,
+    );
+    expect(hostIndex).toBeGreaterThanOrEqual(0);
+    const stopped = (socket: Socket) =>
+      state(
+        socket,
+        (next) =>
+          !next.moving &&
+          next.phase === "playing" &&
+          next.players[hostIndex].strokes === 1,
+      );
+    const hostStopped = stopped(host);
+    const guestStopped = stopped(guest);
+    const moving = state(
+      host,
+      (next) => next.moving && next.players[hostIndex].strokes === 1,
+    );
+    host.emit("action", {
+      type: "shoot",
+      angle: 0,
+      power: 0.32,
+      physics: 1,
+    });
+    await moving;
+    const [hostResult, guestResult] = await Promise.all([
+      hostStopped,
+      guestStopped,
+    ]);
+    expect(hostResult.circuit).toBe("expeditions");
+    expect(hostResult.physics).toBe(2);
+    expect(hostResult.players[hostIndex].strokes).toBe(1);
+    expect(guestResult.players[hostIndex]).toMatchObject({
+      strokes: hostResult.players[hostIndex].strokes,
+      penalties: hostResult.players[hostIndex].penalties,
+      pos: hostResult.players[hostIndex].pos,
+    });
   } finally {
     host.disconnect();
     guest.disconnect();
