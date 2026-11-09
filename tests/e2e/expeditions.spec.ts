@@ -102,10 +102,13 @@ test("all four expedition environments render their own scene on mobile practice
       .getByRole("combobox", { name: "Hoyo de entrenamiento" })
       .selectOption(String(hole));
     await page.getByRole("button", { name: /Practicar este hoyo/ }).click();
-    await expect(page.locator("canvas")).toHaveAttribute(
-      "data-scenery",
-      environments[hole],
-    );
+    const canvas = page.locator("canvas");
+    await expect(canvas).toHaveAttribute("data-scenery", environments[hole]);
+    await expect
+      .poll(async () =>
+        Number(await canvas.getAttribute("data-scenery-accent-count")),
+      )
+      .toBeGreaterThan(0);
     await page.screenshot({
       path: `work/expeditions-${environments[hole]}-mobile.png`,
       animations: "disabled",

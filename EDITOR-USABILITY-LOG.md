@@ -54,11 +54,17 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - En el trabajo principal, `npm test` y `npm run build` terminaron correctamente; `npm run test:e2e` seguía ejecutándose cuando se registró esta nota.
 - Una ejecución previa del navegador de comunidad tuvo un fallo intermitente al esperar la cabecera del taller. Se elevó la espera de 5 a 15 segundos; una ejecución posterior del trabajo de comunidad pasó. Se debe confirmar con el CI de este commit, no asumirlo.
 
+### Cambios recientes de Fase 2
+- Se corrigieron las coordenadas de tres transiciones del bosque que confundían altura con posición longitudinal; una rampa llegaba a alturas de −61 m, por debajo del límite de caída de −4 m.
+- Se agregó una prueba de altura física mínima/máxima para todas las plataformas de los cuatro campos.
+- Se agregó una prueba de ambos extremos de cada rampa para comprobar que encuentre soporte de una plataforma o el green.
+- Se amplió la decoración instanciada con una segunda capa diferenciada por ambiente y una comprobación de navegador para asegurar que la capa esté presente en los cuatro escenarios.
+
 ### Pendientes de verdad
 1. Rondas físicas completas en los cuatro hoyos y validación separada de ruta segura/atajo.
 2. Tiros de prueba en transiciones y superficies limítrofes.
 3. Ajuste de obstáculos, aterrizajes y accesibilidad de cada plataforma.
-4. Identidad visual más rica y específica de cada ambiente.
+4. Landmarks únicos diseñados por hoyo, revisión de capturas y ajuste de luz/materiales.
 5. Medición de rendimiento en teléfonos reales.
 6. CI verde del último commit y corrección de todo fallo reproducible.
 

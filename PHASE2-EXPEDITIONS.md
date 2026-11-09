@@ -37,7 +37,9 @@ Los materiales de piedra, madera y humedad se dibujan con texturas procedurales.
 
 ## Ambientes y rendimiento
 
-`src/AdventureScenery.tsx` incorpora variantes instanciadas para bosque, desierto, costa y montaña. La cantidad de elementos depende del nivel de detalle. Se reutilizan geometrías y materiales y se mantienen las opciones de calidad automática, ahorro y alta existentes. No se incorporan modelos externos ni descargas de recursos durante la partida.
+`src/AdventureScenery.tsx` incorpora variantes instanciadas para bosque, desierto, costa y montaña. Cada ambiente tiene una silueta base y una segunda capa de elementos naturales instanciados, con un presupuesto que depende del nivel de detalle; bosque, desierto, costa y montaña ya no dependen de una única malla decorativa repetida. La costa conserva su faro como punto de referencia. Las nuevas piezas quedan fuera de los límites de juego y no crean colisiones. Se reutilizan geometrías y materiales y se mantienen las opciones de calidad automática, ahorro y alta existentes. No se incorporan modelos externos ni descargas de recursos durante la partida.
+
+Esta capa mejora la lectura a distancia, pero todavía no equivale a un paisaje artístico final: faltan landmarks únicos diseñados por hoyo, revisión visual en capturas grandes y mediciones en teléfonos físicos. Tampoco se confunde decoración con geometría jugable.
 
 ## Compatibilidad
 

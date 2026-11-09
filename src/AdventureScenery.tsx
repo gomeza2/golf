@@ -25,8 +25,10 @@ export function AdventureScenery({
         : detail === 1
           ? 8
           : 12;
+  const accentCount = detail === 0 ? 4 : detail === 1 ? 8 : 12;
   const body = useRef<THREE.InstancedMesh>(null),
     cap = useRef<THREE.InstancedMesh>(null),
+    accent = useRef<THREE.InstancedMesh>(null),
     lamp = useRef<THREE.Group>(null);
   const layout = useMemo(
     () =>
@@ -53,6 +55,22 @@ export function AdventureScenery({
         };
       }),
     [size.width, size.length, count, kind],
+  );
+  const accentLayout = useMemo(
+    () =>
+      Array.from({ length: accentCount }, (_, i) => {
+        const side = i % 2 ? -1 : 1;
+        const lane = Math.floor(i / 2);
+        return {
+          x: side * (size.width / 2 + 13 + (i % 3) * 1.6),
+          z:
+            -size.length / 2 +
+            (size.length * (lane + 0.5)) / (accentCount / 2),
+          yaw: i * 1.73,
+          scale: 0.82 + ((i * 5) % 4) * 0.16,
+        };
+      }),
+    [size.width, size.length, accentCount],
   );
   const { gl } = useThree();
   const reducedMotion = useMemo(
@@ -93,13 +111,37 @@ export function AdventureScenery({
       dummy.updateMatrix();
       cap.current!.setMatrixAt(i, dummy.matrix);
     });
-    for (const ref of [body, cap]) {
+    const accentDummy = new THREE.Object3D();
+    accentLayout.forEach((p, i) => {
+      const forest = kind === "forest";
+      const desert = kind === "desert";
+      const mountain = kind === "mountain";
+      accentDummy.position.set(
+        p.x,
+        forest ? 0.55 : desert ? 1.05 : mountain ? 1.7 : 0.75,
+        p.z,
+      );
+      accentDummy.rotation.set(
+        forest ? 0.12 : mountain ? -0.08 : 0,
+        p.yaw,
+        desert ? 0.04 : 0,
+      );
+      accentDummy.scale.set(
+        (forest ? 1.45 : desert ? 1.25 : mountain ? 1.8 : 1.65) * p.scale,
+        (forest ? 0.85 : desert ? 2.5 : mountain ? 3.8 : 1.05) * p.scale,
+        (forest ? 1.5 : desert ? 1.25 : mountain ? 1.75 : 1.8) * p.scale,
+      );
+      accentDummy.updateMatrix();
+      accent.current!.setMatrixAt(i, accentDummy.matrix);
+    });
+    for (const ref of [body, cap, accent]) {
       ref.current!.instanceMatrix.needsUpdate = true;
       ref.current!.computeBoundingSphere();
     }
     gl.domElement.dataset.scenery = kind;
     gl.domElement.dataset.sceneryCount = String(count);
-  }, [layout, kind, gl, count]);
+    gl.domElement.dataset.sceneryAccentCount = String(accentCount);
+  }, [layout, accentLayout, kind, gl, count, accentCount]);
   useFrame(({ clock }) => {
     if (lamp.current && detail > 0 && !reducedMotion.matches)
       lamp.current.rotation.y = clock.elapsedTime * 0.15;
@@ -176,6 +218,31 @@ export function AdventureScenery({
                         : "#cfb38b"
           }
           roughness={0.9}
+        />
+      </instancedMesh>
+      <instancedMesh
+        key={`accent-${accentCount}-${kind}`}
+        ref={accent}
+        args={[undefined, undefined, accentCount]}
+        castShadow={detail > 1}
+        receiveShadow
+      >
+        {kind === "desert" || kind === "mountain" ? (
+          <coneGeometry args={[1, 1, kind === "mountain" ? 6 : 7]} />
+        ) : (
+          <icosahedronGeometry args={[1, 1]} />
+        )}
+        <meshStandardMaterial
+          color={
+            kind === "forest"
+              ? "#416545"
+              : kind === "desert"
+                ? "#b48a5e"
+                : kind === "coast"
+                  ? "#8aa6a4"
+                  : "#c4cfcb"
+          }
+          roughness={0.96}
         />
       </instancedMesh>
       {beacon && (
