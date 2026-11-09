@@ -38,6 +38,23 @@ test("the editor renders real heights and changes orbit, pan, zoom and every vie
   const canvas = page.locator(".editor3d-stage canvas");
   const before = await draft(page);
   await canvas.scrollIntoViewIfNeeded();
+  const rightDragStart = await canvas.getAttribute("data-editor-camera");
+  const canvasBox = (await canvas.boundingBox())!;
+  await page.mouse.move(
+    canvasBox.x + canvasBox.width * 0.48,
+    canvasBox.y + canvasBox.height * 0.52,
+  );
+  await page.mouse.down({ button: "right" });
+  await page.mouse.move(
+    canvasBox.x + canvasBox.width * 0.58,
+    canvasBox.y + canvasBox.height * 0.57,
+    { steps: 8 },
+  );
+  await page.mouse.up({ button: "right" });
+  await expect
+    .poll(() => canvas.getAttribute("data-editor-camera"))
+    .not.toBe(rightDragStart);
+  expect(await draft(page)).toEqual(before);
   for (const view of ["top", "front", "side", "perspective"]) {
     const previous = await canvas.getAttribute("data-editor-camera");
     await page
@@ -110,6 +127,21 @@ test("the editor renders real heights and changes orbit, pan, zoom and every vie
   expect(await draft(page)).toEqual(before);
   expect(errors).toEqual([]);
 });
+test("right-click camera gestures never place a piece while a construction tool is active", async ({
+  page,
+}) => {
+  await open(page);
+  await page.getByRole("button", { name: "Pared", exact: true }).click();
+  const canvas = page.locator(".editor3d-stage canvas");
+  await canvas.scrollIntoViewIfNeeded();
+  const before = await draft(page);
+  const rect = (await canvas.boundingBox())!;
+  await page.mouse.move(rect.x + rect.width * 0.5, rect.y + rect.height * 0.5);
+  await page.mouse.down({ button: "right" });
+  await page.mouse.up({ button: "right" });
+  expect(await draft(page)).toEqual(before);
+});
+
 test("the 2D and 3D workspaces switch without changing the same draft", async ({
   page,
 }) => {

@@ -330,10 +330,13 @@ function World(
   const lastHit = useRef<string | null>(null);
   const click = useRef<{ id: string; x: number; y: number } | null>(null);
   const down = (e: ThreeEvent<PointerEvent>, id: string) => {
+    // Secondary mouse buttons belong to camera navigation, never to editing.
+    if (e.button !== 0) return;
     e.stopPropagation();
     click.current = { id, x: e.clientX, y: e.clientY };
   };
   const up = (e: ThreeEvent<PointerEvent>, id: string) => {
+    if (e.button !== 0) return;
     e.stopPropagation();
     const start = click.current;
     click.current = null;

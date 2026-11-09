@@ -20,6 +20,8 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Añadidos controles explícitos de órbita, inclinación vertical, subida/bajada, desplazamiento y zoom.
 - Añadida navegación por teclado durante el modo cámara: flechas, W/A/S/D, Q/E y +/−.
 - Paneles laterales con scroll independiente en escritorio y una columna adaptable en móvil.
+- Los eventos de selección y construcción ahora aceptan solo el botón primario: el botón derecho queda reservado para desplazar cámara y no puede colocar una pieza por error.
+- Playwright comprueba el arrastre derecho como navegación y que un clic derecho con la herramienta Pared activa no cambie el diseño.
 
 ### Errores detectados y corrección
 - CI del commit `15cb6ef`: `npm test` pasó (270 pruebas / 32 archivos), pero `npm run build` se detuvo con `src/Workshop.tsx(914,41): TS1136 Property assignment expected`.
