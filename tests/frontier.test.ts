@@ -11,6 +11,7 @@ import {
   surfaceHeight,
   type Course,
   type SurfaceKind,
+  type V3,
 } from "../shared/courses";
 import { Game, initPhysics } from "../shared/game";
 
@@ -484,6 +485,213 @@ it.each(expeditionSafeRoutes)(
     expect(game.state.players[0].done).toBe(true);
     expect(game.state.players[0].penalties).toBe(0);
     expect(game.state.phase).toBe("finished");
+  },
+  180000,
+);
+
+
+type ShortcutRoute = {
+  name: string;
+  index: number;
+  start: V3;
+  end: V3;
+  width: number;
+};
+
+const shortcutRoutes: ShortcutRoute[] = [
+  {
+    name: "La ruta de los arrayanes",
+    index: 0,
+    start: { x: -18, y: 0, z: 51 },
+    end: { x: 15, y: 0, z: -7 },
+    width: 1.8,
+  },
+  {
+    name: "Dunas de cobre",
+    index: 1,
+    start: { x: -25, y: 0, z: 56 },
+    end: { x: 17, y: 7, z: 4 },
+    width: 1.7,
+  },
+  {
+    name: "Archipiélago azul",
+    index: 2,
+    start: { x: -27, y: 0, z: 56 },
+    end: { x: 28, y: 0, z: -42 },
+    width: 1.6,
+  },
+  {
+    name: "La cresta del cóndor",
+    index: 3,
+    start: { x: -34, y: 12, z: 70 },
+    end: { x: 27, y: 5, z: 8 },
+    width: 1.6,
+  },
+];
+
+it.each(shortcutRoutes)(
+  "$name narrow shortcut can be traversed by continuous real shots",
+  ({ name, index, start, end, width }) => {
+    const game = new Game();
+    games.push(game);
+    game.selectCircuit("expeditions");
+    game.add("shortcut-player", "Explorador");
+    game.startPractice(index);
+
+    const shortcut = geometry(frontierCourses[index]).surfaces.find(
+      (surface) => surface.size[0] < 2.05 && surface.size[2] > 55,
+    );
+    expect(shortcut, name + ": shortcut geometry missing").toBeDefined();
+
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    const lengthSquared = dx * dx + dz * dz;
+    const length = Math.sqrt(lengthSquared);
+    const lane = (position: V3) => {
+      const rx = position.x - start.x;
+      const rz = position.z - start.z;
+      return {
+        progress: (rx * dx + rz * dz) / lengthSquared,
+        lateral: Math.abs(dx * rz - dz * rx) / length,
+      };
+    };
+    const point = (fraction: number): V3 => {
+      const x = start.x + dx * fraction;
+      const z = start.z + dz * fraction;
+      const y = surfaceHeight(shortcut!, x, z);
+      expect(y, name + ": no surface at shortcut fraction " + fraction).not.toBeNull();
+      return { x, y: y!, z };
+    };
+
+    const from = point(0.1);
+    const targets = [0.32, 0.54, 0.76, 0.94].map((fraction) => ({
+      ...point(fraction),
+      radius: 1.15,
+    }));
+    const initial = game.state.players[0];
+    initial.pos = { x: from.x, y: from.y + 0.22, z: from.z };
+    game.place();
+    game.tick();
+
+    const resetTrial = (position: V3, time: number) => {
+      const player = game.state.players[0];
+      player.pos = { ...position };
+      player.done = false;
+      player.withdrawn = false;
+      player.penalties = 0;
+      player.strokes = 0;
+      player.capped = [];
+      game.state.phase = "playing";
+      game.state.turn = 0;
+      game.state.moving = false;
+      game.state.time = time;
+      game.state.event = undefined;
+      game.elapsed = 0;
+      game.quiet = 0;
+      game.capturedAt = null;
+      game.lastBounce = -1;
+      game.place();
+      game.tick();
+    };
+    const distance = (a: V3, b: V3) =>
+      Math.hypot(a.x - b.x, (a.y - b.y) * 1.35, a.z - b.z);
+
+    let current: V3 = { ...game.state.players[0].pos };
+    let routeTime = game.state.time;
+    const offsets = [-0.03, -0.015, 0, 0.015, 0.03];
+    const powers = [0.16, 0.25, 0.36, 0.48, 0.62, 0.78, 0.94];
+
+    for (const [targetIndex, target] of targets.entries()) {
+      let successfulShots = 0;
+      while (
+        distance(current, target) > target.radius &&
+        successfulShots < 5
+      ) {
+        const baseAngle = Math.atan2(
+          target.x - current.x,
+          current.z - target.z,
+        );
+        const startingScore = distance(current, target);
+        let best:
+          | { angle: number; power: number; score: number }
+          | undefined;
+        const diagnostics: string[] = [];
+
+        for (const offset of offsets) {
+          for (const power of powers) {
+            resetTrial(current, routeTime);
+            const angle = baseAngle + offset;
+            expect(game.shoot("shortcut-player", angle, power)).toBe(true);
+            let frames = 0;
+            while (game.state.moving && frames++ < 900) game.tick();
+            const player = game.state.players[0];
+            const position = { ...player.pos };
+            const projected = lane(position);
+            const support = game.world.castRay(
+              new R.Ray(
+                { x: position.x, y: position.y + 0.8, z: position.z },
+                { x: 0, y: -1, z: 0 },
+              ),
+              1.8,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              game.ball,
+            );
+            const score = distance(position, target);
+            diagnostics.push(
+              "p=" + power +
+                ",offset=" + offset +
+                ",progress=" + projected.progress.toFixed(2) +
+                ",lateral=" + projected.lateral.toFixed(2) +
+                ",penalty=" + player.penalties +
+                ",support=" + Boolean(support),
+            );
+            if (
+              game.state.moving ||
+              player.penalties > 0 ||
+              !support ||
+              projected.lateral > width / 2 - 0.2 ||
+              projected.progress + 0.03 < lane(current).progress ||
+              score + 0.25 >= startingScore
+            )
+              continue;
+            if (!best || score < best.score)
+              best = { angle, power, score };
+          }
+        }
+
+        expect(
+          best,
+          name + ": shortcut stuck at checkpoint " + (targetIndex + 1) +
+            ", position=" + JSON.stringify(current) +
+            ", candidates=" + diagnostics.sort().slice(0, 10).join("; "),
+        ).toBeDefined();
+
+        resetTrial(current, routeTime);
+        expect(game.shoot("shortcut-player", best!.angle, best!.power)).toBe(true);
+        let frames = 0;
+        while (game.state.moving && frames++ < 900) game.tick();
+        expect(game.state.moving).toBe(false);
+        expect(game.state.players[0].penalties).toBe(0);
+        current = { ...game.state.players[0].pos };
+        const projected = lane(current);
+        expect(projected.lateral).toBeLessThan(width / 2 - 0.2);
+        expect(projected.progress).toBeGreaterThan(
+          targetIndex === 0 ? 0.1 : lane(point([0.32, 0.54, 0.76, 0.94][targetIndex - 1])).progress,
+        );
+        routeTime = game.state.time;
+        successfulShots++;
+      }
+      expect(
+        distance(current, target),
+        name + ": did not traverse shortcut section " + (targetIndex + 1),
+      ).toBeLessThanOrEqual(target.radius);
+    }
+
+    expect(game.state.players[0].penalties).toBe(0);
+    expect(lane(current).progress).toBeGreaterThan(0.9);
   },
   180000,
 );
