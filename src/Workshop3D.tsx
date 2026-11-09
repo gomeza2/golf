@@ -14,7 +14,11 @@ import {
 } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { compileWorkshop, type WorkshopDocument } from "../shared/workshop";
+import {
+  compileWorkshop,
+  WORKSHOP_WATER_LEVEL,
+  type WorkshopDocument,
+} from "../shared/workshop";
 import { Box, Green, GreenSupport, CourseCup } from "./Scene";
 import { CourseWater, useGrassTexture } from "./CourseEffects";
 import { renderProfile, type GraphicsMode } from "./graphics";
@@ -265,9 +269,11 @@ function World(
     for (const piece of p.doc.pieces) {
       const v = new THREE.Vector3(
         piece.x,
-        piece.kind === "ramp"
-          ? (piece.height + piece.endHeight) / 2
-          : piece.height + 0.2,
+        piece.kind === "water"
+          ? WORKSHOP_WATER_LEVEL
+          : piece.kind === "ramp"
+            ? (piece.height + piece.endHeight) / 2
+            : piece.height + 0.2,
         piece.z,
       ).project(camera);
       coords[piece.id] = {
@@ -330,9 +336,11 @@ function World(
               raycast={() => {}}
               position={[
                 piece.x,
-                (piece.kind === "ramp"
-                  ? (piece.height + piece.endHeight) / 2
-                  : piece.height) + 0.03,
+                (piece.kind === "water"
+                  ? WORKSHOP_WATER_LEVEL
+                  : piece.kind === "ramp"
+                    ? (piece.height + piece.endHeight) / 2
+                    : piece.height) + 0.03,
                 piece.z,
               ]}
               rotation={[0, (piece.angle * Math.PI) / 180, 0]}
@@ -376,22 +384,24 @@ function World(
         <sphereGeometry args={[0.22, 20, 12]} />
         <meshStandardMaterial color="#ffe29a" />
       </mesh>
-      <mesh
-        position={[0, p.buildHeight, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        onPointerDown={(e) => down(e, "ground")}
-        onPointerUp={(e) => {
-          if (p.placing) up(e, "ground");
-        }}
-      >
-        <planeGeometry args={[24, 48]} />
-        <meshBasicMaterial
-          transparent
-          opacity={0}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {p.placing && (
+        <mesh
+          position={[0, p.buildHeight, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          onPointerDown={(e) => down(e, "ground")}
+          onPointerUp={(e) => {
+            if (p.placing) up(e, "ground");
+          }}
+        >
+          <planeGeometry args={[24, 48]} />
+          <meshBasicMaterial
+            transparent
+            opacity={0}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
       {!p.navigation &&
         !p.placing &&
         p.selection.length > 0 &&

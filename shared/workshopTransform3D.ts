@@ -1,4 +1,8 @@
-import { parseWorkshop, type WorkshopDocument } from "./workshop";
+import {
+  parseWorkshop,
+  WORKSHOP_WATER_LEVEL,
+  type WorkshopDocument,
+} from "./workshop";
 export type EditorTransform = {
   x?: number;
   y?: number;
@@ -15,7 +19,11 @@ export function selectionPivot(doc: WorkshopDocument, ids: string[]) {
       (Math.min(...pieces.map((p) => p.x)) +
         Math.max(...pieces.map((p) => p.x))) /
       2,
-    y: Math.min(...pieces.map((p) => p.height)),
+    y: Math.min(
+      ...pieces.map((p) =>
+        p.kind === "water" ? WORKSHOP_WATER_LEVEL : p.height,
+      ),
+    ),
     z:
       (Math.min(...pieces.map((p) => p.z)) +
         Math.max(...pieces.map((p) => p.z))) /
@@ -41,6 +49,13 @@ export function transformWorkshop3D(
   const x = snap(transform.x ?? 0),
     y = snap(transform.y ?? 0),
     z = snap(transform.z ?? 0);
+  if (
+    y !== 0 &&
+    doc.pieces.some((p) => ids.includes(p.id) && p.kind === "water")
+  )
+    throw Error(
+      "El agua tiene una cota fija. Selecciona solo el suelo para cambiar alturas.",
+    );
   const quarterTurn = doc.pieces.some(
     (p) =>
       ids.includes(p.id) &&

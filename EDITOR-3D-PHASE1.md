@@ -24,6 +24,8 @@ La organización del editor queda separada de la cancha jugable. Los grupos y bl
 
 Las plataformas conservan sus giros válidos de 90°. Las demás piezas permiten los giros admitidos por el documento; el manipulador usa pasos de 5°. Las superficies rectangulares intercambian dimensiones al girar en cuartos de vuelta. El escalado oblicuo no puede introducir deformaciones que el formato no representa: usa Ancho/Largo o escalado uniforme. No hay un eje de escala vertical ficticio; las alturas se ajustan moviendo Y o mediante los campos.
 
+El agua conserva su cota física fija de −1,4 m; sus controles permiten posición X/Z, tamaño y giro, sin ofrecer una altura que el formato no representa. Una selección que incluye agua no puede mover ni alinear Y parcialmente.
+
 Los marcadores se seleccionan en la escena y se colocan con sus herramientas, con posición/altura exactas en propiedades. El plano de construcción es explícito: tocar una estructura no cambia automáticamente la altura elegida.
 
 ## Estructuras reutilizables

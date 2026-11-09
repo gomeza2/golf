@@ -182,7 +182,12 @@ export function Manipulator({
         : Math.PI / 36,
     );
     c.showX = mode !== "rotate";
-    c.showY = mode !== "scale";
+    c.showY =
+      mode !== "scale" &&
+      !(
+        mode === "translate" &&
+        doc.pieces.some((p) => ids.includes(p.id) && p.kind === "water")
+      );
     c.showZ = mode !== "rotate";
     invalidate();
   }, [doc, ids.join(","), mode, step]);
@@ -198,7 +203,14 @@ export function Manipulator({
       (x) => x.type === "TransformControlsGizmo",
     ) as any;
     for (const mesh of gizmo?.picker?.[mode]?.children ?? []) {
-      if (!["X", "Y", "Z"].includes(mesh.name) || !mesh.visible) continue;
+      if (
+        !["X", "Y", "Z"].includes(mesh.name) ||
+        !mesh.visible ||
+        (mesh.name === "X" && !c.showX) ||
+        (mesh.name === "Y" && !c.showY) ||
+        (mesh.name === "Z" && !c.showZ)
+      )
+        continue;
       const box = new THREE.Box3().setFromObject(mesh),
         world = box.getCenter(new THREE.Vector3()).project(camera);
       if (world.z >= -1 && world.z <= 1)

@@ -105,6 +105,14 @@ it("surface group rotations also preserve valid dirt zone geometry", () => {
   expect(
     transformWorkshop3D(doc, ["soil"], { yaw: 90 }, 0.5).pieces[1],
   ).toMatchObject({ angle: 0, width: 4, length: 2 });
+  const water = { ...doc.pieces[1], kind: "water" as const, id: "water" };
+  doc.pieces.push(water);
+  expect(() =>
+    transformWorkshop3D(doc, ["soil", "water"], { y: 0.5 }, 0.5),
+  ).toThrow(/cota fija/);
+  expect(() =>
+    transformWorkshopSelection(doc, ["soil", "water"], "alignHeight"),
+  ).toThrow(/cota fija/);
 });
 it("groups have unique membership, preserve real identities, and locks refuse edits", () => {
   const doc = source();

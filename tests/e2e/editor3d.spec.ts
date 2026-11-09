@@ -102,6 +102,27 @@ test("a real 3D selection can be moved by its rendered gizmo and undo restores t
     .selectOption("top");
   await canvas.scrollIntoViewIfNeeded();
   const box = (await canvas.boundingBox())!;
+  const waterPoint = await canvas.evaluate(
+    (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!).water,
+  );
+  await page.mouse.click(box.x + waterPoint.x, box.y + waterPoint.y);
+  await expect(page.locator(".workshop-properties h2").first()).toHaveText(
+    "Agua",
+  );
+  await expect
+    .poll(
+      async () =>
+        JSON.parse((await canvas.getAttribute("data-editor-pivot")) || "[]")[1],
+    )
+    .toBe(-1.4);
+  await expect
+    .poll(async () =>
+      Object.keys(
+        JSON.parse((await canvas.getAttribute("data-editor-handles")) || "{}"),
+      ),
+    )
+    .not.toContain("Y");
+
   const pos = await canvas.evaluate(
     (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!)["soil"],
   );
@@ -354,6 +375,15 @@ test("construction on the actual 3D scene groups structures, safely copies, lock
   await page
     .getByRole("combobox", { name: "Vista del editor", exact: true })
     .selectOption("top");
+  await canvas.scrollIntoViewIfNeeded();
+  const basePoint = await canvas.evaluate(
+      (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!).base,
+    ),
+    baseRect = (await canvas.boundingBox())!;
+  await page.mouse.click(baseRect.x + basePoint.x, baseRect.y + basePoint.y);
+  await expect(page.locator(".workshop-properties h2").first()).toHaveText(
+    "Plataforma",
+  );
   await page
     .getByRole("button", { name: "Túnel transitable", exact: true })
     .click();

@@ -42,6 +42,10 @@ export function transformWorkshopSelection(
   if (!pieces.length) return { doc, ids: [] };
   if (!Number.isFinite(step) || step <= 0 || step > 1)
     throw Error("El paso debe estar entre 0 y 1 m.");
+  if (action === "alignHeight" && pieces.some((p) => p.kind === "water"))
+    throw Error(
+      "El agua tiene una cota fija. Alinea alturas sin incluir el agua.",
+    );
   if (["left", "right", "up", "down"].includes(action))
     return {
       doc: moveWorkshopPieces(

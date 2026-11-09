@@ -838,6 +838,13 @@ test("the published 3D editor selects actual stacked geometry, moves a gizmo and
     point = await canvas.evaluate(
       (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!).soil,
     );
+  const waterPoint = await canvas.evaluate(
+    (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!).water,
+  );
+  await page.mouse.click(r.x + waterPoint.x, r.y + waterPoint.y);
+  await expect(page.locator(".workshop-properties h2").first()).toHaveText(
+    "Agua",
+  );
   await page.mouse.click(r.x + point.x, r.y + point.y);
   await expect(page.locator(".workshop-properties h2").first()).toHaveText(
     "Grupo",
