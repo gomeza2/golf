@@ -911,7 +911,7 @@ export function Workshop({
             ))
           )}
         </aside>
-        <div ref={stageRef} className={{`workshop-map workshop-map--${editorView}`}>
+        <div ref={stageRef} className={`workshop-map workshop-map--${editorView}`}>
           <div className="workshop-view-switch" role="group" aria-label="Modo de edición">
             <div>
               <strong>Editar cancha</strong>

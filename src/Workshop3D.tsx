@@ -616,11 +616,16 @@ export function Workshop3D(p: Props) {
             dpr={profile.ratio}
             frameloop="demand"
             camera={{ position: [32, 35, 46], fov: 43, near: 0.1, far: 500 }}
-            onCreated={({ gl }) =>
+            onCreated={({ gl }) => {
+              gl.domElement.tabIndex = 0;
+              gl.domElement.setAttribute(
+                "aria-label",
+                "Escena 3D del taller. Enfoca esta vista para mover la cámara con el teclado.",
+              );
               gl.domElement.addEventListener("webglcontextlost", () =>
                 setFailed(true),
-              )
-            }
+              );
+            }}
             fallback={
               <p>
                 Activa WebGL para construir en 3D. El plano sigue disponible.

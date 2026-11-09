@@ -21,9 +21,16 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Añadida navegación por teclado durante el modo cámara: flechas, W/A/S/D, Q/E y +/−.
 - Paneles laterales con scroll independiente en escritorio y una columna adaptable en móvil.
 
+### Errores detectados y corrección
+- CI del commit `15cb6ef`: `npm test` pasó (270 pruebas / 32 archivos), pero `npm run build` se detuvo con `src/Workshop.tsx(914,41): TS1136 Property assignment expected`.
+- Causa: el atributo JSX `className` de la nueva vista se escribió con una llave duplicada.
+- Corrección: se dejó una única expresión JSX válida. Se agregó además `tabIndex` y nombre accesible al canvas para que el teclado pueda enfocarlo.
+
 ### Verificación agregada
 - Playwright: apertura explícita de 3D para pruebas de escena, alternancia 2D/3D sin cambiar el borrador, y cambios de pose en controles de órbita, inclinación y elevación.
+- La prueba enfoca el canvas antes de probar las flechas; no depende del botón que quedó seleccionado.
 - La suite de producción vuelve a entrar explícitamente en 3D antes de seleccionar geometría.
+- Pendiente confirmar que el siguiente CI completa build y las suites de navegador.
 
 ### Pendiente
 - Revisar capturas nuevas y probar con mouse real y móvil físico; la emulación de Playwright no sustituye esa prueba.
