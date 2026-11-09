@@ -543,7 +543,7 @@ const shortcutRoutes: ShortcutRoute[] = [
 
 it.each(shortcutRoutes)(
   "$name narrow shortcut can be traversed by continuous real shots",
-  ({ name, index, start, end, width }) => {
+  ({ name, index, points, width }) => {
     const game = new Game();
     games.push(game);
     game.selectCircuit("expeditions");
