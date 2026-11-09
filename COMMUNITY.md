@@ -1,6 +1,6 @@
 # Comunidad de creaciones — 0.21.0
 
-**Ediciones físicas:** documento 1 mantiene física original; documentos 2 y 3 requieren `physics: 2`; el 3 admite giro completo, puerta elevable y tierra. La elección se guarda dentro del JSONB inmutable y su hash. No se reescriben revisiones anteriores ni hace falta una migración adicional. Nuevo servidor y cliente usan protocolo 17. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) explica la conversión explícita y las pruebas de compatibilidad.
+**Ediciones físicas:** documento 1 mantiene física original; documentos 2 y 3 requieren `physics: 2`; el 3 admite giro completo, puerta elevable y tierra. La elección se guarda dentro del JSONB inmutable y su hash. No se reescriben revisiones anteriores ni hace falta una migración adicional. Nuevo servidor y cliente usan protocolo 18. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) explica la conversión explícita y las pruebas de compatibilidad.
 
 `GET /api/community/config` declara `documentVersions: [1,2,3]` cuando la base está disponible. Los clientes no ofrecen enviar un documento a un servidor que no lo anuncia. Galería y detalles incluyen `physics`; el historial identifica ambas ediciones. El filtro `physics=1|2` aplica a la última revisión pública de cada creación; las anteriores siguen disponibles por enlace fijo. No se vuelve a mostrar una revisión antigua en la galería solamente para coincidir con un filtro.
 
@@ -18,7 +18,7 @@ La comunidad usa **PostgreSQL real**, con autores vinculados a una identidad OID
 - Denuncias autenticadas, deduplicadas por persona/revisión; cola de moderación, aprobación, rechazo, retirada, restauración y cierre de denuncias con motivo.
 - Historial de decisiones persistente y de solo anexado. El contenido y los identificadores de cada revisión no pueden actualizarse ni borrarse mediante las operaciones normales de la base.
 
-La publicación conserva los documentos del taller **v1/v2/v3: una cancha de un hoyo**. No se agrega un editor de colecciones de varios hoyos ni se modifican los recorridos oficiales. El protocolo de salas es **17**, las reglas locales siguen en **7** y el guardado oficial conserva formatos **1/2**.
+La publicación conserva los documentos del taller **v1/v2/v3: una cancha de un hoyo**. No se agrega un editor de colecciones de varios hoyos ni se reescriben los recorridos oficiales existentes; las selecciones oficiales nuevas se definen en el catálogo del juego. El protocolo de salas es **18**, las reglas locales siguen en **7** y el guardado oficial conserva formatos **1/2**.
 
 ## Estado público y configuración incompleta
 

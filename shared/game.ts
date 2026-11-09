@@ -23,6 +23,7 @@ import {
   inZone,
   surfaceAt,
   rollingResistance,
+  surfaceFriction,
   blockPose,
   blockRotation,
   type Block,
@@ -405,9 +406,19 @@ export class Game {
             sand: 0.08,
             rough: 0.18,
             dirt: 0.4,
+            stone: 0.22,
+            wood: 0.18,
+            wet: 0.06,
           }[surface];
         }
       }
+    }
+    // The original physics edition keeps its historical contact material.
+    // The current edition selects a restrained material coefficient per surface;
+    // rolling resistance remains a separate tangential effect below.
+    if (physicsEdition(s) === 2) {
+      const contactSurface = surfaceAt(this.course(), this.ball.translation());
+      this.ball.collider(0).setFriction(surfaceFriction[contactSurface]);
     }
     this.ball.collider(0).setRestitution(landingRestitution);
     this.world.step();

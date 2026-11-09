@@ -89,6 +89,9 @@ function WaterRipples({ zone }: { zone: Zone }) {
     </mesh>
   );
 }
+type SurfacePatchKind = "rough" | "dirt" | "sand" | "stone" | "wood" | "wet";
+type SurfacePatchData = Zone & { kind: SurfacePatchKind; shade: string };
+
 export function CourseWater({
   course,
   detail = 1,
@@ -96,44 +99,140 @@ export function CourseWater({
   course: Course;
   detail?: number;
 }) {
+  const patches: SurfacePatchData[] = [
+    ...(course.rough || []).map((zone) => ({
+      ...zone,
+      kind: "rough" as const,
+      shade: "#536b38",
+    })),
+    ...(course.dirt || []).map((zone) => ({
+      ...zone,
+      kind: "dirt" as const,
+      shade: "#967352",
+    })),
+    ...(course.sand || []).map((zone) => ({
+      ...zone,
+      kind: "sand" as const,
+      shade: "#d9bf86",
+    })),
+    ...(course.stone || []).map((zone) => ({
+      ...zone,
+      kind: "stone" as const,
+      shade: "#879087",
+    })),
+    ...(course.wood || []).map((zone) => ({
+      ...zone,
+      kind: "wood" as const,
+      shade: "#9a704b",
+    })),
+    ...(course.wet || []).map((zone) => ({
+      ...zone,
+      kind: "wet" as const,
+      shade: "#477f83",
+    })),
+  ];
   return (
     <>
       {course.water?.map((zone, i) => (
         <Water key={i} zone={zone} detail={detail} />
       ))}
-      {[
-        ...(course.rough || []).map((z) => ({ ...z, shade: "#536b38" })),
-        ...(course.dirt || []).map((z) => ({ ...z, shade: "#967352" })),
-        ...(course.sand || []).map((z) => ({ ...z, shade: "#d9bf86" })),
-      ].map((zone, i) => (
-        <SurfacePatch key={`sand${i}`} zone={zone} />
+      {patches.map((zone, i) => (
+        <SurfacePatch key={`${zone.kind}-${i}`} zone={zone} />
       ))}
     </>
   );
 }
-function SurfacePatch({ zone }: { zone: Zone & { shade: string } }) {
+
+function SurfacePatch({ zone }: { zone: SurfacePatchData }) {
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 64;
+    canvas.width = canvas.height = 128;
     const ctx = canvas.getContext("2d")!;
     ctx.fillStyle = "#eeeeee";
-    ctx.fillRect(0, 0, 64, 64);
-    for (let i = 0; i < 1600; i++) {
-      ctx.fillStyle = i % 3 ? "rgba(60,45,30,.13)" : "rgba(255,255,245,.6)";
-      ctx.fillRect(
-        (i * 31 + Math.floor(i / 17)) % 64,
-        (i * 19 + Math.floor(i / 23)) % 64,
-        1,
-        i % 7 ? 1 : 3,
-      );
+    ctx.fillRect(0, 0, 128, 128);
+
+    if (zone.kind === "wood") {
+      for (let row = 0; row < 8; row++) {
+        const y = row * 16;
+        ctx.fillStyle = row % 2 ? "rgba(74,43,22,.16)" : "rgba(255,227,184,.12)";
+        ctx.fillRect(0, y, 128, 15);
+        ctx.strokeStyle = "rgba(54,37,25,.42)";
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(0, y + 15);
+        ctx.lineTo(128, y + 15);
+        ctx.stroke();
+        for (let x = (row % 2) * 13 + 8; x < 128; x += 42) {
+          ctx.fillStyle = "rgba(40,31,24,.42)";
+          ctx.beginPath();
+          ctx.arc(x, y + 7, 1.25, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (let grain = 0; grain < 7; grain++) {
+          const x = (row * 19 + grain * 31) % 120;
+          ctx.strokeStyle = "rgba(80,48,24,.13)";
+          ctx.beginPath();
+          ctx.moveTo(x, y + 3 + (grain % 3) * 3);
+          ctx.lineTo(x + 7 + (grain % 4) * 4, y + 3 + (grain % 3) * 3);
+          ctx.stroke();
+        }
+      }
+    } else if (zone.kind === "stone") {
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 6; col++) {
+          const x = col * 23 + (row % 2) * 11 + 3;
+          const y = row * 22 + 3;
+          const seed = row * 17 + col * 29;
+          ctx.fillStyle =
+            seed % 3 === 0
+              ? "rgba(45,57,55,.22)"
+              : seed % 2
+                ? "rgba(255,255,255,.14)"
+                : "rgba(106,115,105,.18)";
+          ctx.beginPath();
+          ctx.roundRect(x, y, 19, 18, 4);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(50,58,54,.18)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    } else if (zone.kind === "wet") {
+      for (let i = 0; i < 28; i++) {
+        const y = (i * 19) % 124 + 2;
+        const x = (i * 37) % 112 + 4;
+        ctx.strokeStyle = i % 3 ? "rgba(220,250,245,.22)" : "rgba(22,69,78,.17)";
+        ctx.lineWidth = i % 4 === 0 ? 2.2 : 1;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 5 + (i % 5) * 3, 1.2 + (i % 2), -0.12, 0, Math.PI * 1.65);
+        ctx.stroke();
+      }
+    } else {
+      for (let i = 0; i < 2200; i++) {
+        const x = (i * 31 + Math.floor(i / 17) * 7) % 128;
+        const y = (i * 19 + Math.floor(i / 23) * 5) % 128;
+        ctx.fillStyle =
+          zone.kind === "sand"
+            ? i % 3
+              ? "rgba(115,79,38,.12)"
+              : "rgba(255,255,240,.48)"
+            : i % 3
+              ? "rgba(60,45,30,.13)"
+              : "rgba(255,255,245,.6)";
+        ctx.fillRect(x, y, 1, i % 7 ? 1 : 2);
+      }
     }
+
     const result = new THREE.CanvasTexture(canvas);
     result.wrapS = result.wrapT = THREE.RepeatWrapping;
     result.repeat.set(zone.width / 2, zone.length / 2);
     result.colorSpace = THREE.SRGBColorSpace;
     return result;
-  }, [zone.width, zone.length]);
+  }, [zone.width, zone.length, zone.kind]);
   useEffect(() => () => texture.dispose(), [texture]);
+  const roughness =
+    zone.kind === "wet" ? 0.24 : zone.kind === "wood" ? 0.76 : 0.95;
+  const metalness = zone.kind === "wet" ? 0.16 : 0;
   return (
     <mesh
       position={[zone.x, zone.y + 0.008, zone.z]}
@@ -141,7 +240,12 @@ function SurfacePatch({ zone }: { zone: Zone & { shade: string } }) {
       receiveShadow
     >
       <planeGeometry args={[zone.width, zone.length]} />
-      <meshStandardMaterial color={zone.shade} map={texture} roughness={1} />
+      <meshStandardMaterial
+        color={zone.shade}
+        map={texture}
+        roughness={roughness}
+        metalness={metalness}
+      />
     </mesh>
   );
 }

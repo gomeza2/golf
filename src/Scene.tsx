@@ -502,6 +502,18 @@ function World({
 }) {
   const c = courseOverride ?? getCourse(s),
     theme = { ...getCircuit(s.circuit), ...c.visual };
+  const daylight =
+    c.ambience === "desert"
+      ? "#ffe0b6"
+      : c.ambience === "coast"
+        ? "#c3eaf4"
+        : c.ambience === "mountain"
+          ? "#d9e8f4"
+          : c.ambience === "forest"
+            ? "#dceccf"
+            : s.circuit === "moonlight"
+              ? "#a6d8ff"
+              : "#ffe2b2";
   const shape = useMemo(() => geometry(c), [c]);
   const dimensions = useMemo(() => courseSize(c), [c]);
   const grass = useGrassTexture();
@@ -557,12 +569,12 @@ function World({
         ]}
       />
       <ambientLight intensity={1.15} />
-      <hemisphereLight args={["#e9fff5", "#6b7050", 1.3]} />
+      <hemisphereLight args={[daylight, theme.ground, 1.3]} />
       <directionalLight
         onUpdate={updateShadow}
         position={[-12, 25, 8]}
-        intensity={s.circuit === "moonlight" ? 2 : 3}
-        color={s.circuit === "moonlight" ? "#a6d8ff" : "#ffe2b2"}
+        intensity={s.circuit === "moonlight" ? 2 : c.ambience === "desert" ? 3.15 : 2.85}
+        color={daylight}
         castShadow={rendering.shadowSize > 0}
         shadow-mapSize={[
           Math.max(1, rendering.shadowSize),

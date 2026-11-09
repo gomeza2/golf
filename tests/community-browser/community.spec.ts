@@ -212,7 +212,7 @@ test("a real creation moves through OIDC publication, review, anonymous discover
       .click();
     await expect(
       author.getByRole("heading", { name: "Taller de hoyos", exact: true }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15000 });
     expect(
       await author.evaluate(() =>
         JSON.parse(

@@ -2,6 +2,7 @@ import { createRiftCourses } from "./riftCourses";
 import { createAdventureCourses } from "./adventureCourses";
 import { createSkyCourses } from "./skyCourses";
 import { createWildCourses } from "./wildCourses";
+import { createFrontierCourses } from "./frontierCourses";
 export type V3 = { x: number; y: number; z: number };
 export type Block = {
   pos: [number, number, number];
@@ -28,7 +29,7 @@ export type FloorMesh = {
 };
 export type Course = {
   solidGreenSides?: boolean;
-  ambience?: "glacier" | "lighthouse" | "aqueduct";
+  ambience?: "glacier" | "lighthouse" | "aqueduct" | "forest" | "desert" | "coast" | "mountain";
   visual?: { ground: string; edge: string; background: string; accent: string };
   routeLength?: number;
   outerWalls?: false;
@@ -47,6 +48,9 @@ export type Course = {
   sand?: Zone[];
   rough?: Zone[];
   dirt?: Zone[];
+  stone?: Zone[];
+  wood?: Zone[];
+  wet?: Zone[];
   dimensions?: { width: number; length: number };
 };
 const wall = (x: number, z: number, w: number, d: number): Block => ({
@@ -533,6 +537,7 @@ export const adventureCourses = createAdventureCourses({
   curvedBank,
 });
 export const wildCourses = createWildCourses({ deck, rampDeck });
+export const frontierCourses = createFrontierCourses({ deck, rampDeck });
 export const riftAlternateCourses = riftCourses.map((course, i) => ({
   ...course,
   cup: [
@@ -549,6 +554,7 @@ export const uniqueCourses = [
   ...riftCourses,
   ...adventureCourses,
   ...wildCourses,
+  ...frontierCourses,
 ];
 // Append alternate pin layouts without renumbering any existing practice record.
 export const practiceLayouts = [
@@ -559,6 +565,7 @@ export const practiceLayouts = [
   ...riftAlternateCourses,
   ...adventureCourses,
   ...wildCourses,
+  ...frontierCourses,
 ];
 export const inZone = (zone: Zone, p: V3, margin = 0) =>
   Math.abs(p.x - zone.x) < zone.width / 2 + margin &&
@@ -710,6 +717,17 @@ export const circuits = [
     edge: "#cbbd9b",
     background: "#426e7f",
     accent: "#ffd28a",
+  },
+  {
+    id: "expeditions" as const,
+    name: "Grandes travesías",
+    description:
+      "Cuatro recorridos de 156–243 m por bosques, dunas, archipiélagos y montañas. Rutas amplias, atajos y terrenos distintos.",
+    courses: frontierCourses,
+    ground: "#66846a",
+    edge: "#b9a17d",
+    background: "#183e48",
+    accent: "#f0c78a",
   },
 ];
 export const isCircuitId = (value: unknown): value is CircuitId =>
@@ -886,11 +904,9 @@ export function cupWalls(course: Course): Block[] {
   ]);
 }
 
-export function surfaceAt(
-  course: Course,
-  pos: V3,
-): "grass" | "rough" | "dirt" | "sand" {
-  for (const kind of ["sand", "dirt", "rough"] as const)
+export type SurfaceKind = "grass" | "rough" | "dirt" | "sand" | "stone" | "wood" | "wet";
+export function surfaceAt(course: Course, pos: V3): SurfaceKind {
+  for (const kind of ["wet", "stone", "wood", "sand", "dirt", "rough"] as const)
     if (
       course[kind]?.some(
         (zone) => inZone(zone, pos) && Math.abs(pos.y - zone.y - 0.22) < 0.2,
@@ -904,7 +920,25 @@ export const rollingResistance = {
   rough: 0.04,
   dirt: 0.055,
   sand: 0.085,
+  stone: 0.012,
+  wood: 0.024,
+  wet: 0.01,
 } as const;
+
+/** Contact friction used by the current physics edition; edition 1 stays unchanged. */
+export const surfaceFriction = {
+  // Kept deliberately modest: the existing Rapier ground collider also
+  // participates in the coefficient-combination rule.
+  // Existing materials keep their previous ball coefficient.
+  grass: 0.02,
+  rough: 0.02,
+  dirt: 0.02,
+  sand: 0.02,
+  // New materials get distinct but restrained contact coefficients.
+  stone: 0.025,
+  wood: 0.05,
+  wet: 0.012,
+} as const satisfies Record<SurfaceKind, number>;
 
 export function surfaceHeight(
   block: Block,
