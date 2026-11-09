@@ -18,6 +18,7 @@ export function Manipulator({
   onPreview,
   onCommit,
   onError,
+  onTransforming,
 }: {
   doc: WorkshopDocument;
   ids: string[];
@@ -28,10 +29,27 @@ export function Manipulator({
   onPreview: (doc: WorkshopDocument | null) => void;
   onCommit: (doc: WorkshopDocument) => void;
   onError: (message: string) => void;
+  onTransforming: (active: boolean) => void;
 }) {
   const { camera, gl, scene, invalidate } = useThree();
-  const latest = useRef({ doc, ids, step, onPreview, onCommit, onError });
-  latest.current = { doc, ids, step, onPreview, onCommit, onError };
+  const latest = useRef({
+    doc,
+    ids,
+    step,
+    onPreview,
+    onCommit,
+    onError,
+    onTransforming,
+  });
+  latest.current = {
+    doc,
+    ids,
+    step,
+    onPreview,
+    onCommit,
+    onError,
+    onTransforming,
+  };
   const object = useMemo(() => new THREE.Object3D(), []),
     controls = useRef<TransformControls | null>(null),
     initial = useRef<WorkshopDocument | null>(null),
@@ -48,6 +66,7 @@ export function Manipulator({
       initial.current = latest.current.doc;
       proposed.current = null;
       drag.current = true;
+      latest.current.onTransforming(true);
       if (orbit.current) orbit.current.enabled = false;
     };
     const move = () => {
@@ -80,6 +99,7 @@ export function Manipulator({
     const finish = () => {
       if (!drag.current) return;
       drag.current = false;
+      latest.current.onTransforming(false);
       if (orbit.current) orbit.current.enabled = true;
       if (proposed.current) latest.current.onCommit(proposed.current);
       latest.current.onPreview(null);
@@ -90,6 +110,7 @@ export function Manipulator({
     const cancel = () => {
       if (!drag.current) return;
       drag.current = false;
+      latest.current.onTransforming(false);
       c.dragging = false;
       c.axis = null;
       initial.current = null;

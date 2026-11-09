@@ -95,10 +95,14 @@ export function Workshop({
   const [fullscreen, setFullscreen] = useState(false);
   useEffect(() => {
     const change = () =>
-      setFullscreen(document.fullscreenElement === sectionRef.current);
+      setFullscreen(
+        !!sectionRef.current &&
+          document.fullscreenElement === sectionRef.current,
+      );
     document.addEventListener("fullscreenchange", change);
     return () => document.removeEventListener("fullscreenchange", change);
   }, []);
+  const [transforming, setTransforming] = useState(false);
   const cameraMemory = useRef<EditorCameraMemory | null>(null);
   const [history, setHistory] = useState<WorkshopHistory>(() => ({
     past: [],
@@ -190,6 +194,7 @@ export function Workshop({
     const key = (e: KeyboardEvent) => {
       if (
         testing ||
+        transforming ||
         document.querySelector("dialog[open]") ||
         json !== null ||
         drag.current ||
@@ -234,7 +239,7 @@ export function Workshop({
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [history, groupIds, gridStep, testing, json]);
+  }, [history, groupIds, gridStep, testing, json, transforming]);
   useEffect(() => {
     setDraftStored(saveProject(history.present, history.editor));
   }, [history.present, history.editor]);
@@ -628,17 +633,19 @@ export function Workshop({
       <div className="workshop-actions">
         <button
           onClick={() => setHistory(workshopUndo)}
-          disabled={!history.past.length}
+          disabled={transforming || !history.past.length}
         >
           Deshacer
         </button>
         <button
           onClick={() => setHistory(workshopRedo)}
-          disabled={!history.future.length}
+          disabled={transforming || !history.future.length}
         >
           Rehacer
         </button>
-        <button onClick={save}>Guardar diseño</button>
+        <button disabled={transforming} onClick={save}>
+          Guardar diseño
+        </button>
         <button onClick={download}>Exportar archivo</button>
         <button
           onClick={() => {
@@ -669,7 +676,7 @@ export function Workshop({
         </button>
         <button
           className="primary"
-          disabled={!!issues.length}
+          disabled={transforming || !!issues.length}
           onClick={() => setTesting(true)}
         >
           Probar en 3D
@@ -905,6 +912,7 @@ export function Workshop({
         <div ref={stageRef} className="workshop-map">
           <Workshop3D
             cameraMemory={cameraMemory}
+            onTransforming={setTransforming}
             doc={doc}
             selected={selected}
             selection={selection}

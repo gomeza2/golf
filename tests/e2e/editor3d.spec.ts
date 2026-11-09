@@ -95,7 +95,7 @@ test("a real 3D selection can be moved by its rendered gizmo and undo restores t
   page,
 }) => {
   await open(page);
-  await input(page);
+  await page.getByRole("button", { name: /Laboratorio en altura/ }).click();
   const canvas = page.locator(".editor3d-stage canvas");
   await page
     .getByRole("combobox", { name: "Vista del editor", exact: true })
@@ -107,8 +107,11 @@ test("a real 3D selection can be moved by its rendered gizmo and undo restores t
   );
   await page.mouse.click(box.x + pos.x, box.y + pos.y);
   await expect(page.locator(".workshop-properties h2").first()).toHaveText(
-    "Plataforma",
+    "Grupo",
   );
+  await expect
+    .poll(() => canvas.getAttribute("data-editor-selection"))
+    .toContain("tunnel-");
   await page.keyboard.down("Alt");
   await page.mouse.click(box.x + pos.x, box.y + pos.y);
   await page.keyboard.up("Alt");
@@ -186,6 +189,7 @@ test("a real 3D selection can be moved by its rendered gizmo and undo restores t
     cancelRect.y + cancelHandle.y,
     { steps: 10 },
   );
+  await page.keyboard.press("Control+z");
   await page.keyboard.press("Escape");
   await page.mouse.up();
   expect(await draft(page)).toEqual(before);
@@ -254,6 +258,10 @@ test("a saved editable project preserves locks, grouping, clipboard and real phy
       .locator(".editor3d-stage canvas")
       .getAttribute("data-editor-camera"))!,
   );
+  if (await page.evaluate(() => document.fullscreenEnabled))
+    await page
+      .getByRole("button", { name: "Ampliar editor", exact: true })
+      .click();
   await page.getByRole("button", { name: "Probar en 3D", exact: true }).click();
   for (const [a, p] of riskLock) {
     await expect(
@@ -283,6 +291,9 @@ test("a saved editable project preserves locks, grouping, clipboard and real phy
     "data-editor-ready",
     "true",
   );
+  await expect(
+    page.getByRole("button", { name: "Ampliar editor", exact: true }),
+  ).toBeVisible();
   await expect
     .poll(async () => {
       const current = JSON.parse(

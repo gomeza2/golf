@@ -839,6 +839,12 @@ test("the published 3D editor selects actual stacked geometry, moves a gizmo and
       (c: HTMLCanvasElement) => JSON.parse(c.dataset.editorPieces!).soil,
     );
   await page.mouse.click(r.x + point.x, r.y + point.y);
+  await expect(page.locator(".workshop-properties h2").first()).toHaveText(
+    "Grupo",
+  );
+  await expect
+    .poll(() => canvas.getAttribute("data-editor-selection"))
+    .toContain("tunnel-");
   await page.keyboard.down("Alt");
   await page.mouse.click(r.x + point.x, r.y + point.y);
   await page.keyboard.up("Alt");

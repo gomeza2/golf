@@ -38,6 +38,7 @@ type Props = {
   onPreview: (doc: WorkshopDocument | null) => void;
   onCommit: (doc: WorkshopDocument) => void;
   onError: (message: string) => void;
+  onTransforming: (active: boolean) => void;
 };
 type Command = {
   id: number;
@@ -255,6 +256,7 @@ function World(
   };
   useEffect(() => {
     gl.domElement.dataset.editorReady = "true";
+    gl.domElement.dataset.editorSelection = JSON.stringify(p.selection);
     invalidate();
   }, [p.doc, p.selection, p.locked, p.isolate, p.showGrid, p.navigation]);
   useFrame(() => {
@@ -325,6 +327,7 @@ function World(
           <CourseWater course={single} detail={0} />
           {p.selection.includes(piece.id) && (
             <mesh
+              raycast={() => {}}
               position={[
                 piece.x,
                 (piece.kind === "ramp"
@@ -403,6 +406,7 @@ function World(
             onPreview={p.onPreview}
             onCommit={p.onCommit}
             onError={p.onError}
+            onTransforming={p.onTransforming}
           />
         )}
     </>
