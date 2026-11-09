@@ -2,6 +2,7 @@ import { afterEach, beforeAll, expect, it } from "vitest";
 import R from "@dimforge/rapier3d-compat";
 import {
   frontierCourses,
+  deck,
   geometry,
   getCircuit,
   rollingResistance,
@@ -181,6 +182,49 @@ it("gives every new surface a matching physical classification and distinct cont
   ).toBe(3);
   for (const legacy of ["grass", "rough", "dirt", "sand"] as const)
     expect(surfaceFriction[legacy]).toBe(0.02);
+});
+
+it("applies surface contact friction and rolling resistance in the real Rapier simulation", () => {
+  const laboratory: Course = {
+    name: "Laboratorio de superficies",
+    par: 3,
+    dimensions: { width: 40, length: 40 },
+    start: { x: -12, y: 0.22, z: 12 },
+    cup: { x: 12, y: 0, z: -12 },
+    blocks: [],
+    terrain: [deck(0, 0, 38, 38)],
+    wood: [{ x: -10, z: 0, width: 8, length: 10, y: 0 }],
+    stone: [{ x: 0, z: 0, width: 8, length: 10, y: 0 }],
+    wet: [{ x: 10, z: 0, width: 8, length: 10, y: 0 }],
+  };
+
+  function roll(kind: "wood" | "stone" | "wet") {
+    const zone = laboratory[kind]![0];
+    const game = new Game(laboratory, false, 2);
+    games.push(game);
+    game.add("surface-player", "Surface test");
+    game.start();
+    game.state.players[0].pos = {
+      x: zone.x,
+      y: zone.y + 0.22,
+      z: 2,
+    };
+    game.place();
+    expect(surfaceAt(laboratory, game.state.players[0].pos)).toBe(kind);
+    expect(game.shoot("surface-player", 0, 0.12)).toBe(true);
+    game.tick();
+    expect(game.ball.collider(0).friction()).toBe(surfaceFriction[kind]);
+
+    for (let frame = 0; frame < 40 && game.state.moving; frame++)
+      game.tick();
+    return Math.abs(game.state.players[0].pos.z - 2);
+  }
+
+  const woodDistance = roll("wood");
+  const stoneDistance = roll("stone");
+  const wetDistance = roll("wet");
+  expect(woodDistance).toBeLessThan(stoneDistance);
+  expect(stoneDistance).toBeLessThan(wetDistance);
 });
 
 it.each(frontierCourses.map((course, index) => [course.name, index] as const))(
