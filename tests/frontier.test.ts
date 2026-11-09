@@ -264,6 +264,42 @@ it.each(frontierCourses.map((course, index) => [course.name, index] as const))(
     expect(cupRay).not.toBeNull();
     expect(cupRay!.timeOfImpact).toBeGreaterThan(1.4);
 
+    // Sample the middle of every sloped deck in the real Rapier world.
+    // A ramp that merely has finite coordinates is not enough: its collision
+    // must exist continuously between both supported endpoints.
+    for (const ramp of geometry(course).surfaces.filter(
+      (surface) => Math.abs(surface.rotation || 0) > 1e-5,
+    )) {
+      const pitch = ramp.rotation || 0;
+      const yaw = ramp.yaw || 0;
+      for (const fraction of [0.15, 0.35, 0.5, 0.65, 0.85]) {
+        const localZ =
+          (fraction - 0.5) * Math.cos(pitch) * ramp.size[2] +
+          Math.sin(pitch) * ramp.size[1] / 2;
+        const x = ramp.pos[0] + Math.sin(yaw) * localZ;
+        const z = ramp.pos[2] + Math.cos(yaw) * localZ;
+        const height = surfaceHeight(ramp, x, z);
+        expect(height, course.name).not.toBeNull();
+        const hit = game.world.castRay(
+          new R.Ray(
+            { x, y: height! + 0.6, z },
+            { x: 0, y: -1, z: 0 },
+          ),
+          1.2,
+          true,
+          undefined,
+          undefined,
+          undefined,
+          game.ball,
+        );
+        expect(
+          hit,
+          `${course.name}: missing Rapier ramp collision at ${x.toFixed(2)}, ${height!.toFixed(2)}, ${z.toFixed(2)}`,
+        ).not.toBeNull();
+        expect(hit!.timeOfImpact).toBeLessThan(1.05);
+      }
+    }
+
     expect(game.shoot("expedition-player", 0, 0.18)).toBe(true);
     let frames = 0;
     while (game.state.moving && frames++ < 1200) game.tick();
