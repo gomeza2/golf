@@ -26,9 +26,12 @@ export function AdventureScenery({
           ? 8
           : 12;
   const accentCount = detail === 0 ? 4 : detail === 1 ? 8 : 12;
+  const floraCount = detail === 0 ? 4 : detail === 1 ? 8 : 12;
   const body = useRef<THREE.InstancedMesh>(null),
     cap = useRef<THREE.InstancedMesh>(null),
     accent = useRef<THREE.InstancedMesh>(null),
+    floraTrunk = useRef<THREE.InstancedMesh>(null),
+    floraCrown = useRef<THREE.InstancedMesh>(null),
     lamp = useRef<THREE.Group>(null);
   const layout = useMemo(
     () =>
@@ -71,6 +74,22 @@ export function AdventureScenery({
         };
       }),
     [size.width, size.length, accentCount],
+  );
+  const floraLayout = useMemo(
+    () =>
+      Array.from({ length: floraCount }, (_, i) => {
+        const side = i % 2 ? -1 : 1;
+        const lane = Math.floor(i / 2);
+        return {
+          x: side * (size.width / 2 + 2.8 + (lane % 3) * 1.2),
+          z:
+            -size.length / 2 +
+            (size.length * (lane + 0.5)) / (floraCount / 2),
+          yaw: i * 1.71,
+          scale: 0.82 + ((i * 7) % 5) * 0.12,
+        };
+      }),
+    [size.width, size.length, floraCount],
   );
   const { gl } = useThree();
   const reducedMotion = useMemo(
@@ -138,7 +157,47 @@ export function AdventureScenery({
       ref.current!.instanceMatrix.needsUpdate = true;
       ref.current!.computeBoundingSphere();
     }
+    const floraDummy = new THREE.Object3D();
+    const crownDummy = new THREE.Object3D();
+    floraLayout.forEach((p, i) => {
+      const forest = kind === "forest";
+      const desert = kind === "desert";
+      const coast = kind === "coast";
+      const trunkHeight = forest ? 2.8 : desert ? 2.4 : coast ? 4.6 : 2.1;
+      floraDummy.position.set(p.x, trunkHeight * p.scale / 2, p.z);
+      floraDummy.rotation.set(0, p.yaw, coast ? -0.08 * (i % 3) : 0);
+      floraDummy.scale.set(
+        (coast ? 0.22 : desert ? 0.48 : forest ? 0.3 : 0.2) * p.scale,
+        trunkHeight * p.scale,
+        (coast ? 0.22 : desert ? 0.48 : forest ? 0.3 : 0.2) * p.scale,
+      );
+      floraDummy.updateMatrix();
+      floraTrunk.current!.setMatrixAt(i, floraDummy.matrix);
+
+      crownDummy.position.set(
+        p.x,
+        trunkHeight * p.scale + (forest ? 0.85 : coast ? 0.55 : 0.65),
+        p.z,
+      );
+      crownDummy.rotation.set(
+        coast ? 0.22 : 0,
+        p.yaw,
+        coast ? 0.18 : 0,
+      );
+      crownDummy.scale.set(
+        (forest ? 1.55 : coast ? 1.75 : desert ? 0.92 : 1.15) * p.scale,
+        (forest ? 1.35 : coast ? 0.62 : desert ? 1.25 : 2.05) * p.scale,
+        (forest ? 1.55 : coast ? 1.75 : desert ? 0.92 : 1.15) * p.scale,
+      );
+      crownDummy.updateMatrix();
+      floraCrown.current!.setMatrixAt(i, crownDummy.matrix);
+    });
+    for (const ref of [floraTrunk, floraCrown]) {
+      ref.current!.instanceMatrix.needsUpdate = true;
+      ref.current!.computeBoundingSphere();
+    }
     gl.domElement.dataset.scenery = kind;
+    gl.domElement.dataset.sceneryDetailCount = String(floraCount);
     gl.domElement.dataset.sceneryCount = String(count);
     gl.domElement.dataset.sceneryAccentCount = String(accentCount);
     gl.domElement.dataset.sceneryLandmark =
@@ -151,7 +210,7 @@ export function AdventureScenery({
             : kind === "mountain"
               ? "snow-peaks"
               : "none";
-  }, [layout, accentLayout, kind, gl, count, accentCount]);
+  }, [layout, accentLayout, floraLayout, kind, gl, count, accentCount, floraCount]);
   useFrame(({ clock }) => {
     if (lamp.current && detail > 0 && !reducedMotion.matches)
       lamp.current.rotation.y = clock.elapsedTime * 0.15;
@@ -253,6 +312,54 @@ export function AdventureScenery({
                   : "#c4cfcb"
           }
           roughness={0.96}
+        />
+      </instancedMesh>
+      <instancedMesh
+        key={`flora-trunk-${floraCount}-${kind}`}
+        ref={floraTrunk}
+        args={[undefined, undefined, floraCount]}
+        castShadow={detail > 0}
+      >
+        <cylinderGeometry args={[0.62, 0.78, 1, 7]} />
+        <meshStandardMaterial
+          color={
+            kind === "forest"
+              ? "#70563f"
+              : kind === "desert"
+                ? "#47764f"
+                : kind === "coast"
+                  ? "#8a694c"
+                  : "#625f56"
+          }
+          roughness={0.96}
+        />
+      </instancedMesh>
+      <instancedMesh
+        key={`flora-crown-${floraCount}-${kind}`}
+        ref={floraCrown}
+        args={[undefined, undefined, floraCount]}
+        castShadow={detail > 0}
+      >
+        {kind === "forest" ? (
+          <icosahedronGeometry args={[1, 1]} />
+        ) : kind === "desert" ? (
+          <coneGeometry args={[1, 1, 7]} />
+        ) : kind === "coast" ? (
+          <dodecahedronGeometry args={[1, 1]} />
+        ) : (
+          <coneGeometry args={[1, 1, 7]} />
+        )}
+        <meshStandardMaterial
+          color={
+            kind === "forest"
+              ? "#46764d"
+              : kind === "desert"
+                ? "#52834f"
+                : kind === "coast"
+                  ? "#6c9c8d"
+                  : "#526d5c"
+          }
+          roughness={0.92}
         />
       </instancedMesh>
       {kind === "forest" && (
