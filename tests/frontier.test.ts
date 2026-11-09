@@ -477,7 +477,7 @@ it.each(expeditionSafeRoutes)(
       if (targetIndex < targets.length - 1)
         expect(
           distance(current, target),
-          \`\${_courseName}: route did not reach checkpoint \${targetIndex + 1}\`,
+          `${_courseName}: route did not reach checkpoint ${targetIndex + 1}`,
         ).toBeLessThanOrEqual(target.radius);
     }
 
