@@ -241,7 +241,7 @@ it("completes the forest safe route with continuous real shots and no reposition
   const targets = [
     { x: -8, y: 2.22, z: 31, radius: 6.5 },
     { x: 18, y: 0.22, z: -18, radius: 6.5 },
-    { x: 24, y: 3.22, z: -54, radius: 6.5 },
+    { x: 24, y: 3.22, z: -47, radius: 6.5 },
     { x: 26, y: 0.22, z: -68, radius: 1.2 },
   ];
   const resetTrial = (
