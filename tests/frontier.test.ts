@@ -188,6 +188,7 @@ it("applies surface contact friction and rolling resistance in the real Rapier s
   const laboratory: Course = {
     name: "Laboratorio de superficies",
     par: 3,
+    subtitle: "Pista de prueba para comparar superficies con física real.",
     dimensions: { width: 40, length: 40 },
     start: { x: -12, y: 0.22, z: 12 },
     cup: { x: 12, y: 0, z: -12 },
