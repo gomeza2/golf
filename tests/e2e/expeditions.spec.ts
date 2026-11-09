@@ -114,6 +114,11 @@ test("all four expedition environments render their own scene on mobile practice
         Number(await canvas.getAttribute("data-scenery-accent-count")),
       )
       .toBeGreaterThan(0);
+    await expect
+      .poll(async () =>
+        Number(await canvas.getAttribute("data-scenery-detail-count")),
+      )
+      .toBeGreaterThan(0);
     await page.screenshot({
       path: `work/expeditions-${environments[hole]}-mobile.png`,
       animations: "disabled",
