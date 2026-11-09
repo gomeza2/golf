@@ -231,6 +231,132 @@ it("applies surface contact friction and rolling resistance in the real Rapier s
   expect(stoneDistance).toBeLessThan(wetDistance);
 });
 
+it("completes the forest safe route with continuous real shots and no repositioning", () => {
+  const game = new Game();
+  games.push(game);
+  game.selectCircuit("expeditions");
+  game.add("route-player", "Explorador");
+  game.startPractice(0);
+
+  const targets = [
+    { x: -8, y: 2.22, z: 31, radius: 6.5 },
+    { x: 18, y: 0.22, z: -18, radius: 6.5 },
+    { x: 24, y: 3.22, z: -54, radius: 6.5 },
+    { x: 26, y: 0.22, z: -68, radius: 1.2 },
+  ];
+  const resetTrial = (
+    position: { x: number; y: number; z: number },
+    time: number,
+  ) => {
+    const player = game.state.players[0];
+    player.pos = { ...position };
+    player.done = false;
+    player.withdrawn = false;
+    player.penalties = 0;
+    player.strokes = 0;
+    player.capped = [];
+    game.state.phase = "playing";
+    game.state.turn = 0;
+    game.state.moving = false;
+    game.state.time = time;
+    game.state.event = undefined;
+    game.elapsed = 0;
+    game.quiet = 0;
+    game.capturedAt = null;
+    game.lastBounce = -1;
+    game.place();
+    game.tick(); // Put kinematic obstacles at this exact route time.
+  };
+  const distance = (
+    a: { x: number; y: number; z: number },
+    b: { x: number; y: number; z: number },
+  ) => Math.hypot(a.x - b.x, (a.y - b.y) * 1.4, a.z - b.z);
+  let current = { ...game.state.players[0].pos };
+  let routeTime = game.state.time;
+  const offsets = [-0.55, -0.27, 0, 0.27, 0.55];
+  const powers = [0.38, 0.52, 0.66, 0.8, 0.94];
+
+  for (const [targetIndex, target] of targets.entries()) {
+    let successfulShots = 0;
+    while (
+      distance(current, target) > target.radius &&
+      successfulShots < 5 &&
+      !game.state.players[0].done
+    ) {
+      const baseAngle = Math.atan2(target.x - current.x, current.z - target.z);
+      let best:
+        | { angle: number; power: number; position: { x: number; y: number; z: number }; score: number }
+        | undefined;
+      const startingScore = distance(current, target);
+
+      for (const offset of offsets) {
+        for (const power of powers) {
+          resetTrial(current, routeTime);
+          const angle = baseAngle + offset;
+          expect(game.shoot("route-player", angle, power)).toBe(true);
+          let frames = 0;
+          while (game.state.moving && frames++ < 720) game.tick();
+          if (game.state.moving) continue;
+
+          const player = game.state.players[0];
+          if (player.penalties > 0) continue;
+          const position = { ...player.pos };
+          if (player.done) {
+            best = { angle, power, position, score: 0 };
+            break;
+          }
+          const support = game.world.castRay(
+            new R.Ray(
+              { x: position.x, y: position.y + 1.1, z: position.z },
+              { x: 0, y: -1, z: 0 },
+            ),
+            2.2,
+            true,
+            undefined,
+            undefined,
+            undefined,
+            game.ball,
+          );
+          if (!support) continue;
+          const score = distance(position, target);
+          if (
+            score + 0.4 < startingScore &&
+            (!best || score < best.score)
+          )
+            best = { angle, power, position, score };
+        }
+        if (best?.score === 0) break;
+      }
+
+      expect(
+        best,
+        \`Forest route stalled before checkpoint \${targetIndex + 1} at \${current.x.toFixed(1)},\${current.y.toFixed(1)},\${current.z.toFixed(1)}; target \${target.x},\${target.y},\${target.z}\`,
+      ).toBeDefined();
+
+      // Apply the selected shot to the continuous game state. The ball is
+      // never teleported between checkpoints; trial resets only compare options.
+      resetTrial(current, routeTime);
+      expect(game.shoot("route-player", best!.angle, best!.power)).toBe(true);
+      let frames = 0;
+      while (game.state.moving && frames++ < 720) game.tick();
+      expect(game.state.moving).toBe(false);
+      expect(game.state.players[0].penalties).toBe(0);
+      current = { ...game.state.players[0].pos };
+      routeTime = game.state.time;
+      successfulShots++;
+    }
+    if (targetIndex < targets.length - 1)
+      expect(
+        distance(current, target),
+        \`Forest route did not reach checkpoint \${targetIndex + 1}\`,
+      ).toBeLessThanOrEqual(target.radius);
+  }
+
+  expect(game.state.players[0].done).toBe(true);
+  expect(game.state.players[0].penalties).toBe(0);
+  expect(game.state.phase).toBe("finished");
+}, 180000);
+
 it.each(frontierCourses.map((course, index) => [course.name, index] as const))(
   "%s builds real Rapier ground and a physical open cup, then completes a real tee shot without invalid coordinates",
   async (_name, index) => {
