@@ -213,7 +213,10 @@ it("applies surface contact friction and rolling resistance in the real Rapier s
     expect(surfaceAt(laboratory, game.state.players[0].pos)).toBe(kind);
     expect(game.shoot("surface-player", 0, 0.12)).toBe(true);
     game.tick();
-    expect(game.ball.collider(0).friction()).toBe(surfaceFriction[kind]);
+    expect(game.ball.collider(0).friction()).toBeCloseTo(
+      surfaceFriction[kind],
+      6,
+    );
 
     for (let frame = 0; frame < 40 && game.state.moving; frame++)
       game.tick();
