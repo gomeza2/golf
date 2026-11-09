@@ -140,22 +140,28 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(-34, 65, 20, 18),
         span(rampDeck, { x: -34, y: 0, z: 56 }, { x: -10, y: 4, z: 36 }, 8),
         deck(-10, 29, 22, 14, 4),
-        span(rampDeck, { x: -10, y: 4, z: 22 }, { x: 18, y: 7, z: 4 }, 7),
+        // A broad entry keeps the full terrace connected to the safe descent.
+        span(rampDeck, { x: -2, y: 4, z: 22 }, { x: 18, y: 7, z: 4 }, 9),
         deck(18, -1, 20, 16, 7),
         span(rampDeck, { x: 18, y: 7, z: -9 }, { x: 1, y: 3, z: -31 }, 7),
         deck(1, -38, 22, 14, 3),
         span(rampDeck, { x: 1, y: 3, z: -45 }, { x: 30, y: 0, z: -60 }, 8),
         deck(30, -65, 22, 12),
-        // The raised diagonal climbs above the broad terrace instead of
-        // passing underneath it, then joins the final platform from its edge.
+        // Small, supported landing pads break the narrow shortcut into
+        // manageable shots while keeping the main route below it where needed.
+        deck(-16, 44, 2.8, 2.8, 0),
+        deck(-6, 32, 2.8, 2.8, 1.5),
+        deck(8, 18, 2.8, 2.8, 3),
+        // The raised diagonal climbs over the terraces and joins the final
+        // platform at its eastern edge.
         ...spans(
           rampDeck,
           [
             { x: -25, y: 0, z: 56 },
-            { x: -16, y: 2.6, z: 44 },
-            { x: -6, y: 5.3, z: 32 },
-            { x: 8, y: 6.3, z: 18 },
-            { x: 22, y: 8.1, z: 8 },
+            { x: -16, y: 0, z: 44 },
+            { x: -6, y: 1.5, z: 32 },
+            { x: 8, y: 3, z: 18 },
+            { x: 22, y: 7, z: 7 },
             { x: 25, y: 7, z: 1 },
           ],
           1.7,
