@@ -75,7 +75,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(-8, 25, 18, 14, 2),
         span(rampDeck, { x: -8, y: 2, z: 18 }, { x: 18, y: 0, z: -18 }, 7),
         deck(18, -11, 18, 14),
-        span(rampDeck, { x: 18, y: 0, z: -18 }, { x: 24, y: 3, z: -54 }, 6.5),
+        span(rampDeck, { x: 18, y: 0, z: -18 }, { x: 24, y: 3, z: -40 }, 6.5),
         deck(24, -47, 18, 14, 3),
         span(rampDeck, { x: 24, y: 3, z: -54 }, { x: 26, y: 0, z: -61 }, 7),
         // A deliberately narrow wooden shortcut joins the first and third islands.

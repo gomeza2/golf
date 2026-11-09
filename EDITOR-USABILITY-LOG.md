@@ -60,6 +60,7 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 
 ### Cambios recientes de Fase 2
 - Se corrigieron las coordenadas de tres transiciones del bosque que confundían altura con posición longitudinal; una rampa llegaba a alturas de −61 m, por debajo del límite de caída de −4 m.
+- La primera simulación de ruta segura detectó un segundo defecto en el bosque: la rampa ascendente terminaba en z=-54 mientras la plataforma elevada ocupaba z=-54…-40; la rampa seguía debajo de la plataforma y dejaba menos de 0,15 m para la pelota. Se movió el final de esa rampa a z=-40 para que entre por un borde y la rampa de bajada salga por el opuesto. Se agregó una prueba general de espacio libre para rampas bajo plataformas.
 - Se agregó una prueba de altura física mínima/máxima para todas las plataformas de los cuatro campos.
 - Se agregó una prueba de ambos extremos de cada rampa para comprobar que encuentre soporte de una plataforma o el green.
 - Se amplió la decoración instanciada con una segunda capa diferenciada por ambiente y una comprobación de navegador para asegurar que la capa esté presente en los cuatro escenarios.

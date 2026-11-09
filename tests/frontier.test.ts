@@ -97,6 +97,41 @@ it("resolves overlapping surface patches using the same priority as the ball phy
   ).toBe("grass");
 });
 
+it("does not place an expedition ramp underneath a deck without ball clearance", () => {
+  for (const course of frontierCourses) {
+    const surfaces = geometry(course).surfaces;
+    const ramps = surfaces.filter(
+      (surface) => Math.abs(surface.rotation || 0) > 1e-5,
+    );
+    for (const ramp of ramps) {
+      const pitch = ramp.rotation || 0;
+      const yaw = ramp.yaw || 0;
+      for (const fraction of [0.2, 0.4, 0.6, 0.8]) {
+        const localZ =
+          (fraction - 0.5) * Math.cos(pitch) * ramp.size[2] +
+          Math.sin(pitch) * ramp.size[1] / 2;
+        const x = ramp.pos[0] + Math.sin(yaw) * localZ;
+        const z = ramp.pos[2] + Math.cos(yaw) * localZ;
+        const rampHeight = surfaceHeight(ramp, x, z);
+        if (rampHeight === null) continue;
+        for (const deck of surfaces) {
+          if (deck === ramp || Math.abs(deck.rotation || 0) > 1e-5)
+            continue;
+          const deckHeight = surfaceHeight(deck, x, z);
+          if (deckHeight === null || deckHeight <= rampHeight + 0.55)
+            continue;
+          const underside = deckHeight - deck.size[1];
+          const clearance = underside - (rampHeight + 0.44);
+          expect(
+            clearance,
+            `${course.name}: ramp at (${x.toFixed(2)}, ${z.toFixed(2)}) is trapped under a deck with only ${clearance.toFixed(2)} m of ball clearance`,
+          ).toBeGreaterThan(0.15);
+        }
+      }
+    }
+  }
+});
+
 it("keeps every playable expedition platform above the out-of-world limit", () => {
   for (const course of frontierCourses) {
     const surfaces = geometry(course).surfaces;
