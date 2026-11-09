@@ -69,3 +69,16 @@ Pendiente para cerrar la fase:
 - Ajustar la identidad visual del bosque/desierto/costa/montaña: la versión actual usa decoración instanciada compartida y todavía no representa un paisaje escultórico detallado ni un set único de landmarks por hoyo.
 
 El CI de GitHub debe pasar en el Pull Request antes de integrar la fase en `main`. La publicación del juego y la compatibilidad del servidor online se comprueban después del despliegue conjunto. La evaluación humana y la prueba en teléfonos físicos siguen siendo necesarias aunque CI termine verde.
+
+## Seguimiento QA — 9 de noviembre de 2026
+
+La primera ejecución con simulación de atajos encontró problemas físicos reales; se corrigieron por geometría, sin cambiar la exigencia de continuidad:
+
+- El atajo de Archipiélago se desvió para rodear la roca del primer tramo y pasar por fuera de la transición elevada. La última ejecución que llegó a Vitest ya no reportó ese atajo como fallo.
+- En Dunas se detectó una rampa sin plataforma de llegada y una entrada demasiado estrecha en la bajada segura. Se añadieron descansos físicos y se ajustó la anchura de la conexión segura.
+- La prueba posterior dejó un único fallo: el atajo diagonal pasaba debajo de la terraza segura. El trazado se desplazó ahora hacia el borde exterior de la terraza, para evitar golpes contra su parte inferior.
+- Se agregaron detalles ambientales instanciados junto al recorrido, con presupuesto adaptable al nivel gráfico y una comprobación E2E de presencia en los cuatro ambientes.
+
+**Estado honesto:** la ejecución anterior llegó a 282/283 pruebas unitarias; el último cambio de geometría y decoración aún debe pasar todas las comprobaciones. Esta versión no se declara terminada ni fusionada. Tampoco se considera validada una ronda completa solo porque el primer golpe funcione.
+
+Pendientes para completar la Fase 2: comprobar los atajos actualizados con tiros continuos; probar distintos ángulos y potencias en rampas y aterrizajes; verificar los materiales en solapes y bordes; revisar capturas grandes y móviles; medir dispositivos físicos; y cerrar solo con CI verde más inspección manual de las rutas.

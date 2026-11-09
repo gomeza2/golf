@@ -45,6 +45,13 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Observar si la cámara se siente intuitiva para un jugador que nunca usó un editor 3D.
 - Revisar el comportamiento táctil y el tamaño de los controles en teléfonos pequeños.
 
+
+### Seguimiento de cámara y flujo 2D/3D
+- El selector 2D/3D queda como control principal del área de trabajo. La vista inicial es 2D y la escena 3D solo se monta al elegirla; al volver a 3D se conserva el mismo borrador y la cámara recordada.
+- En 3D, el botón derecho desplaza la vista aun mientras se edita. El modo de cámara agrega giro con botón izquierdo; se mantienen el clic izquierdo para seleccionar y los manipuladores para transformar.
+- Los controles explícitos añaden inclinación, órbita, elevación y descenso, además del desplazamiento y zoom. El teclado ofrece flechas y WASD/QE durante la navegación.
+- La prueba de navegador cubre el cambio entre vistas, continuidad del diseño y la cámara, y que el botón secundario no coloque accidentalmente una pared. Pendiente: validación manual con ratón y teléfonos físicos.
+
 ## Fase 2: Grandes travesías y superficies
 
 ### Implementado en la rama
@@ -86,3 +93,20 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - No borrar contenido anterior para acelerar una nueva función.
 - No fusionar el PR ni desplegarlo sin verificar el estado final del CI y revisar el diff.
 - No comenzar la fase siguiente por inercia: terminar primero la que está en curso y registrar lo que no se puede verificar aquí.
+
+### Seguimiento de la última revisión — 9 de noviembre de 2026
+
+- CI del commit `cceaeb8`: el job de comunidad terminó correctamente. En el job principal, 280 de 283 pruebas pasaron; quedaron tres fallos vinculados a Dunas: un extremo de rampa sin apoyo, el acceso al recorrido seguro y el atajo que atravesaba la terraza. El atajo de Archipiélago ya pasó tras mover su trazado para rodear la roca y entrar por el borde de la isla.
+- CI del commit `0e69a6a`: 282 de 283 pruebas pasaron. La prueba de apoyo de rampas y el recorrido seguro de Dunas ya pasaron; quedó un único fallo: el atajo atravesaba la terraza elevada. El log confirmó que la pelota tenía apoyo inferior, pero la terraza actuaba como techo durante el golpe.
+- Corrección aplicada después de ese log: el atajo de Dunas ya no pasa debajo de la terraza. Se desvía por el borde exterior, con una plataforma de apoyo en el cambio de dirección. La prueba mantiene el carril angosto y exige tiros continuos; no se relajó el límite lateral.
+- Ajuste adicional del recorrido seguro: la terraza se amplió para que el ancho de la entrada de la bajada coincida con el ancho útil del suelo, evitando un borde lateral sin conexión.
+- Ambientación: se añadieron dos capas instanciadas pequeñas junto a los laterales de cada campo, con siluetas y colores por ambiente. El conteo se adapta a Ahorro/Normal/Alta y Playwright verifica que los cuatro ambientes dibujen esa capa.
+- Último código registrado en esta nota: atajo de Dunas desviado fuera de la terraza y decoración adicional. **Todavía no está validado por el CI del último commit**; la siguiente ejecución debe confirmar Vitest, compilación, navegador local, páginas y comunidad.
+
+### Pendientes actuales de Fase 2
+1. Confirmar en el CI más reciente que los cuatro atajos se recorren con tiros normales continuos, sin penalización ni recolocación; en especial el nuevo trazado de Dunas.
+2. Revisar el detalle de las uniones en cada transición y probar golpes desde distintos ángulos y potencias alrededor de cada aterrizaje.
+3. Comprobar clasificación de superficies en bordes y solapes, sobre todo en las plataformas elevadas.
+4. Revisar capturas de cada ambiente en escritorio/móvil y ajustar composición, tamaños, luz y landmarks según lo que realmente se vea.
+5. Medir memoria y fluidez con niveles gráficos distintos; CI y emulación no sustituyen teléfonos físicos.
+6. No cerrar la fase hasta tener CI verde y una pasada completa documentada por cada ruta segura y cada atajo.
