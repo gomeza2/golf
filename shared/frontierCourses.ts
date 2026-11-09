@@ -152,6 +152,8 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         deck(-40, 42, 2.8, 2.8, 0),
         deck(-18, 42, 2.8, 2.8, 0),
         deck(5, 42, 2.8, 2.8, 0),
+        // Mid-ramp rest gives the first high climb a precise, supported stop.
+        deck(8, 30, 3.2, 3.2, 1.5),
         // Landing pads overlap the ramp ends by more than the ball radius.
         deck(10, 18, 4, 4.8, 3),
         // Turn platforms begin at the end of the preceding ramp instead of
@@ -167,6 +169,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
             { x: -40, y: 0, z: 42 },
             { x: -18, y: 0, z: 42 },
             { x: 5, y: 0, z: 42 },
+            { x: 8, y: 1.5, z: 30 },
             { x: 10, y: 3, z: 18 },
             { x: 16, y: 4, z: 18 },
             { x: 22, y: 6, z: 12 },
