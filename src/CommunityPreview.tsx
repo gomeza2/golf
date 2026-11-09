@@ -40,6 +40,16 @@ export function CommunityPreview({ document }: { document: WorkshopDocument }) {
           fill="#dac390"
         />
       ))}
+      {course.dirt?.map((z, i) => (
+        <rect
+          key={`d${i}`}
+          x={z.x - z.width / 2}
+          y={z.z - z.length / 2}
+          width={z.width}
+          height={z.length}
+          fill="#967352"
+        />
+      ))}
       {course.blocks.map((b, i) => (
         <rect
           key={i}

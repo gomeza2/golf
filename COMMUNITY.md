@@ -1,15 +1,15 @@
-# Comunidad de creaciones — 0.20.0
+# Comunidad de creaciones — 0.21.0
 
-**Ediciones físicas:** documento 1 mantiene física original; documento 2 requiere `physics: 2`. La elección se guarda dentro del JSONB inmutable y su hash. No se reescriben revisiones anteriores ni hace falta una migración adicional. Nuevo servidor y cliente usan protocolo 16. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) explica la conversión explícita y las pruebas de compatibilidad.
+**Ediciones físicas:** documento 1 mantiene física original; documentos 2 y 3 requieren `physics: 2`; el 3 admite giro completo, puerta elevable y tierra. La elección se guarda dentro del JSONB inmutable y su hash. No se reescriben revisiones anteriores ni hace falta una migración adicional. Nuevo servidor y cliente usan protocolo 17. [WORKSHOP-PHYSICS.md](WORKSHOP-PHYSICS.md) explica la conversión explícita y las pruebas de compatibilidad.
 
-`GET /api/community/config` declara `documentVersions: [1,2]` cuando la base está disponible. Los clientes no ofrecen enviar documento 2 a un servidor que no lo anuncia. Galería y detalles incluyen `physics`; el historial identifica ambas ediciones. El filtro `physics=1|2` aplica a la última revisión pública de cada creación; las anteriores siguen disponibles por enlace fijo. No se vuelve a mostrar una revisión antigua en la galería solamente para coincidir con un filtro.
+`GET /api/community/config` declara `documentVersions: [1,2,3]` cuando la base está disponible. Los clientes no ofrecen enviar un documento a un servidor que no lo anuncia. Galería y detalles incluyen `physics`; el historial identifica ambas ediciones. El filtro `physics=1|2` aplica a la última revisión pública de cada creación; las anteriores siguen disponibles por enlace fijo. No se vuelve a mostrar una revisión antigua en la galería solamente para coincidir con un filtro.
 
 ## Qué está implementado
 
 La comunidad usa **PostgreSQL real**, con autores vinculados a una identidad OIDC, creaciones, revisiones inmutables, denuncias y un historial de moderación. No usa localStorage como base pública ni crea cuentas, votos, partidas o estadísticas de ejemplo.
 
 - Galería pública paginada, planos del diseño real y búsqueda por nombre/descripción, alias de autor, ID de autor, dificultad, física y características.
-- Características calculadas desde el documento: agua, arena, césped alto, rampas, alturas, mecanismos y pasos estrechos. La dificultad es una indicación del autor; no una certificación automática.
+- Características calculadas desde el documento: agua, arena, tierra, césped alto, rampas, alturas, mecanismos y pasos estrechos. La dificultad es una indicación del autor; no una certificación automática.
 - Publicación autenticada en estado **En revisión**. Solo una decisión del moderador la hace pública.
 - Página de creación y enlaces a cada revisión. Una nueva versión no modifica la anterior; si está pendiente, la última aprobada sigue disponible.
 - Juego individual con el mismo Game/Rapier/Scene y resultado real, separado de los récords oficiales. No exige cuenta.
@@ -18,7 +18,7 @@ La comunidad usa **PostgreSQL real**, con autores vinculados a una identidad OID
 - Denuncias autenticadas, deduplicadas por persona/revisión; cola de moderación, aprobación, rechazo, retirada, restauración y cierre de denuncias con motivo.
 - Historial de decisiones persistente y de solo anexado. El contenido y los identificadores de cada revisión no pueden actualizarse ni borrarse mediante las operaciones normales de la base.
 
-La publicación conserva el documento del taller **v1: una cancha de un hoyo**. No se agrega un editor de colecciones de varios hoyos ni se modifican los recorridos oficiales. El protocolo de salas es **14**, las reglas locales siguen en **7** y el guardado oficial sigue en formato **1**.
+La publicación conserva los documentos del taller **v1/v2/v3: una cancha de un hoyo**. No se agrega un editor de colecciones de varios hoyos ni se modifican los recorridos oficiales. El protocolo de salas es **17**, las reglas locales siguen en **7** y el guardado oficial conserva formatos **1/2**.
 
 ## Estado público y configuración incompleta
 
@@ -33,6 +33,12 @@ El repositorio contiene la implementación, migración, integración OIDC y prue
 | PostgreSQL, OIDC y moderadores listos               | Acceso de autores, envíos a revisión y moderación protegidos.                                                                        |
 
 El taller solo muestra **Publicar en la comunidad** cuando el servicio anuncia que los envíos están configurados. Una búsqueda fallida no se sustituye por registros locales ni resultados inventados.
+
+## Opción gratuita y hosting sin Shell
+
+[FREE-COMMUNITY-SETUP.md](FREE-COMMUNITY-SETUP.md) explica Neon Free + Auth0 Free en el Render existente. Requiere cuentas reales del propietario; no están provisionadas por el repositorio. Con `COMMUNITY_MIGRATE_ON_START=true`, `npm start` prepara el esquema si falta y conserva los datos existentes, sin sembrar usuarios o publicaciones. Rechaza una versión de esquema superior. La opción viene desactivada y un fallo no bloquea el golf oficial.
+
+`npm run community:check` (o `community:check:production` sobre el build) diagnostica conexión/esquema y descubrimiento/claves OIDC sin imprimir conexiones privadas ni tokens. Audiencia, callbacks y propiedad del usuario moderador se comprueban entrando realmente. No confundir configuración presente con acceso público comprobado.
 
 ## Activar PostgreSQL
 

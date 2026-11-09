@@ -38,6 +38,19 @@ export async function oidcFixture() {
   let issuer = "";
   const http = createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
+    if (req.url === "/.well-known/openid-configuration") {
+      res.end(
+        JSON.stringify({
+          issuer,
+          jwks_uri: issuer + "/jwks",
+          authorization_endpoint: issuer + "/authorize",
+          token_endpoint: issuer + "/token",
+          response_types_supported: ["code"],
+          code_challenge_methods_supported: ["S256"],
+        }),
+      );
+      return;
+    }
     if (req.url === "/jwks") {
       res.end(JSON.stringify({ keys: [jwk] }));
       return;

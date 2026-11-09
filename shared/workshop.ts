@@ -6,7 +6,7 @@ import {
   type Course,
 } from "./courses";
 import type { PhysicsEdition } from "./rules";
-export const WORKSHOP_VERSION = 2;
+export const WORKSHOP_VERSION = 3;
 export const MAX_WORKSHOP_BYTES = 60000;
 export const pieceKinds = [
   "floor",
@@ -16,7 +16,13 @@ export const pieceKinds = [
   "rough",
   "water",
   "gate",
+  "rotor",
+  "lift",
+  "dirt",
 ] as const;
+export const advancedPieceKinds = ["rotor", "lift", "dirt"] as const;
+export const isAdvancedPiece = (kind: PieceKind) =>
+  (advancedPieceKinds as readonly string[]).includes(kind);
 export type PieceKind = (typeof pieceKinds)[number];
 export type WorkshopPiece = {
   id: string;
@@ -30,7 +36,7 @@ export type WorkshopPiece = {
   angle: number;
 };
 export type WorkshopDocument = (
-  { version: 1; physics?: never } | { version: 2; physics: 2 }
+  { version: 1; physics?: never } | { version: 2 | 3; physics: 2 }
 ) & {
   name: string;
   par: number;
@@ -45,9 +51,9 @@ export function parseWorkshop(value: unknown): WorkshopDocument {
   const v = value as any;
   if (
     !v ||
-    ![1, 2].includes(v.version) ||
+    ![1, 2, 3].includes(v.version) ||
     (v.version === 1 && v.physics !== undefined) ||
-    (v.version === 2 && v.physics !== 2) ||
+    (v.version >= 2 && v.physics !== 2) ||
     typeof v.name !== "string" ||
     !v.name.trim() ||
     v.name.length > 48 ||
@@ -72,6 +78,7 @@ export function parseWorkshop(value: unknown): WorkshopDocument {
       p.id === "start" ||
       p.id === "cup" ||
       !pieceKinds.includes(p.kind) ||
+      (v.version < 3 && isAdvancedPiece(p.kind)) ||
       !point(p) ||
       !number(p.width, 0.5, 22) ||
       !number(p.length, 0.5, 44) ||
@@ -82,7 +89,7 @@ export function parseWorkshop(value: unknown): WorkshopDocument {
       throw Error("Hay una pieza inválida o un identificador repetido.");
     if (
       (p.kind === "floor" && p.angle % 90 !== 0) ||
-      (["water", "sand", "rough"].includes(p.kind) && p.angle !== 0)
+      (["water", "sand", "rough", "dirt"].includes(p.kind) && p.angle !== 0)
     )
       throw Error("Las plataformas giran de 90° en 90° y las zonas no giran.");
     ids.add(p.id);
@@ -99,8 +106,8 @@ export function parseWorkshop(value: unknown): WorkshopDocument {
     };
   });
   return {
-    ...(v.version === 2
-      ? { version: 2 as const, physics: 2 as const }
+    ...(v.version >= 2
+      ? { version: v.version as 2 | 3, physics: 2 as const }
       : { version: 1 as const }),
     name: v.name.trim(),
     par: v.par,
@@ -122,7 +129,7 @@ export function importWorkshop(text: string) {
 export const exportWorkshop = (doc: WorkshopDocument) =>
   JSON.stringify(parseWorkshop(doc), null, 2);
 export const workshopPhysics = (doc: WorkshopDocument): PhysicsEdition =>
-  doc.version === 2 ? 2 : 1;
+  doc.version >= 2 ? 2 : 1;
 export const workshopPhysicsLabel = (physics: PhysicsEdition) =>
   physics === 2 ? "Física actual" : "Física original";
 /** Explicit, reversible conversion. Original canonical bytes remain unchanged. */
@@ -136,11 +143,25 @@ export function withWorkshopPhysics(
     ...fields
   } = parseWorkshop(input);
   if (physics !== 1 && physics !== 2) throw Error("Física de cancha inválida.");
+  if (physics === 1 && fields.pieces.some((p) => isAdvancedPiece(p.kind)))
+    throw Error(
+      "Retira las piezas avanzadas antes de volver a física original.",
+    );
   return parseWorkshop(
     physics === 2
-      ? { version: 2, physics: 2, ...fields }
+      ? { version: _version === 3 ? 3 : 2, physics: 2, ...fields }
       : { version: 1, ...fields },
   );
+}
+export function withWorkshopResources(
+  input: WorkshopDocument,
+): WorkshopDocument {
+  const {
+    version: _version,
+    physics: _physics,
+    ...fields
+  } = parseWorkshop(input);
+  return parseWorkshop({ version: 3, physics: 2, ...fields });
 }
 export function newWorkshop(): WorkshopDocument {
   return {
@@ -198,6 +219,7 @@ export function compileWorkshop(input: WorkshopDocument): Course {
     water: [],
     sand: [],
     rough: [],
+    ...(d.version === 3 ? { dirt: [] } : {}),
   };
   for (const p of d.pieces) {
     const a = (p.angle * Math.PI) / 180;
@@ -251,19 +273,33 @@ export function compileWorkshop(input: WorkshopDocument): Course {
         ],
         yaw: a,
       });
-    } else if (p.kind === "wall" || p.kind === "gate") {
+    } else if (["wall", "gate", "rotor", "lift"].includes(p.kind)) {
       blocks.push({
         pos: [p.x, p.height + 0.45, p.z],
         size: [p.width, 0.9, p.length],
         yaw: a,
         bevel: 0.06,
-        ...(p.kind === "gate"
-          ? { moving: true, motion: "slide" as const }
+        ...(p.kind !== "wall"
+          ? {
+              moving: true,
+              motion:
+                p.kind === "gate"
+                  ? ("slide" as const)
+                  : p.kind === "lift"
+                    ? ("lift" as const)
+                    : ("spin" as const),
+            }
           : {}),
       });
     } else {
       c[
-        p.kind === "water" ? "water" : p.kind === "sand" ? "sand" : "rough"
+        p.kind === "water"
+          ? "water"
+          : p.kind === "sand"
+            ? "sand"
+            : p.kind === "dirt"
+              ? "dirt"
+              : "rough"
       ]!.push({
         x: p.x,
         z: p.z,
@@ -313,13 +349,23 @@ export function workshopIssues(doc: WorkshopDocument): string[] {
         Math.PI) /
       180;
     const w =
-      p.kind === "sand" || p.kind === "rough" || p.kind === "water"
-        ? p.width
-        : Math.abs(Math.cos(a) * p.width) + Math.abs(Math.sin(a) * p.length);
+      p.kind === "rotor"
+        ? Math.hypot(p.width, p.length)
+        : p.kind === "sand" ||
+            p.kind === "rough" ||
+            p.kind === "water" ||
+            p.kind === "dirt"
+          ? p.width
+          : Math.abs(Math.cos(a) * p.width) + Math.abs(Math.sin(a) * p.length);
     const l =
-      p.kind === "sand" || p.kind === "rough" || p.kind === "water"
-        ? p.length
-        : Math.abs(Math.sin(a) * p.width) + Math.abs(Math.cos(a) * p.length);
+      p.kind === "rotor"
+        ? Math.hypot(p.width, p.length)
+        : p.kind === "sand" ||
+            p.kind === "rough" ||
+            p.kind === "water" ||
+            p.kind === "dirt"
+          ? p.length
+          : Math.abs(Math.sin(a) * p.width) + Math.abs(Math.cos(a) * p.length);
     if (Math.abs(p.x) + w / 2 > 12.01 || Math.abs(p.z) + l / 2 > 24.01)
       issues.push("Hay piezas que salen de los límites del mapa.");
     if (p.kind === "ramp" && Math.abs(p.height - p.endHeight) / p.length > 0.5)
@@ -328,18 +374,32 @@ export function workshopIssues(doc: WorkshopDocument): string[] {
       (p.kind === "ramp" ||
         p.kind === "wall" ||
         p.kind === "gate" ||
+        p.kind === "rotor" ||
+        p.kind === "lift" ||
         (p.kind === "floor" && Math.abs(p.height - d.cup.height) > 0.01)) &&
       Math.abs(p.x - d.cup.x) < w / 2 + 2 &&
       Math.abs(p.z - d.cup.z) < l / 2 + 2
     )
       issues.push("Deja libre la plataforma de 4 × 4 m de la copa.");
-    if (p.kind === "wall" || p.kind === "gate") {
+    if (
+      p.kind === "wall" ||
+      p.kind === "gate" ||
+      p.kind === "rotor" ||
+      p.kind === "lift"
+    ) {
       const dx = d.start.x - p.x,
         dz = d.start.z - p.z;
       if (
-        Math.abs(Math.cos(a) * dx - Math.sin(a) * dz) < p.width / 2 + 0.24 &&
-        Math.abs(Math.sin(a) * dx + Math.cos(a) * dz) < p.length / 2 + 0.24 &&
-        Math.abs(c.start.y - p.height) < 1.1
+        (p.kind === "rotor"
+          ? Math.hypot(dx, dz) < Math.hypot(p.width, p.length) / 2 + 0.24
+          : Math.abs(Math.cos(a) * dx - Math.sin(a) * dz) <
+              p.width / 2 + 0.24 &&
+            Math.abs(Math.sin(a) * dx + Math.cos(a) * dz) <
+              p.length / 2 + 0.24) &&
+        (p.kind === "rotor" || p.kind === "lift"
+          ? c.start.y >= p.height - 0.24 &&
+            c.start.y <= p.height + (p.kind === "lift" ? 2.5 : 1.1)
+          : Math.abs(c.start.y - p.height) < 1.1)
       )
         issues.push("La salida está dentro de una barrera.");
     }

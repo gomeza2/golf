@@ -56,7 +56,7 @@ it("rejects ambiguous editions instead of silently changing the published physic
     { version: 2 },
     { version: 2, physics: 1 },
     { version: 2, physics: 3 },
-    { version: 3, physics: 2 },
+    { version: 4, physics: 2 },
   ]) {
     expect(() => parseWorkshop({ ...privateWorkshop(), ...change })).toThrow();
   }

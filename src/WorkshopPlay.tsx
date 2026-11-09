@@ -1,3 +1,4 @@
+import { HoleMap } from "./HoleMap";
 import { useEffect, useRef, useState } from "react";
 import { Game, type State } from "../shared/game";
 import {
@@ -68,6 +69,7 @@ export function WorkshopPlay({
     [angle, setAngle] = useState(0),
     [power, setPower] = useState(0.55),
     [overview, setOverview] = useState(false),
+    [mapOpen, setMapOpen] = useState(false),
     [inspecting, setInspecting] = useState(false),
     [look, setLook] = useState(defaultLook);
   const canShoot = !inspecting && !!s && s.phase === "playing" && !s.moving;
@@ -146,6 +148,14 @@ export function WorkshopPlay({
           overview={overview}
         />
       )}
+      {mapOpen && s && (
+        <div
+          className="workshop-live-map"
+          style={{ top: margins.top, bottom: margins.bottom }}
+        >
+          <HoleMap s={{ ...s, courseOverride: course }} />
+        </div>
+      )}
       <div ref={header} className="workshop-test-top">
         <div>
           <small>{label || "TALLER · PRUEBA LOCAL"}</small>
@@ -158,6 +168,9 @@ export function WorkshopPlay({
           </p>
         </div>
         <button onClick={onBack}>{backLabel}</button>
+        <button aria-pressed={mapOpen} onClick={() => setMapOpen((v) => !v)}>
+          {mapOpen ? "Cerrar mapa" : "Mapa"}
+        </button>
         <button onClick={() => setOverview((v) => !v)}>
           {overview ? "Seguir pelota" : "Ver campo"}
         </button>

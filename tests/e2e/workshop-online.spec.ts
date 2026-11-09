@@ -343,3 +343,63 @@ test("the public workshop room keeps current physics through real long drives, r
     previous?.disconnect();
   }
 });
+
+test("the public workshop room synchronizes format 3 mechanisms and completes both safe bridge routes", async () => {
+  test.setTimeout(180000);
+  const { workshopBlueprint } = await import("../../shared/workshopBlueprints"),
+    { safeClock } = await import("../fixtures/blueprints");
+  const a = await open(),
+    b = await open();
+  try {
+    const document = workshopBlueprint("clock"),
+      hash = await workshopFingerprint(
+        validateRoomWorkshop(document).canonical,
+      ),
+      host = await admission(a, {
+        type: "create",
+        name: "Ana",
+        workshop: document,
+      });
+    expect(host.content).toEqual({ document, hash });
+    a.emit("action", { type: "content-ready", hash });
+    const guest = await admission(b, {
+      type: "join",
+      name: "Luis",
+      code: host.session.code,
+    });
+    expect(guest.content).toEqual(host.content);
+    b.emit("action", { type: "content-ready", hash });
+    let pending = state(
+      a,
+      (s) => s.players.length === 2 && s.players.every((p) => p.ready),
+    );
+    a.emit("action", { type: "ready" });
+    b.emit("action", { type: "ready" });
+    await pending;
+    pending = state(a, (s) => s.phase === "playing");
+    a.emit("action", { type: "start" });
+    expect((await pending).physics).toBe(2);
+    let result: State | undefined;
+    for (const [stroke, [angle, power]] of safeClock.entries()) {
+      for (const [index, socket] of [a, b].entries()) {
+        pending = state(
+          b,
+          (s) =>
+            !s.moving &&
+            (stroke === safeClock.length - 1
+              ? s.players[index].done
+              : s.players[index].strokes === stroke + 1),
+        );
+        socket.emit("action", { type: "shoot", angle, power });
+        result = await pending;
+        expect(result.workshopHash).toBe(hash);
+        expect(result.players[index].penalties).toBe(0);
+      }
+    }
+    expect(result!.phase).toBe("finished");
+    expect(result!.players.map((p) => p.scores)).toEqual([[4], [4]]);
+  } finally {
+    a.disconnect();
+    b.disconnect();
+  }
+});

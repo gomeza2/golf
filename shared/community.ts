@@ -12,6 +12,7 @@ export const featureLabels = {
   water: "Agua",
   sand: "Arena",
   rough: "Césped alto",
+  dirt: "Tierra",
   ramps: "Rampas",
   heights: "Alturas",
   moving: "Mecanismos",
@@ -105,13 +106,17 @@ export function publicationInput(value: unknown) {
   if (pieces.some((p) => p.kind === "water")) features.push("water");
   if (pieces.some((p) => p.kind === "sand")) features.push("sand");
   if (pieces.some((p) => p.kind === "rough")) features.push("rough");
+  if (pieces.some((p) => p.kind === "dirt")) features.push("dirt");
   if (pieces.some((p) => p.kind === "ramp")) features.push("ramps");
   if (
-    pieces.some((p) => p.height > 0.5 || p.endHeight > 0.5) ||
+    pieces.some(
+      (p) => p.height > 0.5 || p.endHeight > 0.5 || p.kind === "lift",
+    ) ||
     validated.document.cup.height > 0.5
   )
     features.push("heights");
-  if (pieces.some((p) => p.kind === "gate")) features.push("moving");
+  if (pieces.some((p) => ["gate", "rotor", "lift"].includes(p.kind)))
+    features.push("moving");
   if (
     pieces.some((p) => (p.kind === "floor" || p.kind === "ramp") && p.width < 2)
   )
@@ -122,7 +127,13 @@ export function publicationInput(value: unknown) {
     moving: validated.cost.mechanisms,
     maxHeight: Math.max(
       validated.document.cup.height,
-      ...pieces.flatMap((p) => [p.height, p.endHeight]),
+      ...pieces.flatMap((p) => [
+        p.height,
+        p.endHeight,
+        ...(validated.document.version === 3 && p.kind === "lift"
+          ? [p.height + 2.5]
+          : []),
+      ]),
     ),
     holes: 1 as const,
   };
@@ -148,7 +159,7 @@ export function galleryFilter(params: URLSearchParams) {
   if (
     q.length > 80 ||
     author.length > 64 ||
-    features.length > 7 ||
+    features.length > Object.keys(featureLabels).length ||
     features.some((f) => !Object.hasOwn(featureLabels, f)) ||
     (difficulty && !difficulties.includes(difficulty as Difficulty)) ||
     !["", "1", "2"].includes(physics) ||

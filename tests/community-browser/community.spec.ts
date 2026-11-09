@@ -361,6 +361,37 @@ test("a real creation moves through OIDC publication, review, anonymous discover
       path: "work/community-withdrawn-version.png",
       fullPage: true,
     });
+    // Opening a new editable idea must not accidentally submit it as a revision of this creation.
+    await author.goto(pinned);
+    await author
+      .getByRole("button", {
+        name: "Editar nueva versión en el taller",
+        exact: true,
+      })
+      .click();
+    await expect(author.locator(".private-course-summary")).toContainText(
+      "Nueva revisión",
+    );
+    await author.getByRole("button", { name: /El pulso del puente/ }).click();
+    await expect(
+      author.getByRole("textbox", { name: "Nombre del diseño", exact: true }),
+    ).toHaveValue("El pulso del puente");
+    await expect(
+      author.getByRole("button", {
+        name: "Publicar como creación nueva",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+    await author.reload();
+    await author
+      .getByRole("button", { name: "Abrir taller de hoyos", exact: true })
+      .click();
+    await expect(
+      author.getByRole("button", {
+        name: "Publicar como creación nueva",
+        exact: true,
+      }),
+    ).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {
     for (const c of [authorContext, modContext, guestContext, friendContext])

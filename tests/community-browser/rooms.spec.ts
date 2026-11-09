@@ -1,4 +1,4 @@
-import { withWorkshopPhysics } from "../../shared/workshop";
+import { withWorkshopResources } from "../../shared/workshop";
 import { test, expect } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { io, type Socket } from "socket.io-client";
@@ -86,8 +86,22 @@ const roomCount = async () =>
 test("published revision rooms serialize concurrent admission, use server content and reject stale withdrawn references", async () => {
   const author = await accessToken("author"),
     mod = await accessToken("reviewer");
-  const doc = withWorkshopPhysics(privateWorkshop(), 2);
+  const doc = withWorkshopResources(privateWorkshop());
   doc.name = "La revisión de los sockets";
+  doc.pieces.push(
+    ...(["rotor", "lift", "dirt"] as const).map((kind, i) => ({
+      id: `advanced-${i}`,
+      kind,
+      x: 6,
+      z: 2 + i * 2,
+      width: 1,
+      length: 0.5,
+      height: 0,
+      endHeight: 0,
+      angle: 0,
+    })),
+  );
+
   const entry = await api("/creations", author, {
     document: doc,
     authorName: "Autor socket",

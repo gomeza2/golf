@@ -1,6 +1,14 @@
 # Evolución total del club
 
-## Entrega actual — 0.20.0, física elegida y verificada en las creaciones
+## Entrega actual — 0.21.0, recursos del taller y activación gratuita
+
+Tres recursos físicos nuevos con adopción explícita del documento 3: giro completo, puerta elevable y tierra. Dos ejemplos editables con rutas seguras/arriesgadas comprobadas, conservación del borrador y mapa de mecanismos en vivo. La nueva geometría comparte compilación, pose y presupuesto con Rapier/Scene/servidor. Documentos 1/2 mantienen hashes y comportamiento; 34 hoyos oficiales, todos los modos y datos intactos. Protocolo 17, física 1/2, reglas 7 y esquema PostgreSQL 1.
+
+Se resuelve el acceso a migración en hosting gratuito sin Shell mediante preparación opcional e idempotente; no inserta cuentas o publicaciones. Diagnóstico de base/OIDC sin secretos. Guía concreta Neon Free + Auth0 Free sobre Render, con pasos de cuenta real, permisos y publicación/reinicio. [WORKSHOP-RESOURCES.md](WORKSHOP-RESOURCES.md) y [FREE-COMMUNITY-SETUP.md](FREE-COMMUNITY-SETUP.md).
+
+**Siguiente fase:** el propietario debe crear esas cuentas y configurar las variables privadas para activar la galería pública; luego verificar acceso/moderación/publicación y permanencia tras reinicio. Sesiones con amigos y móviles físicos para equilibrar tiempos de mecanismos y rutas. Colecciones de varios hoyos del taller, carga concurrente y persistencia de copas siguen pendientes; no se simulan.
+
+## Entrega anterior — 0.20.0, física elegida y verificada en las creaciones
 
 El autor puede adoptar explícitamente física actual mediante documento 2 o conservar documento 1/original. Confirmación, deshacer/rehacer, borrador, biblioteca, exportación/importación y prueba 3D conservan la elección. La huella incluye la edición; servidor y cliente contrastan contenido y física antes de mostrar una cancha privada.
 
