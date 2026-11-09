@@ -493,8 +493,7 @@ it.each(expeditionSafeRoutes)(
 type ShortcutRoute = {
   name: string;
   index: number;
-  start: V3;
-  end: V3;
+  points: V3[];
   width: number;
 };
 
@@ -502,29 +501,42 @@ const shortcutRoutes: ShortcutRoute[] = [
   {
     name: "La ruta de los arrayanes",
     index: 0,
-    start: { x: -18, y: 0, z: 51 },
-    end: { x: 15, y: 0, z: -7 },
+    points: [
+      { x: -18, y: 0, z: 51 },
+      { x: 15, y: 0, z: -7 },
+    ],
     width: 1.8,
   },
   {
     name: "Dunas de cobre",
     index: 1,
-    start: { x: -25, y: 0, z: 56 },
-    end: { x: 17, y: 7, z: 4 },
+    points: [
+      { x: -25, y: 0, z: 56 },
+      { x: -16, y: 2.6, z: 44 },
+      { x: -6, y: 5.3, z: 32 },
+      { x: 8, y: 6.3, z: 18 },
+      { x: 22, y: 8.1, z: 8 },
+      { x: 25, y: 7, z: 1 },
+    ],
     width: 1.7,
   },
   {
     name: "Archipiélago azul",
     index: 2,
-    start: { x: -27, y: 0, z: 56 },
-    end: { x: 28, y: 0, z: -42 },
+    points: [
+      { x: -27, y: 0, z: 56 },
+      { x: 10, y: 0, z: -22 },
+      { x: 24, y: 0, z: -42 },
+    ],
     width: 1.6,
   },
   {
     name: "La cresta del cóndor",
     index: 3,
-    start: { x: -34, y: 12, z: 70 },
-    end: { x: 27, y: 5, z: 8 },
+    points: [
+      { x: -34, y: 12, z: 70 },
+      { x: 27, y: 5, z: 8 },
+    ],
     width: 1.6,
   },
 ];
@@ -538,29 +550,81 @@ it.each(shortcutRoutes)(
     game.add("shortcut-player", "Explorador");
     game.startPractice(index);
 
-    const shortcut = geometry(frontierCourses[index]).surfaces.find(
-      (surface) => surface.size[0] < 2.05 && surface.size[2] > 55,
+    const shortcutSurfaces = geometry(frontierCourses[index]).surfaces.filter(
+      (surface) => surface.size[0] < 2.05 && surface.size[2] > 6,
     );
-    expect(shortcut, name + ": shortcut geometry missing").toBeDefined();
+    expect(shortcutSurfaces.length, name + ": shortcut geometry missing").toBeGreaterThan(0);
 
-    const dx = end.x - start.x;
-    const dz = end.z - start.z;
-    const lengthSquared = dx * dx + dz * dz;
-    const length = Math.sqrt(lengthSquared);
-    const lane = (position: V3) => {
-      const rx = position.x - start.x;
-      const rz = position.z - start.z;
+    const segments = points.slice(1).map((to, segmentIndex) => {
+      const from = points[segmentIndex];
       return {
-        progress: (rx * dx + rz * dz) / lengthSquared,
-        lateral: Math.abs(dx * rz - dz * rx) / length,
+        from,
+        to,
+        dx: to.x - from.x,
+        dz: to.z - from.z,
+        length: Math.hypot(to.x - from.x, to.z - from.z),
       };
+    });
+    let accumulated = 0;
+    const routeSegments = segments.map((segment) => {
+      const routeStart = accumulated;
+      accumulated += segment.length;
+      return { ...segment, routeStart };
+    });
+    const routeLength = accumulated;
+
+    const lane = (position: V3) => {
+      let closest = { progress: 0, lateral: Number.POSITIVE_INFINITY };
+      for (const segment of routeSegments) {
+        const lengthSquared =
+          segment.dx * segment.dx + segment.dz * segment.dz;
+        const ratio = Math.max(
+          0,
+          Math.min(
+            1,
+            ((position.x - segment.from.x) * segment.dx +
+              (position.z - segment.from.z) * segment.dz) /
+              lengthSquared,
+          ),
+        );
+        const x = segment.from.x + segment.dx * ratio;
+        const z = segment.from.z + segment.dz * ratio;
+        const lateral = Math.hypot(position.x - x, position.z - z);
+        if (lateral < closest.lateral)
+          closest = {
+            progress:
+              (segment.routeStart + segment.length * ratio) / routeLength,
+            lateral,
+          };
+      }
+      return closest;
     };
+
     const point = (fraction: number): V3 => {
-      const x = start.x + dx * fraction;
-      const z = start.z + dz * fraction;
-      const y = surfaceHeight(shortcut!, x, z);
-      expect(y, name + ": no surface at shortcut fraction " + fraction).not.toBeNull();
-      return { x, y: y!, z };
+      const requested = Math.min(routeLength, Math.max(0, fraction * routeLength));
+      const segment =
+        routeSegments.find(
+          (candidate) =>
+            requested <= candidate.routeStart + candidate.length + 1e-6,
+        ) ?? routeSegments[routeSegments.length - 1];
+      const ratio = Math.max(
+        0,
+        Math.min(1, (requested - segment.routeStart) / segment.length),
+      );
+      const x = segment.from.x + segment.dx * ratio;
+      const z = segment.from.z + segment.dz * ratio;
+      const expectedY =
+        segment.from.y + (segment.to.y - segment.from.y) * ratio;
+      const support = shortcutSurfaces
+        .map((surface) => ({ y: surfaceHeight(surface, x, z) }))
+        .filter((candidate): candidate is { y: number } => candidate.y !== null)
+        .sort((a, b) => Math.abs(a.y - expectedY) - Math.abs(b.y - expectedY))[0];
+      expect(
+        support,
+        name + ": no surface at shortcut fraction " + fraction,
+      ).toBeDefined();
+      expect(Math.abs(support!.y - expectedY)).toBeLessThan(0.08);
+      return { x, y: support!.y, z };
     };
 
     const from = point(0.1);
