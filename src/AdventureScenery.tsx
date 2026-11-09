@@ -141,6 +141,16 @@ export function AdventureScenery({
     gl.domElement.dataset.scenery = kind;
     gl.domElement.dataset.sceneryCount = String(count);
     gl.domElement.dataset.sceneryAccentCount = String(accentCount);
+    gl.domElement.dataset.sceneryLandmark =
+      kind === "forest"
+        ? "ancient-pine"
+        : kind === "desert"
+          ? "canyon-arch"
+          : kind === "coast"
+            ? "lighthouse"
+            : kind === "mountain"
+              ? "snow-peaks"
+              : "none";
   }, [layout, accentLayout, kind, gl, count, accentCount]);
   useFrame(({ clock }) => {
     if (lamp.current && detail > 0 && !reducedMotion.matches)
@@ -245,6 +255,73 @@ export function AdventureScenery({
           roughness={0.96}
         />
       </instancedMesh>
+      {kind === "forest" && (
+        <group position={[-size.width / 2 - 13, 0, -size.length / 2 - 13]}>
+          <mesh position={[0, 3.5, 0]} castShadow>
+            <cylinderGeometry args={[0.72, 1.15, 7, 8]} />
+            <meshStandardMaterial color="#725c43" roughness={0.98} />
+          </mesh>
+          {[0, 1, 2].map((tier) => (
+            <mesh
+              key={tier}
+              position={[0, 8 + tier * 3.1, 0]}
+              castShadow={detail > 0}
+            >
+              <coneGeometry
+                args={[
+                  6.2 - tier * 1.5,
+                  7.2 - tier * 0.6,
+                  detail === 0 ? 6 : 9,
+                ]}
+              />
+              <meshStandardMaterial
+                color={tier === 0 ? "#315f42" : tier === 1 ? "#3c7048" : "#4c8051"}
+                roughness={0.95}
+              />
+            </mesh>
+          ))}
+        </group>
+      )}
+      {kind === "desert" && (
+        <group position={[0, 0, -size.length / 2 - 17]}>
+          {[-10, 10].map((x) => (
+            <mesh key={x} position={[x, 6, 0]} castShadow>
+              <cylinderGeometry args={[2.1, 2.9, 12, 7]} />
+              <meshStandardMaterial color="#a8754b" roughness={1} />
+            </mesh>
+          ))}
+          <mesh position={[0, 12, 0]} castShadow>
+            <boxGeometry args={[24, 3, 3.6]} />
+            <meshStandardMaterial color="#bf8955" roughness={0.98} />
+          </mesh>
+          <mesh position={[0, 14.1, 0]}>
+            <boxGeometry args={[10, 1, 4]} />
+            <meshStandardMaterial color="#d2a16c" roughness={0.96} />
+          </mesh>
+        </group>
+      )}
+      {kind === "mountain" && (
+        <group position={[0, 0, -size.length / 2 - 19]}>
+          <mesh position={[0, 11, 0]} castShadow>
+            <coneGeometry args={[11, 23, detail === 0 ? 6 : 9]} />
+            <meshStandardMaterial color="#69766f" roughness={1} />
+          </mesh>
+          <mesh position={[0, 20.2, 0]}>
+            <coneGeometry args={[5.7, 7.8, detail === 0 ? 6 : 9]} />
+            <meshStandardMaterial color="#e5ece8" roughness={0.96} />
+          </mesh>
+          {[-14, 14].map((x, index) => (
+            <mesh
+              key={x}
+              position={[x, index ? 7 : 8.5, -2]}
+              castShadow={detail > 0}
+            >
+              <coneGeometry args={[7.2, index ? 15 : 17, 7]} />
+              <meshStandardMaterial color={index ? "#858e87" : "#78847e"} roughness={1} />
+            </mesh>
+          ))}
+        </group>
+      )}
       {beacon && (
         <group position={[size.width / 2 + 8, 0, 0]}>
           <mesh position={[0, 4.5, 0]} castShadow={detail > 0}>

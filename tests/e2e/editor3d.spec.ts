@@ -158,6 +158,8 @@ test("the 2D and 3D workspaces switch without changing the same draft", async ({
   await open(page);
   await input(page);
   const before = await draft(page);
+  const canvas = page.locator(".editor3d-stage canvas");
+  const cameraBefore = await canvas.getAttribute("data-editor-camera");
   await page.getByRole("button", { name: "Vista 2D", exact: true }).click();
   await expect(page.getByRole("img", { name: "Plano editable de la cancha" })).toBeVisible();
   await expect(page.locator(".editor3d-stage")).toHaveCount(0);
@@ -166,6 +168,9 @@ test("the 2D and 3D workspaces switch without changing the same draft", async ({
     "data-editor-ready",
     "true",
   );
+  await expect
+    .poll(() => canvas.getAttribute("data-editor-camera"))
+    .toBe(cameraBefore);
   expect(await draft(page)).toEqual(before);
 });
 

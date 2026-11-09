@@ -20,6 +20,7 @@ Este registro separa lo implementado de lo comprobado. Una compilación correcta
 - Añadidos controles explícitos de órbita, inclinación vertical, subida/bajada, desplazamiento y zoom.
 - Añadida navegación por teclado durante el modo cámara: flechas, W/A/S/D, Q/E y +/−.
 - Paneles laterales con scroll independiente en escritorio y una columna adaptable en móvil.
+- El cambio entre 2D y 3D conserva también el encuadre de cámara, además del diseño; Playwright comprueba que el valor de cámara no se reinicialice al volver a la escena.
 - Los eventos de selección y construcción ahora aceptan solo el botón primario: el botón derecho queda reservado para desplazar cámara y no puede colocar una pieza por error.
 - La navegación vertical por teclado sigue una convención habitual: E sube y Q baja; Playwright comprueba ambos sentidos.
 - Playwright comprueba el arrastre derecho como navegación y que un clic derecho con la herramienta Pared activa no cambie el diseño.

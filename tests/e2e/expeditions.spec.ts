@@ -94,6 +94,7 @@ test("all four expedition environments render their own scene on mobile practice
     localStorage.setItem("golf-hole-intro", "false");
   });
   const environments = ["forest", "desert", "coast", "mountain"];
+  const landmarks = ["ancient-pine", "canyon-arch", "lighthouse", "snow-peaks"];
   for (let hole = 0; hole < environments.length; hole++) {
     await page.goto("/");
     await page.getByRole("button", { name: /Grandes travesías/ }).click();
@@ -104,6 +105,10 @@ test("all four expedition environments render their own scene on mobile practice
     await page.getByRole("button", { name: /Practicar este hoyo/ }).click();
     const canvas = page.locator("canvas");
     await expect(canvas).toHaveAttribute("data-scenery", environments[hole]);
+    await expect(canvas).toHaveAttribute(
+      "data-scenery-landmark",
+      landmarks[hole],
+    );
     await expect
       .poll(async () =>
         Number(await canvas.getAttribute("data-scenery-accent-count")),
