@@ -513,7 +513,7 @@ const shortcutRoutes: ShortcutRoute[] = [
     points: [
       { x: -25, y: 0, z: 56 },
       { x: -16, y: 0, z: 44 },
-      { x: -6, y: 1.5, z: 32 },
+      { x: 5, y: 0, z: 36 },
       { x: 8, y: 3, z: 18 },
       { x: 22, y: 7, z: 7 },
       { x: 25, y: 7, z: 1 },

@@ -150,7 +150,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
         // Small, supported landing pads break the narrow shortcut into
         // manageable shots while keeping the main route below it where needed.
         deck(-16, 44, 2.8, 2.8, 0),
-        deck(-6, 32, 2.8, 2.8, 1.5),
+        deck(5, 36, 2.8, 2.8, 0),
         deck(8, 18, 2.8, 2.8, 3),
         // The raised diagonal climbs over the terraces and joins the final
         // platform at its eastern edge.
@@ -159,7 +159,7 @@ export function createFrontierCourses({ deck, rampDeck }: Build): Course[] {
           [
             { x: -25, y: 0, z: 56 },
             { x: -16, y: 0, z: 44 },
-            { x: -6, y: 1.5, z: 32 },
+            { x: 5, y: 0, z: 36 },
             { x: 8, y: 3, z: 18 },
             { x: 22, y: 7, z: 7 },
             { x: 25, y: 7, z: 1 },
