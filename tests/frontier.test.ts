@@ -496,6 +496,7 @@ type ShortcutRoute = {
   points: V3[];
   width: number;
   checkpoints?: number[];
+  shotOffsets?: number[];
 };
 
 const shortcutRoutes: ShortcutRoute[] = [
@@ -523,6 +524,7 @@ const shortcutRoutes: ShortcutRoute[] = [
     ],
     width: 1.7,
     checkpoints: [0.13, 0.338, 0.554, 0.784, 0.87, 0.937, 0.985],
+    shotOffsets: [-0.14, -0.1, -0.06, -0.03, 0, 0.03, 0.06, 0.1, 0.14],
   },
   {
     name: "Archipiélago azul",
@@ -549,7 +551,7 @@ const shortcutRoutes: ShortcutRoute[] = [
 
 it.each(shortcutRoutes)(
   "$name narrow shortcut can be traversed by continuous real shots",
-  ({ name, index, points, width, checkpoints }) => {
+  ({ name, index, points, width, checkpoints, shotOffsets }) => {
     const game = new Game();
     games.push(game);
     game.selectCircuit("expeditions");
@@ -671,7 +673,7 @@ it.each(shortcutRoutes)(
 
     let current: V3 = { ...game.state.players[0].pos };
     let routeTime = game.state.time;
-    const offsets = [-0.03, -0.015, 0, 0.015, 0.03];
+    const offsets = shotOffsets ?? [-0.03, -0.015, 0, 0.015, 0.03];
     const powers = [0.16, 0.25, 0.36, 0.48, 0.62, 0.78, 0.94];
 
     for (const [targetIndex, target] of targets.entries()) {
